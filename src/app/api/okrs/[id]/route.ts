@@ -3,13 +3,18 @@ import { createClient, createServiceClient } from "@/lib/supabase/server";
 import { updateOKRSchema } from "@/lib/validation";
 import { logOKRUpdate, logOKRDelete } from "@/lib/audit";
 import { calculateStatus } from "@/lib/okr-logic";
+import { withCorsHeaders, withRateLimitHeaders } from "@/lib/api-utils";
+import { logger, generateRequestId } from "@/lib/logger";
 
 export async function GET(
   _request: NextRequest,
   { params }: { params: Promise<{ id: string }> }
 ) {
+  const requestId = generateRequestId();
+  const { id } = await params;
+  const reqLog = logger.request("GET", `/api/okrs/${id}`, { requestId });
+
   try {
-    const { id } = await params;
     const supabase = await createClient();
     const {
       data: { user },
@@ -17,7 +22,22 @@ export async function GET(
     } = await supabase.auth.getUser();
 
     if (authError || !user) {
-      return NextResponse.json({ error: "Nicht authentifiziert" }, { status: 401 });
+      reqLog.finish(401);
+      return withRateLimitHeaders(
+        withCorsHeaders(
+          NextResponse.json({ error: "Nicht authentifiziert" }, { status: 401 })
+        )
+      );
+    }
+
+    // Validate UUID format
+    if (!isValidUUID(id)) {
+      reqLog.finish(400, { userId: user.id });
+      return withRateLimitHeaders(
+        withCorsHeaders(
+          NextResponse.json({ error: "Ungültige OKR-ID" }, { status: 400 })
+        )
+      );
     }
 
     const serviceClient = await createServiceClient();
@@ -30,9 +50,14 @@ export async function GET(
       .single();
 
     if (error || !okr) {
-      return NextResponse.json(
-        { error: "OKR nicht gefunden" },
-        { status: 404 }
+      reqLog.finish(404, { userId: user.id });
+      return withRateLimitHeaders(
+        withCorsHeaders(
+          NextResponse.json(
+            { error: "OKR nicht gefunden" },
+            { status: 404 }
+          )
+        )
       );
     }
 
@@ -42,12 +67,25 @@ export async function GET(
         a.sort_order - b.sort_order
     );
 
-    return NextResponse.json({ okr });
+    reqLog.finish(200, { userId: user.id });
+    return withRateLimitHeaders(
+      withCorsHeaders(NextResponse.json({ okr }))
+    );
   } catch (error) {
-    console.error("GET /api/okrs/[id] error:", error);
-    return NextResponse.json(
-      { error: "Interner Serverfehler" },
-      { status: 500 }
+    logger.error("GET /api/okrs/[id] unhandled error", {
+      requestId,
+      okrId: id,
+      error: error instanceof Error ? error.message : String(error),
+      stack: error instanceof Error ? error.stack : undefined,
+    });
+    reqLog.finish(500);
+    return withRateLimitHeaders(
+      withCorsHeaders(
+        NextResponse.json(
+          { error: "Interner Serverfehler" },
+          { status: 500 }
+        )
+      )
     );
   }
 }
@@ -56,8 +94,11 @@ export async function PATCH(
   request: NextRequest,
   { params }: { params: Promise<{ id: string }> }
 ) {
+  const requestId = generateRequestId();
+  const { id } = await params;
+  const reqLog = logger.request("PATCH", `/api/okrs/${id}`, { requestId });
+
   try {
-    const { id } = await params;
     const supabase = await createClient();
     const {
       data: { user },
@@ -65,16 +106,50 @@ export async function PATCH(
     } = await supabase.auth.getUser();
 
     if (authError || !user) {
-      return NextResponse.json({ error: "Nicht authentifiziert" }, { status: 401 });
+      reqLog.finish(401);
+      return withRateLimitHeaders(
+        withCorsHeaders(
+          NextResponse.json({ error: "Nicht authentifiziert" }, { status: 401 })
+        )
+      );
     }
 
-    const body = await request.json();
+    // Validate UUID format
+    if (!isValidUUID(id)) {
+      reqLog.finish(400, { userId: user.id });
+      return withRateLimitHeaders(
+        withCorsHeaders(
+          NextResponse.json({ error: "Ungültige OKR-ID" }, { status: 400 })
+        )
+      );
+    }
+
+    let body: unknown;
+    try {
+      body = await request.json();
+    } catch {
+      reqLog.finish(400, { userId: user.id });
+      return withRateLimitHeaders(
+        withCorsHeaders(
+          NextResponse.json(
+            { error: "Ungültiger JSON-Body" },
+            { status: 400 }
+          )
+        )
+      );
+    }
+
     const parsed = updateOKRSchema.safeParse(body);
 
     if (!parsed.success) {
-      return NextResponse.json(
-        { error: "Validierungsfehler", details: parsed.error.flatten() },
-        { status: 400 }
+      reqLog.finish(400, { userId: user.id });
+      return withRateLimitHeaders(
+        withCorsHeaders(
+          NextResponse.json(
+            { error: "Validierungsfehler", details: parsed.error.flatten() },
+            { status: 400 }
+          )
+        )
       );
     }
 
@@ -90,9 +165,14 @@ export async function PATCH(
       .single();
 
     if (fetchError || !existingOkr) {
-      return NextResponse.json(
-        { error: "OKR nicht gefunden" },
-        { status: 404 }
+      reqLog.finish(404, { userId: user.id });
+      return withRateLimitHeaders(
+        withCorsHeaders(
+          NextResponse.json(
+            { error: "OKR nicht gefunden" },
+            { status: 404 }
+          )
+        )
       );
     }
 
@@ -115,7 +195,10 @@ export async function PATCH(
 
     // If nothing changed, return the existing OKR
     if (Object.keys(updateData).length === 0) {
-      return NextResponse.json({ okr: existingOkr });
+      reqLog.finish(200, { userId: user.id });
+      return withRateLimitHeaders(
+        withCorsHeaders(NextResponse.json({ okr: existingOkr }))
+      );
     }
 
     // Recalculate status if progress-related fields changed
@@ -142,10 +225,20 @@ export async function PATCH(
       .single();
 
     if (updateError) {
-      console.error("Update OKR error:", updateError);
-      return NextResponse.json(
-        { error: "Fehler beim Aktualisieren" },
-        { status: 500 }
+      logger.error("OKR update failed", {
+        requestId,
+        userId: user.id,
+        okrId: id,
+        error: updateError.message,
+      });
+      reqLog.finish(500);
+      return withRateLimitHeaders(
+        withCorsHeaders(
+          NextResponse.json(
+            { error: "Fehler beim Aktualisieren" },
+            { status: 500 }
+          )
+        )
       );
     }
 
@@ -165,14 +258,34 @@ export async function PATCH(
         id,
         changedFields
       ).catch(() => {});
+
+      logger.audit("okr.updated", {
+        requestId,
+        userId: user.id,
+        okrId: id,
+        changedFields: Object.keys(changedFields).join(", "),
+      });
     }
 
-    return NextResponse.json({ okr: updatedOkr });
+    reqLog.finish(200, { userId: user.id });
+    return withRateLimitHeaders(
+      withCorsHeaders(NextResponse.json({ okr: updatedOkr }))
+    );
   } catch (error) {
-    console.error("PATCH /api/okrs/[id] error:", error);
-    return NextResponse.json(
-      { error: "Interner Serverfehler" },
-      { status: 500 }
+    logger.error("PATCH /api/okrs/[id] unhandled error", {
+      requestId,
+      okrId: id,
+      error: error instanceof Error ? error.message : String(error),
+      stack: error instanceof Error ? error.stack : undefined,
+    });
+    reqLog.finish(500);
+    return withRateLimitHeaders(
+      withCorsHeaders(
+        NextResponse.json(
+          { error: "Interner Serverfehler" },
+          { status: 500 }
+        )
+      )
     );
   }
 }
@@ -181,8 +294,11 @@ export async function DELETE(
   _request: NextRequest,
   { params }: { params: Promise<{ id: string }> }
 ) {
+  const requestId = generateRequestId();
+  const { id } = await params;
+  const reqLog = logger.request("DELETE", `/api/okrs/${id}`, { requestId });
+
   try {
-    const { id } = await params;
     const supabase = await createClient();
     const {
       data: { user },
@@ -190,7 +306,22 @@ export async function DELETE(
     } = await supabase.auth.getUser();
 
     if (authError || !user) {
-      return NextResponse.json({ error: "Nicht authentifiziert" }, { status: 401 });
+      reqLog.finish(401);
+      return withRateLimitHeaders(
+        withCorsHeaders(
+          NextResponse.json({ error: "Nicht authentifiziert" }, { status: 401 })
+        )
+      );
+    }
+
+    // Validate UUID format
+    if (!isValidUUID(id)) {
+      reqLog.finish(400, { userId: user.id });
+      return withRateLimitHeaders(
+        withCorsHeaders(
+          NextResponse.json({ error: "Ungültige OKR-ID" }, { status: 400 })
+        )
+      );
     }
 
     const serviceClient = await createServiceClient();
@@ -198,15 +329,28 @@ export async function DELETE(
     // Fetch the OKR to verify ownership and get details for audit
     const { data: existingOkr, error: fetchError } = await serviceClient
       .from("okrs")
-      .select("id, title, organization_id, user_id")
+      .select("id, title, organization_id, user_id, is_active")
       .eq("id", id)
       .eq("user_id", user.id)
       .single();
 
     if (fetchError || !existingOkr) {
-      return NextResponse.json(
-        { error: "OKR nicht gefunden" },
-        { status: 404 }
+      reqLog.finish(404, { userId: user.id });
+      return withRateLimitHeaders(
+        withCorsHeaders(
+          NextResponse.json(
+            { error: "OKR nicht gefunden" },
+            { status: 404 }
+          )
+        )
+      );
+    }
+
+    // Idempotency: if already soft-deleted, return success without re-updating
+    if (!existingOkr.is_active) {
+      reqLog.finish(200, { userId: user.id });
+      return withRateLimitHeaders(
+        withCorsHeaders(NextResponse.json({ success: true }))
       );
     }
 
@@ -218,10 +362,20 @@ export async function DELETE(
       .eq("user_id", user.id);
 
     if (deleteError) {
-      console.error("Delete OKR error:", deleteError);
-      return NextResponse.json(
-        { error: "Fehler beim Löschen" },
-        { status: 500 }
+      logger.error("OKR soft-delete failed", {
+        requestId,
+        userId: user.id,
+        okrId: id,
+        error: deleteError.message,
+      });
+      reqLog.finish(500);
+      return withRateLimitHeaders(
+        withCorsHeaders(
+          NextResponse.json(
+            { error: "Fehler beim Löschen" },
+            { status: 500 }
+          )
+        )
       );
     }
 
@@ -233,12 +387,35 @@ export async function DELETE(
       existingOkr.title
     ).catch(() => {});
 
-    return NextResponse.json({ success: true });
+    logger.audit("okr.deleted", {
+      requestId,
+      userId: user.id,
+      okrId: id,
+    });
+
+    reqLog.finish(200, { userId: user.id });
+    return withRateLimitHeaders(
+      withCorsHeaders(NextResponse.json({ success: true }))
+    );
   } catch (error) {
-    console.error("DELETE /api/okrs/[id] error:", error);
-    return NextResponse.json(
-      { error: "Interner Serverfehler" },
-      { status: 500 }
+    logger.error("DELETE /api/okrs/[id] unhandled error", {
+      requestId,
+      okrId: id,
+      error: error instanceof Error ? error.message : String(error),
+      stack: error instanceof Error ? error.stack : undefined,
+    });
+    reqLog.finish(500);
+    return withRateLimitHeaders(
+      withCorsHeaders(
+        NextResponse.json(
+          { error: "Interner Serverfehler" },
+          { status: 500 }
+        )
+      )
     );
   }
+}
+
+function isValidUUID(id: string): boolean {
+  return /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(id);
 }

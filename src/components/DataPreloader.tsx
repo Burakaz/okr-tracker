@@ -9,18 +9,33 @@ export function DataPreloader() {
   useEffect(() => {
     // Parallel prefetch all data when dashboard loads
     const prefetchData = async () => {
-      await Promise.all([
+      await Promise.allSettled([
         queryClient.prefetchQuery({
           queryKey: ["okrs"],
-          queryFn: () => fetch("/api/okrs").then((r) => r.json()),
+          queryFn: async () => {
+            const res = await fetch("/api/okrs");
+            if (!res.ok) throw new Error("Failed to prefetch OKRs");
+            return res.json();
+          },
+          staleTime: 2 * 60 * 1000,
         }),
         queryClient.prefetchQuery({
           queryKey: ["currentUser"],
-          queryFn: () => fetch("/api/auth/me").then((r) => r.json()),
+          queryFn: async () => {
+            const res = await fetch("/api/auth/me");
+            if (!res.ok) throw new Error("Failed to prefetch user");
+            return res.json();
+          },
+          staleTime: 5 * 60 * 1000,
         }),
         queryClient.prefetchQuery({
-          queryKey: ["careerLevels"],
-          queryFn: () => fetch("/api/career/levels").then((r) => r.json()),
+          queryKey: ["careerProgress"],
+          queryFn: async () => {
+            const res = await fetch("/api/career");
+            if (!res.ok) throw new Error("Failed to prefetch career");
+            return res.json();
+          },
+          staleTime: 10 * 60 * 1000,
         }),
       ]);
     };

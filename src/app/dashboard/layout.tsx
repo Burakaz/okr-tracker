@@ -8,7 +8,11 @@ export default async function DashboardLayout({
 }: {
   children: React.ReactNode;
 }) {
-  const supabase = await createClient();
+  // Create both clients in parallel
+  const [supabase, serviceClient] = await Promise.all([
+    createClient(),
+    createServiceClient(),
+  ]);
 
   const {
     data: { user: authUser },
@@ -18,12 +22,20 @@ export default async function DashboardLayout({
     redirect("/auth/login");
   }
 
-  // User-Daten laden
-  const { data: user } = await supabase
-    .from("profiles")
-    .select("*")
-    .eq("id", authUser.id)
-    .single();
+  // Fetch profile and logo in parallel (eliminates waterfall)
+  const [profileResult, logoResult] = await Promise.all([
+    supabase
+      .from("profiles")
+      .select("*")
+      .eq("id", authUser.id)
+      .single(),
+    serviceClient.storage.from("logos").list("", {
+      limit: 10,
+      sortBy: { column: "created_at", order: "desc" },
+    }).catch(() => ({ data: null })),
+  ]);
+
+  const user = profileResult.data;
 
   if (!user) {
     redirect("/auth/login");
@@ -34,16 +46,11 @@ export default async function DashboardLayout({
     redirect("/auth/login?error=suspended");
   }
 
-  // Logo laden
-  const serviceClient = await createServiceClient();
+  // Process logo result
   let orgLogo: string | null = null;
 
   try {
-    const { data: logoFiles } = await serviceClient.storage.from("logos").list("", {
-      limit: 10,
-      sortBy: { column: "created_at", order: "desc" },
-    });
-
+    const logoFiles = logoResult?.data;
     if (logoFiles && logoFiles.length > 0) {
       const imageFile = logoFiles.find((file) => {
         const ext = file.name.split(".").pop()?.toLowerCase();

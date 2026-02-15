@@ -16,7 +16,7 @@ export function Header({ user, currentQuarter, onSearch, onNewItem, onCheckin }:
   const [showUserMenu, setShowUserMenu] = useState(false);
 
   return (
-    <header className="h-14 flex items-center justify-between px-6 border-b border-cream-300/50">
+    <header className="h-14 flex items-center justify-between px-6 border-b border-cream-300/50" role="banner">
       {/* Linke Seite: Quarter badge + Suche */}
       <div className="flex items-center gap-4 flex-1">
         {/* Quarter Indicator */}
@@ -26,11 +26,13 @@ export function Header({ user, currentQuarter, onSearch, onNewItem, onCheckin }:
         </div>
 
         {/* Suche */}
-        <div className="flex-1 max-w-md">
+        <div className="flex-1 max-w-md" role="search">
           <div className="relative">
-            <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted" />
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted" aria-hidden="true" />
+            <label htmlFor="okr-search" className="sr-only">OKRs durchsuchen</label>
             <input
-              type="text"
+              id="okr-search"
+              type="search"
               placeholder="OKRs durchsuchen..."
               className="w-full py-2 pl-10 pr-4 bg-cream-100/50 border border-cream-300/50 rounded-lg text-[13px] text-foreground placeholder:text-muted focus:outline-none focus:border-cream-400"
               onChange={(e) => onSearch(e.target.value)}
@@ -68,7 +70,7 @@ export function Header({ user, currentQuarter, onSearch, onNewItem, onCheckin }:
           <button
             onClick={() => setShowUserMenu(!showUserMenu)}
             className="flex items-center gap-1.5 p-1.5 rounded-lg hover:bg-cream-200/50 transition-colors"
-            aria-label="Benutzermenue"
+            aria-label="Benutzermenü"
             aria-expanded={showUserMenu}
             aria-haspopup="true"
           >
@@ -95,20 +97,21 @@ export function Header({ user, currentQuarter, onSearch, onNewItem, onCheckin }:
               <div
                 className="fixed inset-0 z-10"
                 onClick={() => setShowUserMenu(false)}
-                onKeyDown={(e) => e.key === "Escape" && setShowUserMenu(false)}
+                aria-hidden="true"
               />
-              <div className="dropdown-menu" role="menu" aria-label="Benutzermenue">
+              <div className="dropdown-menu" role="menu" aria-label="Benutzermenü">
                 <div className="px-3 py-2.5 border-b border-cream-300/50">
                   <p className="text-[13px] font-medium text-foreground">{user.name}</p>
                   <p className="text-[11px] text-muted">{user.email}</p>
                 </div>
-                <a href="/dashboard/settings" className="dropdown-item text-[13px]">
-                  <UserIcon className="h-3.5 w-3.5" />
+                <a href="/dashboard/settings" className="dropdown-item text-[13px]" role="menuitem">
+                  <UserIcon className="h-3.5 w-3.5" aria-hidden="true" />
                   Profil
                 </a>
+                <div role="separator" className="border-t border-cream-300/50 my-0.5" />
                 <form action="/auth/signout" method="POST">
-                  <button type="submit" className="dropdown-item-danger w-full text-[13px]">
-                    <LogOut className="h-3.5 w-3.5" />
+                  <button type="submit" className="dropdown-item-danger w-full text-[13px]" role="menuitem">
+                    <LogOut className="h-3.5 w-3.5" aria-hidden="true" />
                     Abmelden
                   </button>
                 </form>

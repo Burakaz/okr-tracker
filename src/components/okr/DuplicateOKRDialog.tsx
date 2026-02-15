@@ -54,7 +54,7 @@ export function DuplicateOKRDialog({
   }
 
   return (
-    <div className="modal-overlay" onClick={onCancel}>
+    <div className="modal-overlay" onClick={onCancel} role="dialog" aria-modal="true" aria-labelledby="duplicate-dialog-title">
       <div
         className="modal-content"
         onClick={(e) => e.stopPropagation()}
@@ -62,13 +62,14 @@ export function DuplicateOKRDialog({
         <form onSubmit={handleSubmit}>
           {/* Header */}
           <div className="flex items-center justify-between p-6 border-b border-cream-300/50">
-            <h2 className="text-lg font-semibold text-foreground">OKR duplizieren</h2>
+            <h2 id="duplicate-dialog-title" className="text-lg font-semibold text-foreground">OKR duplizieren</h2>
             <button
               type="button"
               onClick={onCancel}
               className="p-1.5 hover:bg-cream-200 rounded-lg transition-colors"
+              aria-label="Dialog schließen"
             >
-              <X className="h-5 w-5 text-muted" />
+              <X className="h-5 w-5 text-muted" aria-hidden="true" />
             </button>
           </div>
 
@@ -80,10 +81,11 @@ export function DuplicateOKRDialog({
 
             {/* Target Quarter */}
             <div>
-              <label className="text-[11px] font-semibold text-muted uppercase tracking-wider block mb-1.5">
+              <label htmlFor="duplicate-quarter" className="text-[11px] font-semibold text-muted uppercase tracking-wider block mb-1.5">
                 Ziel-Quartal
               </label>
               <select
+                id="duplicate-quarter"
                 value={targetQuarter}
                 onChange={(e) => setTargetQuarter(e.target.value)}
                 className="input"

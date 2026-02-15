@@ -2,12 +2,44 @@
 @tailwind components;
 @tailwind utilities;
 
+/* Skip-to-content Link für Tastaturnavigation */
+.skip-to-content {
+  position: absolute;
+  top: -100%;
+  left: 0;
+  z-index: 9999;
+  padding: 0.75rem 1.5rem;
+  background-color: var(--foreground);
+  color: white;
+  font-size: 0.875rem;
+  font-weight: 500;
+  border-radius: 0 0 0.5rem 0;
+  transition: top 0.15s ease;
+}
+
+.skip-to-content:focus {
+  top: 0;
+  outline: none;
+}
+
+/* Focus-visible Styles für Tastaturnavigation */
+*:focus-visible {
+  outline: 2px solid var(--foreground);
+  outline-offset: 2px;
+  border-radius: 4px;
+}
+
+/* Sichtbarer Fokus für Screenreader-Nutzer entfernen bei Mausklick */
+*:focus:not(:focus-visible) {
+  outline: none;
+}
+
 :root {
   --background: #f5f4f0;
   --foreground: #1a1a1a;
   --card-bg: #ffffff;
   --border-color: #e8e5e1;
-  --text-muted: #7a7a7a;
+  --text-muted: #5c5c5c;
   --accent-green: #22c55e;
   --cream-50: #faf9f7;
   --cream-100: #f7f6f3;
@@ -70,9 +102,10 @@ body {
   background-color: #333;
 }
 
-.btn-primary:focus {
-  outline: none;
-  box-shadow: 0 0 0 2px var(--cream-300);
+.btn-primary:focus-visible {
+  outline: 2px solid var(--foreground);
+  outline-offset: 2px;
+  box-shadow: none;
 }
 
 .btn-primary:disabled {
@@ -101,9 +134,10 @@ body {
   border-color: var(--cream-400);
 }
 
-.btn-secondary:focus {
-  outline: none;
-  box-shadow: 0 0 0 2px var(--cream-300);
+.btn-secondary:focus-visible {
+  outline: 2px solid var(--foreground);
+  outline-offset: 2px;
+  box-shadow: none;
 }
 
 .btn-secondary:disabled {
@@ -130,9 +164,10 @@ body {
   background-color: #b91c1c;
 }
 
-.btn-danger:focus {
-  outline: none;
-  box-shadow: 0 0 0 2px #fecaca;
+.btn-danger:focus-visible {
+  outline: 2px solid #dc2626;
+  outline-offset: 2px;
+  box-shadow: none;
 }
 
 .btn-danger:disabled {
@@ -159,9 +194,10 @@ body {
   background-color: var(--cream-200);
 }
 
-.btn-ghost:focus {
-  outline: none;
-  box-shadow: 0 0 0 2px var(--cream-300);
+.btn-ghost:focus-visible {
+  outline: 2px solid var(--foreground);
+  outline-offset: 2px;
+  box-shadow: none;
 }
 
 .btn-ghost:disabled {
@@ -188,9 +224,10 @@ body {
   background-color: #16a34a;
 }
 
-.btn-success:focus {
-  outline: none;
-  box-shadow: 0 0 0 2px #bbf7d0;
+.btn-success:focus-visible {
+  outline: 2px solid var(--accent-green);
+  outline-offset: 2px;
+  box-shadow: none;
 }
 
 .btn-success:disabled {
@@ -211,13 +248,13 @@ body {
 }
 
 .input::placeholder {
-  color: #a0a0a0;
+  color: #767676;
 }
 
 .input:focus {
   outline: none;
-  border-color: var(--cream-400);
-  box-shadow: 0 0 0 2px rgba(0, 0, 0, 0.04);
+  border-color: var(--foreground);
+  box-shadow: 0 0 0 1px var(--foreground);
 }
 
 /* Card Styles - Minimalistischer mit mehr Weißraum */

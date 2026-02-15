@@ -33,8 +33,8 @@ export default {
           greenDark: "#16a34a",
         },
         muted: {
-          DEFAULT: "#6b6b6b",
-          light: "#9a9a9a",
+          DEFAULT: "#5c5c5c",
+          light: "#767676",
         },
       },
       boxShadow: {

@@ -81,6 +81,7 @@ export function ConfirmDialog({
           <button
             onClick={onCancel}
             className="flex-1 btn-secondary py-2.5 text-sm font-medium"
+            autoFocus
           >
             {cancelLabel}
           </button>

@@ -49,8 +49,9 @@ export function FocusOKRSection({ okrs, onSelect, onToggleFocus }: FocusOKRSecti
                 }}
                 className="p-1.5 hover:bg-cream-200 rounded-lg transition-colors flex-shrink-0"
                 title="Fokus entfernen"
+                aria-label={`Fokus von "${okr.title}" entfernen`}
               >
-                <Star className="h-4 w-4 text-accent-green fill-accent-green" />
+                <Star className="h-4 w-4 text-accent-green fill-accent-green" aria-hidden="true" />
               </button>
             </div>
 

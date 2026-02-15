@@ -1,7 +1,12 @@
 import { NextResponse } from "next/server";
 import { createClient, createServiceClient } from "@/lib/supabase/server";
+import { withCorsHeaders, withRateLimitHeaders } from "@/lib/api-utils";
+import { logger, generateRequestId } from "@/lib/logger";
 
 export async function GET() {
+  const requestId = generateRequestId();
+  const reqLog = logger.request("GET", "/api/career", { requestId });
+
   try {
     const supabase = await createClient();
     const {
@@ -10,7 +15,12 @@ export async function GET() {
     } = await supabase.auth.getUser();
 
     if (authError || !user) {
-      return NextResponse.json({ error: "Nicht authentifiziert" }, { status: 401 });
+      reqLog.finish(401);
+      return withRateLimitHeaders(
+        withCorsHeaders(
+          NextResponse.json({ error: "Nicht authentifiziert" }, { status: 401 })
+        )
+      );
     }
 
     const serviceClient = await createServiceClient();
@@ -23,7 +33,10 @@ export async function GET() {
       .single();
 
     if (profileError || !profile || !profile.organization_id) {
-      return NextResponse.json({ progress: null });
+      reqLog.finish(200, { userId: user.id });
+      return withRateLimitHeaders(
+        withCorsHeaders(NextResponse.json({ progress: null }))
+      );
     }
 
     const { data: progress, error } = await serviceClient
@@ -36,21 +49,45 @@ export async function GET() {
     if (error) {
       // No career progress record yet is not an error
       if (error.code === "PGRST116") {
-        return NextResponse.json({ progress: null });
+        reqLog.finish(200, { userId: user.id });
+        return withRateLimitHeaders(
+          withCorsHeaders(NextResponse.json({ progress: null }))
+        );
       }
-      console.error("GET /api/career error:", error);
-      return NextResponse.json(
-        { error: "Fehler beim Laden des Karriere-Fortschritts" },
-        { status: 500 }
+      logger.error("Career progress query failed", {
+        requestId,
+        userId: user.id,
+        error: error.message,
+      });
+      reqLog.finish(500);
+      return withRateLimitHeaders(
+        withCorsHeaders(
+          NextResponse.json(
+            { error: "Fehler beim Laden des Karriere-Fortschritts" },
+            { status: 500 }
+          )
+        )
       );
     }
 
-    return NextResponse.json({ progress });
+    reqLog.finish(200, { userId: user.id });
+    return withRateLimitHeaders(
+      withCorsHeaders(NextResponse.json({ progress }))
+    );
   } catch (error) {
-    console.error("GET /api/career error:", error);
-    return NextResponse.json(
-      { error: "Interner Serverfehler" },
-      { status: 500 }
+    logger.error("GET /api/career unhandled error", {
+      requestId,
+      error: error instanceof Error ? error.message : String(error),
+      stack: error instanceof Error ? error.stack : undefined,
+    });
+    reqLog.finish(500);
+    return withRateLimitHeaders(
+      withCorsHeaders(
+        NextResponse.json(
+          { error: "Interner Serverfehler" },
+          { status: 500 }
+        )
+      )
     );
   }
 }

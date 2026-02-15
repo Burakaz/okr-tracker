@@ -11,7 +11,9 @@ import {
   Trash2,
 } from "lucide-react";
 import type { OKR, OKRCategory, CreateOKRRequest } from "@/types";
+import type { SuggestedKR } from "@/lib/ai/types";
 import { getCurrentQuarter, getNextQuarter } from "@/components/layout/DashboardClientWrapper";
+import AISuggestButton from "./AISuggestButton";
 
 interface OKRFormProps {
   initialData?: OKR;
@@ -98,6 +100,33 @@ export function OKRForm({
     );
   };
 
+  const handleAcceptAISuggestion = (suggestion: SuggestedKR) => {
+    // Check if first KR is empty (default one) and replace it
+    const firstKR = keyResults[0];
+    if (keyResults.length === 1 && !firstKR.title.trim()) {
+      setKeyResults([
+        {
+          id: firstKR.id,
+          title: suggestion.title,
+          start_value: String(suggestion.start_value),
+          target_value: String(suggestion.target_value),
+          unit: suggestion.unit,
+        },
+      ]);
+    } else {
+      setKeyResults((prev) => [
+        ...prev,
+        {
+          id: generateId(),
+          title: suggestion.title,
+          start_value: String(suggestion.start_value),
+          target_value: String(suggestion.target_value),
+          unit: suggestion.unit,
+        },
+      ]);
+    }
+  };
+
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     if (!title.trim()) return;
@@ -133,7 +162,7 @@ export function OKRForm({
   }
 
   return (
-    <div className="modal-overlay" onClick={onCancel}>
+    <div className="modal-overlay" onClick={onCancel} role="dialog" aria-modal="true" aria-labelledby="okr-form-title">
       <div
         className="modal-content"
         style={{ maxWidth: "32rem" }}
@@ -142,15 +171,16 @@ export function OKRForm({
         <form onSubmit={handleSubmit}>
           {/* Header */}
           <div className="flex items-center justify-between p-6 border-b border-cream-300/50">
-            <h2 className="text-lg font-semibold text-foreground">
+            <h2 id="okr-form-title" className="text-lg font-semibold text-foreground">
               {isEditing ? "OKR bearbeiten" : "Neues OKR erstellen"}
             </h2>
             <button
               type="button"
               onClick={onCancel}
               className="p-1.5 hover:bg-cream-200 rounded-lg transition-colors"
+              aria-label="Formular schließen"
             >
-              <X className="h-5 w-5 text-muted" />
+              <X className="h-5 w-5 text-muted" aria-hidden="true" />
             </button>
           </div>
 
@@ -158,10 +188,11 @@ export function OKRForm({
           <div className="p-6 space-y-5">
             {/* Title */}
             <div>
-              <label className="text-[11px] font-semibold text-muted uppercase tracking-wider block mb-1.5">
+              <label htmlFor="okr-title" className="text-[11px] font-semibold text-muted uppercase tracking-wider block mb-1.5">
                 Titel *
               </label>
               <input
+                id="okr-title"
                 type="text"
                 value={title}
                 onChange={(e) => setTitle(e.target.value)}
@@ -174,10 +205,11 @@ export function OKRForm({
 
             {/* Why it matters */}
             <div>
-              <label className="text-[11px] font-semibold text-muted uppercase tracking-wider block mb-1.5">
+              <label htmlFor="okr-why" className="text-[11px] font-semibold text-muted uppercase tracking-wider block mb-1.5">
                 Warum ist das wichtig?
               </label>
               <textarea
+                id="okr-why"
                 value={whyItMatters}
                 onChange={(e) => setWhyItMatters(e.target.value)}
                 placeholder="Kontext und Motivation für dieses OKR..."
@@ -212,10 +244,11 @@ export function OKRForm({
 
             {/* Quarter */}
             <div>
-              <label className="text-[11px] font-semibold text-muted uppercase tracking-wider block mb-1.5">
+              <label htmlFor="okr-quarter" className="text-[11px] font-semibold text-muted uppercase tracking-wider block mb-1.5">
                 Quartal
               </label>
               <select
+                id="okr-quarter"
                 value={quarter}
                 onChange={(e) => setQuarter(e.target.value)}
                 className="input"
@@ -244,8 +277,9 @@ export function OKRForm({
                           type="button"
                           onClick={() => removeKeyResult(kr.id)}
                           className="p-1 hover:bg-cream-200 rounded transition-colors"
+                          aria-label={`Key Result ${index + 1} entfernen`}
                         >
-                          <Trash2 className="h-3.5 w-3.5 text-muted hover:text-red-500" />
+                          <Trash2 className="h-3.5 w-3.5 text-muted hover:text-red-500" aria-hidden="true" />
                         </button>
                       )}
                     </div>
@@ -289,14 +323,23 @@ export function OKRForm({
                   </div>
                 ))}
               </div>
-              <button
-                type="button"
-                onClick={addKeyResult}
-                className="btn-ghost text-[13px] gap-1.5 mt-2"
-              >
-                <Plus className="h-3.5 w-3.5" />
-                Key Result hinzufügen
-              </button>
+              <div className="flex items-center gap-2 mt-2">
+                <button
+                  type="button"
+                  onClick={addKeyResult}
+                  className="btn-ghost text-[13px] gap-1.5"
+                >
+                  <Plus className="h-3.5 w-3.5" />
+                  Key Result hinzufügen
+                </button>
+              </div>
+              <AISuggestButton
+                okrTitle={title}
+                category={category}
+                existingKRs={keyResults.filter((kr) => kr.title.trim()).map((kr) => kr.title)}
+                onAccept={handleAcceptAISuggestion}
+                disabled={isLoading}
+              />
             </div>
           </div>
 

@@ -1,10 +1,28 @@
 import { createClient, createServiceClient } from "@/lib/supabase/server";
 import { NextResponse } from "next/server";
+import { logger } from "@/lib/logger";
+
+/**
+ * Validates that a redirect path is safe (relative, no protocol, no double slashes).
+ * Prevents open redirect attacks via the `next` query parameter.
+ */
+function sanitizeRedirectPath(path: string): string {
+  // Must start with / and not contain protocol indicators or double slashes
+  if (
+    !path.startsWith("/") ||
+    path.startsWith("//") ||
+    path.includes("://") ||
+    path.includes("\\")
+  ) {
+    return "/dashboard";
+  }
+  return path;
+}
 
 export async function GET(request: Request) {
   const { searchParams, origin } = new URL(request.url);
   const code = searchParams.get("code");
-  const next = searchParams.get("next") ?? "/dashboard";
+  const next = sanitizeRedirectPath(searchParams.get("next") ?? "/dashboard");
 
   if (code) {
     const supabase = await createClient();
@@ -21,6 +39,10 @@ export async function GET(request: Request) {
         .single();
 
       if (existingUser?.status === "suspended" || existingUser?.status === "inactive") {
+        logger.warn("Login attempt by suspended/inactive user", {
+          userId: data.user.id,
+          status: existingUser.status,
+        });
         await supabase.auth.signOut();
         return NextResponse.redirect(`${origin}/auth/login?error=suspended`);
       }
@@ -58,13 +80,29 @@ export async function GET(request: Request) {
       );
 
       if (upsertError) {
-        console.error("Error upserting user:", upsertError);
+        logger.error("Profile upsert failed during auth callback", {
+          userId: data.user.id,
+          error: upsertError.message,
+        });
       }
 
+      logger.audit("auth.login", {
+        userId: data.user.id,
+        isFirstUser,
+        isNewUser: !existingUser,
+      });
+
       return NextResponse.redirect(`${origin}${next}`);
+    }
+
+    if (error) {
+      logger.error("Auth code exchange failed", {
+        error: error.message,
+      });
     }
   }
 
   // Auth failed
+  logger.warn("Auth callback failed - no code or session exchange error");
   return NextResponse.redirect(`${origin}/auth/login?error=auth_failed`);
 }

@@ -68,7 +68,7 @@ export function CheckinDialog({
   };
 
   return (
-    <div className="modal-overlay" onClick={onCancel}>
+    <div className="modal-overlay" onClick={onCancel} role="dialog" aria-modal="true" aria-labelledby="checkin-dialog-title">
       <div
         className="modal-content"
         style={{ maxWidth: "32rem" }}
@@ -78,15 +78,16 @@ export function CheckinDialog({
           {/* Header */}
           <div className="flex items-center justify-between p-6 border-b border-cream-300/50">
             <div>
-              <h2 className="text-lg font-semibold text-foreground">Check-in</h2>
+              <h2 id="checkin-dialog-title" className="text-lg font-semibold text-foreground">Check-in</h2>
               <p className="text-[13px] text-muted truncate max-w-[300px]">{okr.title}</p>
             </div>
             <button
               type="button"
               onClick={onCancel}
               className="p-1.5 hover:bg-cream-200 rounded-lg transition-colors"
+              aria-label="Check-in schließen"
             >
-              <X className="h-5 w-5 text-muted" />
+              <X className="h-5 w-5 text-muted" aria-hidden="true" />
             </button>
           </div>
 
@@ -128,6 +129,7 @@ export function CheckinDialog({
                               [kr.id]: parseFloat(e.target.value),
                             }))
                           }
+                          aria-label={`${kr.title} Fortschritt`}
                           className="w-full h-1.5 bg-cream-300 rounded-full appearance-none cursor-pointer accent-accent-green"
                           style={{
                             background: `linear-gradient(to right, var(--accent-green) 0%, var(--accent-green) ${Math.min(progressPercent, 100)}%, var(--cream-300) ${Math.min(progressPercent, 100)}%, var(--cream-300) 100%)`,
@@ -162,7 +164,7 @@ export function CheckinDialog({
             {/* Confidence Selector */}
             <div>
               <label className="text-[11px] font-semibold text-muted uppercase tracking-wider block mb-2">
-                Confidence
+                Zuversicht
               </label>
               <div className="flex gap-1">
                 {([1, 2, 3, 4, 5] as ConfidenceLevel[]).map((level) => (
@@ -187,10 +189,11 @@ export function CheckinDialog({
 
             {/* Reflection Text Areas */}
             <div>
-              <label className="text-[11px] font-semibold text-muted uppercase tracking-wider block mb-1.5">
+              <label htmlFor="checkin-helped" className="text-[11px] font-semibold text-muted uppercase tracking-wider block mb-1.5">
                 Was lief gut?
               </label>
               <textarea
+                id="checkin-helped"
                 value={whatHelped}
                 onChange={(e) => setWhatHelped(e.target.value)}
                 placeholder="Erfolge und positive Entwicklungen..."
@@ -200,10 +203,11 @@ export function CheckinDialog({
             </div>
 
             <div>
-              <label className="text-[11px] font-semibold text-muted uppercase tracking-wider block mb-1.5">
+              <label htmlFor="checkin-blocked" className="text-[11px] font-semibold text-muted uppercase tracking-wider block mb-1.5">
                 Was hat blockiert?
               </label>
               <textarea
+                id="checkin-blocked"
                 value={whatBlocked}
                 onChange={(e) => setWhatBlocked(e.target.value)}
                 placeholder="Hindernisse und Herausforderungen..."
@@ -213,10 +217,11 @@ export function CheckinDialog({
             </div>
 
             <div>
-              <label className="text-[11px] font-semibold text-muted uppercase tracking-wider block mb-1.5">
+              <label htmlFor="checkin-nextsteps" className="text-[11px] font-semibold text-muted uppercase tracking-wider block mb-1.5">
                 Nächste Schritte
               </label>
               <textarea
+                id="checkin-nextsteps"
                 value={nextSteps}
                 onChange={(e) => setNextSteps(e.target.value)}
                 placeholder="Geplante Aktionen..."

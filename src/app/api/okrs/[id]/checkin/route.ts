@@ -2,13 +2,21 @@ import { NextRequest, NextResponse } from "next/server";
 import { createClient, createServiceClient } from "@/lib/supabase/server";
 import { createCheckinSchema } from "@/lib/validation";
 import { logCheckinCreate } from "@/lib/audit";
+import { withCorsHeaders, withRateLimitHeaders } from "@/lib/api-utils";
+import { logger, generateRequestId } from "@/lib/logger";
+
+// Minimum seconds between check-ins to prevent double-submits
+const CHECKIN_COOLDOWN_SECONDS = 30;
 
 export async function GET(
   _request: NextRequest,
   { params }: { params: Promise<{ id: string }> }
 ) {
+  const requestId = generateRequestId();
+  const { id: okrId } = await params;
+  const reqLog = logger.request("GET", `/api/okrs/${okrId}/checkin`, { requestId });
+
   try {
-    const { id: okrId } = await params;
     const supabase = await createClient();
     const {
       data: { user },
@@ -16,7 +24,12 @@ export async function GET(
     } = await supabase.auth.getUser();
 
     if (authError || !user) {
-      return NextResponse.json({ error: "Nicht authentifiziert" }, { status: 401 });
+      reqLog.finish(401);
+      return withRateLimitHeaders(
+        withCorsHeaders(
+          NextResponse.json({ error: "Nicht authentifiziert" }, { status: 401 })
+        )
+      );
     }
 
     const serviceClient = await createServiceClient();
@@ -30,9 +43,14 @@ export async function GET(
       .single();
 
     if (okrError || !okr) {
-      return NextResponse.json(
-        { error: "OKR nicht gefunden" },
-        { status: 404 }
+      reqLog.finish(404, { userId: user.id });
+      return withRateLimitHeaders(
+        withCorsHeaders(
+          NextResponse.json(
+            { error: "OKR nicht gefunden" },
+            { status: 404 }
+          )
+        )
       );
     }
 
@@ -43,19 +61,44 @@ export async function GET(
       .order("checked_at", { ascending: false });
 
     if (error) {
-      console.error("GET checkins error:", error);
-      return NextResponse.json(
-        { error: "Fehler beim Laden der Check-ins" },
-        { status: 500 }
+      logger.error("Checkin list query failed", {
+        requestId,
+        userId: user.id,
+        okrId,
+        error: error.message,
+      });
+      reqLog.finish(500);
+      return withRateLimitHeaders(
+        withCorsHeaders(
+          NextResponse.json(
+            { error: "Fehler beim Laden der Check-ins" },
+            { status: 500 }
+          )
+        )
       );
     }
 
-    return NextResponse.json({ checkins: checkins || [] });
+    reqLog.finish(200, { userId: user.id });
+    return withRateLimitHeaders(
+      withCorsHeaders(
+        NextResponse.json({ checkins: checkins || [] })
+      )
+    );
   } catch (error) {
-    console.error("GET /api/okrs/[id]/checkin error:", error);
-    return NextResponse.json(
-      { error: "Interner Serverfehler" },
-      { status: 500 }
+    logger.error("GET /api/okrs/[id]/checkin unhandled error", {
+      requestId,
+      okrId,
+      error: error instanceof Error ? error.message : String(error),
+      stack: error instanceof Error ? error.stack : undefined,
+    });
+    reqLog.finish(500);
+    return withRateLimitHeaders(
+      withCorsHeaders(
+        NextResponse.json(
+          { error: "Interner Serverfehler" },
+          { status: 500 }
+        )
+      )
     );
   }
 }
@@ -64,8 +107,11 @@ export async function POST(
   request: NextRequest,
   { params }: { params: Promise<{ id: string }> }
 ) {
+  const requestId = generateRequestId();
+  const { id: okrId } = await params;
+  const reqLog = logger.request("POST", `/api/okrs/${okrId}/checkin`, { requestId });
+
   try {
-    const { id: okrId } = await params;
     const supabase = await createClient();
     const {
       data: { user },
@@ -73,16 +119,40 @@ export async function POST(
     } = await supabase.auth.getUser();
 
     if (authError || !user) {
-      return NextResponse.json({ error: "Nicht authentifiziert" }, { status: 401 });
+      reqLog.finish(401);
+      return withRateLimitHeaders(
+        withCorsHeaders(
+          NextResponse.json({ error: "Nicht authentifiziert" }, { status: 401 })
+        )
+      );
     }
 
-    const body = await request.json();
+    let body: unknown;
+    try {
+      body = await request.json();
+    } catch {
+      reqLog.finish(400, { userId: user.id });
+      return withRateLimitHeaders(
+        withCorsHeaders(
+          NextResponse.json(
+            { error: "Ungültiger JSON-Body" },
+            { status: 400 }
+          )
+        )
+      );
+    }
+
     const parsed = createCheckinSchema.safeParse(body);
 
     if (!parsed.success) {
-      return NextResponse.json(
-        { error: "Validierungsfehler", details: parsed.error.flatten() },
-        { status: 400 }
+      reqLog.finish(400, { userId: user.id });
+      return withRateLimitHeaders(
+        withCorsHeaders(
+          NextResponse.json(
+            { error: "Validierungsfehler", details: parsed.error.flatten() },
+            { status: 400 }
+          )
+        )
       );
     }
 
@@ -98,34 +168,91 @@ export async function POST(
       .single();
 
     if (okrError || !okr) {
-      return NextResponse.json(
-        { error: "OKR nicht gefunden" },
-        { status: 404 }
+      reqLog.finish(404, { userId: user.id });
+      return withRateLimitHeaders(
+        withCorsHeaders(
+          NextResponse.json(
+            { error: "OKR nicht gefunden" },
+            { status: 404 }
+          )
+        )
       );
     }
 
     if (!okr.is_active) {
-      return NextResponse.json(
-        { error: "Check-in für archivierte OKRs nicht möglich" },
-        { status: 400 }
+      reqLog.finish(400, { userId: user.id });
+      return withRateLimitHeaders(
+        withCorsHeaders(
+          NextResponse.json(
+            { error: "Check-in für archivierte OKRs nicht möglich" },
+            { status: 400 }
+          )
+        )
       );
     }
 
-    // Update key result current_values (triggers auto-calculate KR progress + OKR progress)
-    for (const krUpdate of data.key_result_updates) {
-      const { error: krError } = await serviceClient
-        .from("key_results")
-        .update({ current_value: krUpdate.current_value })
-        .eq("id", krUpdate.id)
-        .eq("okr_id", okrId);
+    // Duplicate check-in guard: prevent rapid double-submits
+    const cooldownThreshold = new Date(
+      Date.now() - CHECKIN_COOLDOWN_SECONDS * 1000
+    ).toISOString();
 
-      if (krError) {
-        console.error("KR update error:", krError);
-        return NextResponse.json(
-          { error: `Fehler beim Aktualisieren von Key Result ${krUpdate.id}` },
-          { status: 500 }
-        );
-      }
+    const { data: recentCheckins, error: recentError } = await serviceClient
+      .from("okr_checkins")
+      .select("id, checked_at")
+      .eq("okr_id", okrId)
+      .eq("user_id", user.id)
+      .gte("checked_at", cooldownThreshold)
+      .order("checked_at", { ascending: false })
+      .limit(1);
+
+    if (!recentError && recentCheckins && recentCheckins.length > 0) {
+      logger.warn("Checkin rate-limited", {
+        requestId,
+        userId: user.id,
+        okrId,
+      });
+      reqLog.finish(429, { userId: user.id });
+      return withRateLimitHeaders(
+        withCorsHeaders(
+          NextResponse.json(
+            {
+              error: `Bitte warten Sie ${CHECKIN_COOLDOWN_SECONDS} Sekunden zwischen Check-ins`,
+              retry_after: CHECKIN_COOLDOWN_SECONDS,
+            },
+            { status: 429 }
+          )
+        )
+      );
+    }
+
+    // Update key result current_values in parallel (eliminates N+1 sequential queries)
+    const krUpdateResults = await Promise.all(
+      data.key_result_updates.map((krUpdate) =>
+        serviceClient
+          .from("key_results")
+          .update({ current_value: krUpdate.current_value })
+          .eq("id", krUpdate.id)
+          .eq("okr_id", okrId)
+      )
+    );
+
+    const failedKrUpdate = krUpdateResults.find((result) => result.error);
+    if (failedKrUpdate?.error) {
+      logger.error("Key result update failed during checkin", {
+        requestId,
+        userId: user.id,
+        okrId,
+        error: failedKrUpdate.error.message,
+      });
+      reqLog.finish(500);
+      return withRateLimitHeaders(
+        withCorsHeaders(
+          NextResponse.json(
+            { error: "Fehler beim Aktualisieren der Key Results" },
+            { status: 500 }
+          )
+        )
+      );
     }
 
     // Fetch the updated OKR progress (after triggers have fired)
@@ -160,10 +287,20 @@ export async function POST(
       .single();
 
     if (checkinError || !checkin) {
-      console.error("Insert checkin error:", checkinError);
-      return NextResponse.json(
-        { error: "Fehler beim Erstellen des Check-ins" },
-        { status: 500 }
+      logger.error("Checkin insert failed", {
+        requestId,
+        userId: user.id,
+        okrId,
+        error: checkinError?.message,
+      });
+      reqLog.finish(500);
+      return withRateLimitHeaders(
+        withCorsHeaders(
+          NextResponse.json(
+            { error: "Fehler beim Erstellen des Check-ins" },
+            { status: 500 }
+          )
+        )
       );
     }
 
@@ -190,15 +327,39 @@ export async function POST(
       okrId
     ).catch(() => {});
 
-    return NextResponse.json(
-      { checkin, okr: fullOkr },
-      { status: 201 }
+    logger.audit("checkin.created", {
+      requestId,
+      userId: user.id,
+      okrId,
+      checkinId: checkin.id,
+      previousProgress: okr.progress,
+      newProgress,
+    });
+
+    reqLog.finish(201, { userId: user.id });
+    return withRateLimitHeaders(
+      withCorsHeaders(
+        NextResponse.json(
+          { checkin, okr: fullOkr },
+          { status: 201 }
+        )
+      )
     );
   } catch (error) {
-    console.error("POST /api/okrs/[id]/checkin error:", error);
-    return NextResponse.json(
-      { error: "Interner Serverfehler" },
-      { status: 500 }
+    logger.error("POST /api/okrs/[id]/checkin unhandled error", {
+      requestId,
+      okrId,
+      error: error instanceof Error ? error.message : String(error),
+      stack: error instanceof Error ? error.stack : undefined,
+    });
+    reqLog.finish(500);
+    return withRateLimitHeaders(
+      withCorsHeaders(
+        NextResponse.json(
+          { error: "Interner Serverfehler" },
+          { status: 500 }
+        )
+      )
     );
   }
 }

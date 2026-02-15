@@ -120,11 +120,13 @@ export function OKRList({
 
   if (okrs.length === 0) {
     return (
-      <div className="empty-state">
-        <Target className="empty-state-icon" />
-        <p className="empty-state-title">Keine OKRs gefunden</p>
-        <p className="empty-state-description">
-          Erstelle dein erstes OKR, um loszulegen.
+      <div className="empty-state" role="status">
+        <div className="w-16 h-16 rounded-2xl bg-cream-200 flex items-center justify-center mb-4">
+          <Target className="w-8 h-8 text-muted" />
+        </div>
+        <p className="empty-state-title">Noch keine OKRs vorhanden</p>
+        <p className="empty-state-description mb-4">
+          Erstellen Sie Ihr erstes OKR, um Ihre Ziele zu verfolgen.
         </p>
       </div>
     );
@@ -132,21 +134,32 @@ export function OKRList({
 
   const SortHeader = ({ field, label }: { field: SortField; label: string }) => (
     <th
+      scope="col"
       className="cursor-pointer select-none hover:text-foreground transition-colors"
       onClick={() => handleSort(field)}
+      aria-sort={sortField === field ? (sortDirection === "asc" ? "ascending" : "descending") : "none"}
+      role="columnheader"
     >
-      <span className="inline-flex items-center gap-1">
+      <button
+        type="button"
+        className="inline-flex items-center gap-1 w-full text-left bg-transparent border-none cursor-pointer p-0 font-inherit text-inherit uppercase text-[0.75rem] tracking-[0.025em]"
+        onClick={(e) => {
+          e.stopPropagation();
+          handleSort(field);
+        }}
+        aria-label={`Sortieren nach ${label}`}
+      >
         {label}
         {sortField === field && (
-          <ArrowUpDown className="h-3 w-3" />
+          <ArrowUpDown className="h-3 w-3" aria-hidden="true" />
         )}
-      </span>
+      </button>
     </th>
   );
 
   return (
     <div className="card mx-6 mt-4 overflow-hidden">
-      <table className="table">
+      <table className="table" aria-label="OKR-Übersicht">
         <thead>
           <tr>
             <SortHeader field="title" label="Titel" />
@@ -155,7 +168,7 @@ export function OKRList({
             <SortHeader field="score" label="Score" />
             <SortHeader field="status" label="Status" />
             <SortHeader field="due_date" label="Fällig" />
-            <th className="w-10" />
+            <th className="w-10" scope="col"><span className="sr-only">Aktionen</span></th>
           </tr>
         </thead>
         <tbody>
@@ -215,7 +228,7 @@ export function OKRList({
                   </button>
 
                   {openMenuId === okr.id && (
-                    <div className="dropdown-menu" role="menu">
+                    <div className="dropdown-menu" role="menu" aria-label="OKR-Aktionen">
                       <button
                         onClick={(e) => {
                           e.stopPropagation();
@@ -223,8 +236,9 @@ export function OKRList({
                           onEdit(okr);
                         }}
                         className="dropdown-item w-full text-[13px]"
+                        role="menuitem"
                       >
-                        <Pencil className="h-3.5 w-3.5" />
+                        <Pencil className="h-3.5 w-3.5" aria-hidden="true" />
                         Bearbeiten
                       </button>
                       <button
@@ -234,8 +248,9 @@ export function OKRList({
                           onFocus(okr);
                         }}
                         className="dropdown-item w-full text-[13px]"
+                        role="menuitem"
                       >
-                        <Star className="h-3.5 w-3.5" />
+                        <Star className="h-3.5 w-3.5" aria-hidden="true" />
                         {okr.is_focus ? "Fokus entfernen" : "Fokus setzen"}
                       </button>
                       <button
@@ -245,8 +260,9 @@ export function OKRList({
                           onDuplicate(okr);
                         }}
                         className="dropdown-item w-full text-[13px]"
+                        role="menuitem"
                       >
-                        <Copy className="h-3.5 w-3.5" />
+                        <Copy className="h-3.5 w-3.5" aria-hidden="true" />
                         Duplizieren
                       </button>
                       <button
@@ -256,11 +272,12 @@ export function OKRList({
                           onArchive(okr);
                         }}
                         className="dropdown-item w-full text-[13px]"
+                        role="menuitem"
                       >
-                        <Archive className="h-3.5 w-3.5" />
+                        <Archive className="h-3.5 w-3.5" aria-hidden="true" />
                         Archivieren
                       </button>
-                      <div className="border-t border-cream-300/50 my-0.5" />
+                      <div className="border-t border-cream-300/50 my-0.5" role="separator" />
                       <button
                         onClick={(e) => {
                           e.stopPropagation();
@@ -268,8 +285,9 @@ export function OKRList({
                           onDelete(okr);
                         }}
                         className="dropdown-item-danger w-full text-[13px]"
+                        role="menuitem"
                       >
-                        <Trash2 className="h-3.5 w-3.5" />
+                        <Trash2 className="h-3.5 w-3.5" aria-hidden="true" />
                         Löschen
                       </button>
                     </div>

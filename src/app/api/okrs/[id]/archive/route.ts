@@ -1,13 +1,18 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createClient, createServiceClient } from "@/lib/supabase/server";
 import { logOKRArchive, logOKRRestore } from "@/lib/audit";
+import { withCorsHeaders, withRateLimitHeaders } from "@/lib/api-utils";
+import { logger, generateRequestId } from "@/lib/logger";
 
 export async function POST(
   request: NextRequest,
   { params }: { params: Promise<{ id: string }> }
 ) {
+  const requestId = generateRequestId();
+  const { id } = await params;
+  const reqLog = logger.request("POST", `/api/okrs/${id}/archive`, { requestId });
+
   try {
-    const { id } = await params;
     const supabase = await createClient();
     const {
       data: { user },
@@ -15,16 +20,40 @@ export async function POST(
     } = await supabase.auth.getUser();
 
     if (authError || !user) {
-      return NextResponse.json({ error: "Nicht authentifiziert" }, { status: 401 });
+      reqLog.finish(401);
+      return withRateLimitHeaders(
+        withCorsHeaders(
+          NextResponse.json({ error: "Nicht authentifiziert" }, { status: 401 })
+        )
+      );
     }
 
-    const body = await request.json();
-    const archive = body.archive as boolean;
+    let body: unknown;
+    try {
+      body = await request.json();
+    } catch {
+      reqLog.finish(400, { userId: user.id });
+      return withRateLimitHeaders(
+        withCorsHeaders(
+          NextResponse.json(
+            { error: "Ungültiger JSON-Body" },
+            { status: 400 }
+          )
+        )
+      );
+    }
+
+    const archive = (body as Record<string, unknown>)?.archive;
 
     if (typeof archive !== "boolean") {
-      return NextResponse.json(
-        { error: "Feld 'archive' (boolean) ist erforderlich" },
-        { status: 400 }
+      reqLog.finish(400, { userId: user.id });
+      return withRateLimitHeaders(
+        withCorsHeaders(
+          NextResponse.json(
+            { error: "Feld 'archive' (boolean) ist erforderlich" },
+            { status: 400 }
+          )
+        )
       );
     }
 
@@ -39,14 +68,40 @@ export async function POST(
       .single();
 
     if (fetchError || !existingOkr) {
-      return NextResponse.json(
-        { error: "OKR nicht gefunden" },
-        { status: 404 }
+      reqLog.finish(404, { userId: user.id });
+      return withRateLimitHeaders(
+        withCorsHeaders(
+          NextResponse.json(
+            { error: "OKR nicht gefunden" },
+            { status: 404 }
+          )
+        )
       );
     }
 
     // Toggle is_active (archive = set inactive, restore = set active)
     const newIsActive = !archive;
+
+    // Idempotency: if the OKR is already in the desired state, return it without updating
+    if (existingOkr.is_active === newIsActive) {
+      const { data: currentOkr } = await serviceClient
+        .from("okrs")
+        .select("*, key_results(*)")
+        .eq("id", id)
+        .single();
+
+      if (currentOkr) {
+        currentOkr.key_results = (currentOkr.key_results || []).sort(
+          (a: { sort_order: number }, b: { sort_order: number }) =>
+            a.sort_order - b.sort_order
+        );
+      }
+
+      reqLog.finish(200, { userId: user.id });
+      return withRateLimitHeaders(
+        withCorsHeaders(NextResponse.json({ okr: currentOkr }))
+      );
+    }
 
     const { data: updatedOkr, error: updateError } = await serviceClient
       .from("okrs")
@@ -57,10 +112,29 @@ export async function POST(
       .single();
 
     if (updateError) {
-      console.error("Archive OKR error:", updateError);
-      return NextResponse.json(
-        { error: "Fehler beim Archivieren/Wiederherstellen" },
-        { status: 500 }
+      logger.error("OKR archive/restore failed", {
+        requestId,
+        userId: user.id,
+        okrId: id,
+        archive,
+        error: updateError.message,
+      });
+      reqLog.finish(500);
+      return withRateLimitHeaders(
+        withCorsHeaders(
+          NextResponse.json(
+            { error: "Fehler beim Archivieren/Wiederherstellen" },
+            { status: 500 }
+          )
+        )
+      );
+    }
+
+    // Sort key_results by sort_order
+    if (updatedOkr) {
+      updatedOkr.key_results = (updatedOkr.key_results || []).sort(
+        (a: { sort_order: number }, b: { sort_order: number }) =>
+          a.sort_order - b.sort_order
       );
     }
 
@@ -81,12 +155,31 @@ export async function POST(
       ).catch(() => {});
     }
 
-    return NextResponse.json({ okr: updatedOkr });
+    logger.audit(archive ? "okr.archived" : "okr.restored", {
+      requestId,
+      userId: user.id,
+      okrId: id,
+    });
+
+    reqLog.finish(200, { userId: user.id });
+    return withRateLimitHeaders(
+      withCorsHeaders(NextResponse.json({ okr: updatedOkr }))
+    );
   } catch (error) {
-    console.error("POST /api/okrs/[id]/archive error:", error);
-    return NextResponse.json(
-      { error: "Interner Serverfehler" },
-      { status: 500 }
+    logger.error("POST /api/okrs/[id]/archive unhandled error", {
+      requestId,
+      okrId: id,
+      error: error instanceof Error ? error.message : String(error),
+      stack: error instanceof Error ? error.stack : undefined,
+    });
+    reqLog.finish(500);
+    return withRateLimitHeaders(
+      withCorsHeaders(
+        NextResponse.json(
+          { error: "Interner Serverfehler" },
+          { status: 500 }
+        )
+      )
     );
   }
 }

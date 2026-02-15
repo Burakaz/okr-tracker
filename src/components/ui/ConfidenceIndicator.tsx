@@ -26,8 +26,8 @@ export function ConfidenceIndicator({
   const dotSize = size === "sm" ? "w-1.5 h-1.5" : "w-2 h-2";
 
   return (
-    <div className={`flex items-center gap-1.5 ${className}`}>
-      <div className="flex items-center gap-1">
+    <div className={`flex items-center gap-1.5 ${className}`} role="img" aria-label={`Zuversicht: ${labels[level]} (${level} von 5)`}>
+      <div className="flex items-center gap-1" aria-hidden="true">
         {[1, 2, 3, 4, 5].map((dot) => (
           <div
             key={dot}

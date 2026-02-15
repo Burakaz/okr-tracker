@@ -69,9 +69,9 @@ export function OKRDetail({
         <button
           onClick={onClose}
           className="p-1.5 hover:bg-cream-200 rounded-lg transition-colors flex-shrink-0"
-          aria-label="Schließen"
+          aria-label="Detailansicht schließen"
         >
-          <X className="h-5 w-5 text-muted" />
+          <X className="h-5 w-5 text-muted" aria-hidden="true" />
         </button>
       </div>
 
@@ -107,7 +107,7 @@ export function OKRDetail({
               </p>
             </div>
             <div className="bg-cream-50 rounded-lg p-3">
-              <p className="text-[11px] text-muted mb-1">Confidence</p>
+              <p className="text-[11px] text-muted mb-1">Zuversicht</p>
               <ConfidenceIndicator level={okr.confidence} showLabel />
             </div>
             <div className="bg-cream-50 rounded-lg p-3">
@@ -227,22 +227,25 @@ export function OKRDetail({
           onClick={onArchive}
           className="p-2 hover:bg-cream-200 rounded-lg transition-colors"
           title="Archivieren"
+          aria-label="OKR archivieren"
         >
-          <Archive className="h-4 w-4 text-muted" />
+          <Archive className="h-4 w-4 text-muted" aria-hidden="true" />
         </button>
         <button
           onClick={onDuplicate}
           className="p-2 hover:bg-cream-200 rounded-lg transition-colors"
           title="Duplizieren"
+          aria-label="OKR duplizieren"
         >
-          <Copy className="h-4 w-4 text-muted" />
+          <Copy className="h-4 w-4 text-muted" aria-hidden="true" />
         </button>
         <button
           onClick={onDelete}
           className="p-2 hover:bg-red-50 rounded-lg transition-colors"
           title="Löschen"
+          aria-label="OKR löschen"
         >
-          <Trash2 className="h-4 w-4 text-red-500" />
+          <Trash2 className="h-4 w-4 text-red-500" aria-hidden="true" />
         </button>
       </div>
     </div>

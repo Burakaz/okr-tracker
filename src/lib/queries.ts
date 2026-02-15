@@ -48,6 +48,7 @@ export function useCurrentUser() {
       if (!res.ok) throw new Error("Fehler beim Laden des Users");
       return res.json();
     },
+    staleTime: 5 * 60 * 1000, // User data rarely changes, 5 min stale
   });
 }
 
@@ -61,6 +62,7 @@ export function useCheckinHistory(okrId: string) {
       return res.json();
     },
     enabled: !!okrId,
+    staleTime: 2 * 60 * 1000, // 2 min stale for check-in history
   });
 }
 
@@ -74,6 +76,7 @@ export function useCareerProgress() {
         throw new Error("Fehler beim Laden des Karriere-Fortschritts");
       return res.json();
     },
+    staleTime: 10 * 60 * 1000, // Career data is slow-changing, 10 min stale
   });
 }
 

@@ -110,7 +110,7 @@ function SidebarContent({
   const nextQ = getNextQuarter(currentQuarter);
 
   return (
-    <aside className="sidebar-container w-52">
+    <aside className="sidebar-container w-52" aria-label="Seitenleiste">
       {/* Logo / Org Header */}
       <div className="px-4 py-5">
         <div className="flex items-center gap-3">
@@ -140,8 +140,9 @@ function SidebarContent({
             onClick={() => onQuarterChange(prevQ)}
             className="flex items-center justify-center px-1.5 py-1.5 rounded-md text-muted hover:text-foreground transition-all"
             title={prevQ}
+            aria-label={`Vorheriges Quartal: ${prevQ}`}
           >
-            <ChevronLeft className="h-3 w-3" />
+            <ChevronLeft className="h-3 w-3" aria-hidden="true" />
           </button>
           <div className="flex-1 flex items-center justify-center px-2 py-1.5 rounded-md text-[11px] font-medium bg-white text-foreground shadow-sm">
             {currentQuarter}
@@ -150,14 +151,15 @@ function SidebarContent({
             onClick={() => onQuarterChange(nextQ)}
             className="flex items-center justify-center px-1.5 py-1.5 rounded-md text-muted hover:text-foreground transition-all"
             title={nextQ}
+            aria-label={`Nächstes Quartal: ${nextQ}`}
           >
-            <ChevronRight className="h-3 w-3" />
+            <ChevronRight className="h-3 w-3" aria-hidden="true" />
           </button>
         </div>
       </div>
 
       {/* Navigation */}
-      <nav className="flex-1 overflow-y-auto px-3 py-1">
+      <nav className="flex-1 overflow-y-auto px-3 py-1" aria-label="Hauptnavigation">
         <div className="space-y-0.5">
           <FilterButton
             icon={<LayoutGrid className="h-4 w-4" />}
@@ -268,21 +270,22 @@ function SidebarContent({
             <div
               className="fixed inset-0 z-10"
               onClick={() => setShowProfileMenu(false)}
-              onKeyDown={(e) => e.key === "Escape" && setShowProfileMenu(false)}
+              aria-hidden="true"
             />
             <div className="absolute bottom-full left-3 right-3 mb-1 bg-white rounded-xl shadow-lg border border-cream-300 py-1 z-50" role="menu" aria-label="Profil-Menü">
               <Link
                 href="/dashboard/settings"
                 onClick={() => setShowProfileMenu(false)}
                 className="dropdown-item text-[13px]"
+                role="menuitem"
               >
-                <Settings className="h-3.5 w-3.5" />
+                <Settings className="h-3.5 w-3.5" aria-hidden="true" />
                 Einstellungen
               </Link>
-              <div className="border-t border-cream-300/50 my-0.5" />
+              <div className="border-t border-cream-300/50 my-0.5" role="separator" />
               <form action="/auth/signout" method="POST">
-                <button type="submit" className="dropdown-item-danger w-full text-[13px]">
-                  <LogOut className="h-3.5 w-3.5" />
+                <button type="submit" className="dropdown-item-danger w-full text-[13px]" role="menuitem">
+                  <LogOut className="h-3.5 w-3.5" aria-hidden="true" />
                   Abmelden
                 </button>
               </form>

@@ -3,13 +3,18 @@ import { createClient, createServiceClient } from "@/lib/supabase/server";
 import { duplicateOKRSchema } from "@/lib/validation";
 import { logOKRDuplicate } from "@/lib/audit";
 import { getQuarterDateRange, MAX_OKRS_PER_QUARTER } from "@/lib/okr-logic";
+import { withCorsHeaders, withRateLimitHeaders } from "@/lib/api-utils";
+import { logger, generateRequestId } from "@/lib/logger";
 
 export async function POST(
   request: NextRequest,
   { params }: { params: Promise<{ id: string }> }
 ) {
+  const requestId = generateRequestId();
+  const { id } = await params;
+  const reqLog = logger.request("POST", `/api/okrs/${id}/duplicate`, { requestId });
+
   try {
-    const { id } = await params;
     const supabase = await createClient();
     const {
       data: { user },
@@ -17,16 +22,40 @@ export async function POST(
     } = await supabase.auth.getUser();
 
     if (authError || !user) {
-      return NextResponse.json({ error: "Nicht authentifiziert" }, { status: 401 });
+      reqLog.finish(401);
+      return withRateLimitHeaders(
+        withCorsHeaders(
+          NextResponse.json({ error: "Nicht authentifiziert" }, { status: 401 })
+        )
+      );
     }
 
-    const body = await request.json();
+    let body: unknown;
+    try {
+      body = await request.json();
+    } catch {
+      reqLog.finish(400, { userId: user.id });
+      return withRateLimitHeaders(
+        withCorsHeaders(
+          NextResponse.json(
+            { error: "Ungültiger JSON-Body" },
+            { status: 400 }
+          )
+        )
+      );
+    }
+
     const parsed = duplicateOKRSchema.safeParse(body);
 
     if (!parsed.success) {
-      return NextResponse.json(
-        { error: "Validierungsfehler", details: parsed.error.flatten() },
-        { status: 400 }
+      reqLog.finish(400, { userId: user.id });
+      return withRateLimitHeaders(
+        withCorsHeaders(
+          NextResponse.json(
+            { error: "Validierungsfehler", details: parsed.error.flatten() },
+            { status: 400 }
+          )
+        )
       );
     }
 
@@ -42,9 +71,14 @@ export async function POST(
       .single();
 
     if (fetchError || !sourceOkr) {
-      return NextResponse.json(
-        { error: "OKR nicht gefunden" },
-        { status: 404 }
+      reqLog.finish(404, { userId: user.id });
+      return withRateLimitHeaders(
+        withCorsHeaders(
+          NextResponse.json(
+            { error: "OKR nicht gefunden" },
+            { status: 404 }
+          )
+        )
       );
     }
 
@@ -57,18 +91,33 @@ export async function POST(
       .eq("is_active", true);
 
     if (countError) {
-      return NextResponse.json(
-        { error: "Fehler beim Prüfen des OKR-Limits" },
-        { status: 500 }
+      logger.error("OKR count check failed for duplicate", {
+        requestId,
+        userId: user.id,
+        error: countError.message,
+      });
+      reqLog.finish(500);
+      return withRateLimitHeaders(
+        withCorsHeaders(
+          NextResponse.json(
+            { error: "Fehler beim Prüfen des OKR-Limits" },
+            { status: 500 }
+          )
+        )
       );
     }
 
     if ((count || 0) >= MAX_OKRS_PER_QUARTER) {
-      return NextResponse.json(
-        {
-          error: `Maximal ${MAX_OKRS_PER_QUARTER} OKRs pro Quartal erlaubt`,
-        },
-        { status: 400 }
+      reqLog.finish(400, { userId: user.id });
+      return withRateLimitHeaders(
+        withCorsHeaders(
+          NextResponse.json(
+            {
+              error: `Maximal ${MAX_OKRS_PER_QUARTER} OKRs pro Quartal erlaubt`,
+            },
+            { status: 400 }
+          )
+        )
       );
     }
 
@@ -109,10 +158,20 @@ export async function POST(
       .single();
 
     if (insertError || !newOkr) {
-      console.error("Duplicate OKR insert error:", insertError);
-      return NextResponse.json(
-        { error: "Fehler beim Duplizieren" },
-        { status: 500 }
+      logger.error("Duplicate OKR insert failed", {
+        requestId,
+        userId: user.id,
+        sourceOkrId: id,
+        error: insertError?.message,
+      });
+      reqLog.finish(500);
+      return withRateLimitHeaders(
+        withCorsHeaders(
+          NextResponse.json(
+            { error: "Fehler beim Duplizieren" },
+            { status: 500 }
+          )
+        )
       );
     }
 
@@ -151,12 +210,22 @@ export async function POST(
         .select();
 
       if (krError) {
-        console.error("Duplicate KR insert error:", krError);
+        logger.error("Duplicate KR insert failed", {
+          requestId,
+          userId: user.id,
+          newOkrId: newOkr.id,
+          error: krError.message,
+        });
         // Rollback the new OKR
         await serviceClient.from("okrs").delete().eq("id", newOkr.id);
-        return NextResponse.json(
-          { error: "Fehler beim Duplizieren der Key Results" },
-          { status: 500 }
+        reqLog.finish(500);
+        return withRateLimitHeaders(
+          withCorsHeaders(
+            NextResponse.json(
+              { error: "Fehler beim Duplizieren der Key Results" },
+              { status: 500 }
+            )
+          )
         );
       }
 
@@ -172,15 +241,38 @@ export async function POST(
       data.target_quarter
     ).catch(() => {});
 
-    return NextResponse.json(
-      { okr: { ...newOkr, key_results: insertedKRs || [] } },
-      { status: 201 }
+    logger.audit("okr.duplicated", {
+      requestId,
+      userId: user.id,
+      sourceOkrId: id,
+      newOkrId: newOkr.id,
+      targetQuarter: data.target_quarter,
+    });
+
+    reqLog.finish(201, { userId: user.id });
+    return withRateLimitHeaders(
+      withCorsHeaders(
+        NextResponse.json(
+          { okr: { ...newOkr, key_results: insertedKRs || [] } },
+          { status: 201 }
+        )
+      )
     );
   } catch (error) {
-    console.error("POST /api/okrs/[id]/duplicate error:", error);
-    return NextResponse.json(
-      { error: "Interner Serverfehler" },
-      { status: 500 }
+    logger.error("POST /api/okrs/[id]/duplicate unhandled error", {
+      requestId,
+      okrId: id,
+      error: error instanceof Error ? error.message : String(error),
+      stack: error instanceof Error ? error.stack : undefined,
+    });
+    reqLog.finish(500);
+    return withRateLimitHeaders(
+      withCorsHeaders(
+        NextResponse.json(
+          { error: "Interner Serverfehler" },
+          { status: 500 }
+        )
+      )
     );
   }
 }

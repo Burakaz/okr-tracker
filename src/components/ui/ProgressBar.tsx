@@ -25,14 +25,21 @@ export function ProgressBar({
 
   return (
     <div className={`flex items-center gap-2 ${className}`}>
-      <div className={`flex-1 bg-cream-200 rounded-full overflow-hidden ${sizeClasses[size]}`}>
+      <div
+        className={`flex-1 bg-cream-200 rounded-full overflow-hidden ${sizeClasses[size]}`}
+        role="progressbar"
+        aria-valuenow={Math.round(percentage)}
+        aria-valuemin={0}
+        aria-valuemax={100}
+        aria-label={`Fortschritt: ${Math.round(percentage)}%`}
+      >
         <div
           className="h-full bg-accent-green rounded-full transition-all duration-300 ease-out"
           style={{ width: `${percentage}%` }}
         />
       </div>
       {showLabel && (
-        <span className="text-[11px] font-medium text-muted whitespace-nowrap">
+        <span className="text-[11px] font-medium text-muted whitespace-nowrap" aria-hidden="true">
           {Math.round(percentage)}%
         </span>
       )}

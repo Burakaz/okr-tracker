@@ -81,6 +81,6 @@ export function useOKRsRealtime(enabled = true) {
  * Set up realtime invalidation for admin data
  */
 export function useAdminRealtime(enabled = true) {
-  useRealtimeQueryInvalidation("users", [["users"]], { enabled });
+  useRealtimeQueryInvalidation("profiles", [["users"]], { enabled });
   useRealtimeQueryInvalidation("career_levels", [["careerLevels"]], { enabled });
 }

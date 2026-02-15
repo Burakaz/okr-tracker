@@ -319,6 +319,7 @@ function DashboardContent() {
 
   return (
     <div className="h-full flex flex-col">
+      <h1 className="sr-only">OKR Dashboard</h1>
       <Header
         user={user || { id: "", email: "", name: "Loading...", role: "employee", status: "active", department: null, manager_id: null, career_level_id: null, organization_id: null, avatar_url: null, created_at: "", updated_at: "" }}
         currentQuarter={currentQuarter}
@@ -328,6 +329,13 @@ function DashboardContent() {
       />
 
       <div className="flex-1 flex overflow-hidden relative">
+        {/* Screenreader-Ankündigung für dynamische Änderungen */}
+        <div className="sr-only" aria-live="polite" aria-atomic="true" id="okr-status">
+          {filteredOKRs.length === 0
+            ? "Keine OKRs gefunden"
+            : `${filteredOKRs.length} OKR${filteredOKRs.length !== 1 ? "s" : ""} angezeigt`}
+        </div>
+
         {/* Main content area */}
         <div className="flex-1 overflow-y-auto">
           {/* Focus OKRs at top */}
@@ -374,6 +382,7 @@ function DashboardContent() {
           <div
             className="absolute inset-0 bg-black/5 z-10 lg:hidden"
             onClick={handleCloseDetail}
+            aria-hidden="true"
           />
         )}
       </div>

@@ -2,13 +2,18 @@ import { NextRequest, NextResponse } from "next/server";
 import { createClient, createServiceClient } from "@/lib/supabase/server";
 import { logFocusToggle } from "@/lib/audit";
 import { MAX_FOCUS } from "@/lib/okr-logic";
+import { withCorsHeaders, withRateLimitHeaders } from "@/lib/api-utils";
+import { logger, generateRequestId } from "@/lib/logger";
 
 export async function POST(
   _request: NextRequest,
   { params }: { params: Promise<{ id: string }> }
 ) {
+  const requestId = generateRequestId();
+  const { id } = await params;
+  const reqLog = logger.request("POST", `/api/okrs/${id}/focus`, { requestId });
+
   try {
-    const { id } = await params;
     const supabase = await createClient();
     const {
       data: { user },
@@ -16,7 +21,12 @@ export async function POST(
     } = await supabase.auth.getUser();
 
     if (authError || !user) {
-      return NextResponse.json({ error: "Nicht authentifiziert" }, { status: 401 });
+      reqLog.finish(401);
+      return withRateLimitHeaders(
+        withCorsHeaders(
+          NextResponse.json({ error: "Nicht authentifiziert" }, { status: 401 })
+        )
+      );
     }
 
     const serviceClient = await createServiceClient();
@@ -30,16 +40,26 @@ export async function POST(
       .single();
 
     if (fetchError || !existingOkr) {
-      return NextResponse.json(
-        { error: "OKR nicht gefunden" },
-        { status: 404 }
+      reqLog.finish(404, { userId: user.id });
+      return withRateLimitHeaders(
+        withCorsHeaders(
+          NextResponse.json(
+            { error: "OKR nicht gefunden" },
+            { status: 404 }
+          )
+        )
       );
     }
 
     if (!existingOkr.is_active) {
-      return NextResponse.json(
-        { error: "Archivierte OKRs können nicht als Fokus markiert werden" },
-        { status: 400 }
+      reqLog.finish(400, { userId: user.id });
+      return withRateLimitHeaders(
+        withCorsHeaders(
+          NextResponse.json(
+            { error: "Archivierte OKRs können nicht als Fokus markiert werden" },
+            { status: 400 }
+          )
+        )
       );
     }
 
@@ -56,18 +76,33 @@ export async function POST(
         .eq("is_active", true);
 
       if (countError) {
-        return NextResponse.json(
-          { error: "Fehler beim Prüfen des Fokus-Limits" },
-          { status: 500 }
+        logger.error("Focus limit check failed", {
+          requestId,
+          userId: user.id,
+          error: countError.message,
+        });
+        reqLog.finish(500);
+        return withRateLimitHeaders(
+          withCorsHeaders(
+            NextResponse.json(
+              { error: "Fehler beim Prüfen des Fokus-Limits" },
+              { status: 500 }
+            )
+          )
         );
       }
 
       if ((count || 0) >= MAX_FOCUS) {
-        return NextResponse.json(
-          {
-            error: `Maximal ${MAX_FOCUS} Fokus-OKRs erlaubt`,
-          },
-          { status: 400 }
+        reqLog.finish(400, { userId: user.id });
+        return withRateLimitHeaders(
+          withCorsHeaders(
+            NextResponse.json(
+              {
+                error: `Maximal ${MAX_FOCUS} Fokus-OKRs erlaubt`,
+              },
+              { status: 400 }
+            )
+          )
         );
       }
     }
@@ -81,10 +116,20 @@ export async function POST(
       .single();
 
     if (updateError) {
-      console.error("Toggle focus error:", updateError);
-      return NextResponse.json(
-        { error: "Fehler beim Fokus-Toggle" },
-        { status: 500 }
+      logger.error("Focus toggle failed", {
+        requestId,
+        userId: user.id,
+        okrId: id,
+        error: updateError.message,
+      });
+      reqLog.finish(500);
+      return withRateLimitHeaders(
+        withCorsHeaders(
+          NextResponse.json(
+            { error: "Fehler beim Fokus-Toggle" },
+            { status: 500 }
+          )
+        )
       );
     }
 
@@ -104,12 +149,32 @@ export async function POST(
       newFocusState
     ).catch(() => {});
 
-    return NextResponse.json({ okr: updatedOkr });
+    logger.audit("okr.focus_toggled", {
+      requestId,
+      userId: user.id,
+      okrId: id,
+      newFocusState,
+    });
+
+    reqLog.finish(200, { userId: user.id });
+    return withRateLimitHeaders(
+      withCorsHeaders(NextResponse.json({ okr: updatedOkr }))
+    );
   } catch (error) {
-    console.error("POST /api/okrs/[id]/focus error:", error);
-    return NextResponse.json(
-      { error: "Interner Serverfehler" },
-      { status: 500 }
+    logger.error("POST /api/okrs/[id]/focus unhandled error", {
+      requestId,
+      okrId: id,
+      error: error instanceof Error ? error.message : String(error),
+      stack: error instanceof Error ? error.stack : undefined,
+    });
+    reqLog.finish(500);
+    return withRateLimitHeaders(
+      withCorsHeaders(
+        NextResponse.json(
+          { error: "Interner Serverfehler" },
+          { status: 500 }
+        )
+      )
     );
   }
 }

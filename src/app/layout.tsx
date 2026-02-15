@@ -32,6 +32,9 @@ export default function RootLayout({
     <html lang="de" suppressHydrationWarning>
       <body className={`${inter.className} antialiased min-h-screen bg-background`} suppressHydrationWarning>
         <QueryProvider>
+          <a href="#main-content" className="skip-to-content">
+            Zum Hauptinhalt springen
+          </a>
           {children}
           <Toaster
             position="top-right"

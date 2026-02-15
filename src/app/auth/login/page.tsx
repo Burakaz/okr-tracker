@@ -11,7 +11,7 @@ function LoginContent() {
 
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(
-    errorParam === "suspended" ? "Dein Account wurde gesperrt. Bitte kontaktiere einen Administrator." : null
+    errorParam === "suspended" ? "Ihr Account wurde gesperrt. Bitte kontaktieren Sie einen Administrator." : null
   );
 
   const handleGoogleLogin = async () => {
@@ -59,7 +59,7 @@ function LoginContent() {
 
           {/* Error Message */}
           {error && (
-            <div className="mb-6 p-4 bg-red-50 border border-red-200 rounded-xl text-red-600 text-sm">
+            <div className="mb-6 p-4 bg-red-50 border border-red-200 rounded-xl text-red-600 text-sm" role="alert">
               {error}
             </div>
           )}
@@ -69,9 +69,10 @@ function LoginContent() {
             onClick={handleGoogleLogin}
             disabled={isLoading}
             className="w-full flex items-center justify-center gap-3 px-4 py-3 border border-cream-400 rounded-xl bg-white hover:bg-cream-100 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+            aria-label="Mit Google anmelden"
           >
             {isLoading ? (
-              <Loader2 className="h-5 w-5 animate-spin text-foreground" />
+              <Loader2 className="h-5 w-5 animate-spin text-foreground" aria-label="Anmeldung läuft" />
             ) : (
               <>
                 <GoogleIcon />
@@ -92,7 +93,7 @@ function LoginContent() {
 
 function GoogleIcon() {
   return (
-    <svg className="h-5 w-5" viewBox="0 0 24 24">
+    <svg className="h-5 w-5" viewBox="0 0 24 24" aria-hidden="true">
       <path
         d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"
         fill="#4285F4"

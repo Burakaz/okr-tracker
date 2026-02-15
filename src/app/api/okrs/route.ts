@@ -3,8 +3,13 @@ import { createClient, createServiceClient } from "@/lib/supabase/server";
 import { createOKRSchema } from "@/lib/validation";
 import { logOKRCreate } from "@/lib/audit";
 import { getQuarterDateRange, MAX_OKRS_PER_QUARTER } from "@/lib/okr-logic";
+import { withCorsHeaders, withRateLimitHeaders } from "@/lib/api-utils";
+import { logger, generateRequestId } from "@/lib/logger";
 
 export async function GET(request: NextRequest) {
+  const requestId = generateRequestId();
+  const reqLog = logger.request("GET", "/api/okrs", { requestId });
+
   try {
     const supabase = await createClient();
     const {
@@ -13,32 +18,99 @@ export async function GET(request: NextRequest) {
     } = await supabase.auth.getUser();
 
     if (authError || !user) {
-      return NextResponse.json({ error: "Nicht authentifiziert" }, { status: 401 });
+      reqLog.finish(401);
+      return withRateLimitHeaders(
+        withCorsHeaders(
+          NextResponse.json({ error: "Nicht authentifiziert" }, { status: 401 })
+        )
+      );
     }
 
     const { searchParams } = new URL(request.url);
     const quarter = searchParams.get("quarter");
+    const status = searchParams.get("status");
+    const category = searchParams.get("category");
+    const scope = searchParams.get("scope");
+    const showArchived = searchParams.get("archived") === "true";
+    const focusOnly = searchParams.get("focus") === "true";
+    const sortBy = searchParams.get("sort_by") || "sort_order";
+    const sortDir = searchParams.get("sort_dir") || "asc";
+    const page = Math.max(1, parseInt(searchParams.get("page") || "1", 10));
+    const limit = Math.min(
+      Math.max(1, parseInt(searchParams.get("limit") || "50", 10)),
+      100
+    );
+    const offset = (page - 1) * limit;
 
     const serviceClient = await createServiceClient();
 
+    // Build the count query and data query in parallel
     let query = serviceClient
       .from("okrs")
-      .select("*, key_results(*)")
-      .eq("user_id", user.id)
-      .order("sort_order", { ascending: true })
-      .order("created_at", { ascending: false });
+      .select("*, key_results(*)", { count: "exact" })
+      .eq("user_id", user.id);
+
+    // By default, only show active OKRs unless archived=true
+    if (!showArchived) {
+      query = query.eq("is_active", true);
+    }
 
     if (quarter) {
       query = query.eq("quarter", quarter);
     }
 
-    const { data: okrs, error } = await query;
+    if (status) {
+      query = query.eq("status", status);
+    }
+
+    if (category) {
+      query = query.eq("category", category);
+    }
+
+    if (scope) {
+      query = query.eq("scope", scope);
+    }
+
+    if (focusOnly) {
+      query = query.eq("is_focus", true);
+    }
+
+    // Sorting
+    const ascending = sortDir === "asc";
+    if (sortBy === "created_at") {
+      query = query.order("created_at", { ascending });
+    } else if (sortBy === "progress") {
+      query = query.order("progress", { ascending });
+    } else if (sortBy === "due_date") {
+      query = query.order("due_date", { ascending });
+    } else if (sortBy === "title") {
+      query = query.order("title", { ascending });
+    } else {
+      // Default: sort_order asc, then created_at desc
+      query = query
+        .order("sort_order", { ascending: true })
+        .order("created_at", { ascending: false });
+    }
+
+    // Pagination
+    query = query.range(offset, offset + limit - 1);
+
+    const { data: okrs, error, count } = await query;
 
     if (error) {
-      console.error("GET /api/okrs error:", error);
-      return NextResponse.json(
-        { error: "Fehler beim Laden der OKRs" },
-        { status: 500 }
+      logger.error("GET /api/okrs query failed", {
+        requestId,
+        userId: user.id,
+        error: error.message,
+      });
+      reqLog.finish(500);
+      return withRateLimitHeaders(
+        withCorsHeaders(
+          NextResponse.json(
+            { error: "Fehler beim Laden der OKRs" },
+            { status: 500 }
+          )
+        )
       );
     }
 
@@ -51,17 +123,42 @@ export async function GET(request: NextRequest) {
       ),
     }));
 
-    return NextResponse.json({ okrs: sortedOkrs });
+    reqLog.finish(200, { userId: user.id });
+    return withRateLimitHeaders(
+      withCorsHeaders(
+        NextResponse.json({
+          okrs: sortedOkrs,
+          pagination: {
+            page,
+            limit,
+            total: count || 0,
+            totalPages: Math.ceil((count || 0) / limit),
+          },
+        })
+      )
+    );
   } catch (error) {
-    console.error("GET /api/okrs error:", error);
-    return NextResponse.json(
-      { error: "Interner Serverfehler" },
-      { status: 500 }
+    logger.error("GET /api/okrs unhandled error", {
+      requestId,
+      error: error instanceof Error ? error.message : String(error),
+      stack: error instanceof Error ? error.stack : undefined,
+    });
+    reqLog.finish(500);
+    return withRateLimitHeaders(
+      withCorsHeaders(
+        NextResponse.json(
+          { error: "Interner Serverfehler" },
+          { status: 500 }
+        )
+      )
     );
   }
 }
 
 export async function POST(request: NextRequest) {
+  const requestId = generateRequestId();
+  const reqLog = logger.request("POST", "/api/okrs", { requestId });
+
   try {
     const supabase = await createClient();
     const {
@@ -70,16 +167,40 @@ export async function POST(request: NextRequest) {
     } = await supabase.auth.getUser();
 
     if (authError || !user) {
-      return NextResponse.json({ error: "Nicht authentifiziert" }, { status: 401 });
+      reqLog.finish(401);
+      return withRateLimitHeaders(
+        withCorsHeaders(
+          NextResponse.json({ error: "Nicht authentifiziert" }, { status: 401 })
+        )
+      );
     }
 
-    const body = await request.json();
+    let body: unknown;
+    try {
+      body = await request.json();
+    } catch {
+      reqLog.finish(400, { userId: user.id });
+      return withRateLimitHeaders(
+        withCorsHeaders(
+          NextResponse.json(
+            { error: "Ungültiger JSON-Body" },
+            { status: 400 }
+          )
+        )
+      );
+    }
+
     const parsed = createOKRSchema.safeParse(body);
 
     if (!parsed.success) {
-      return NextResponse.json(
-        { error: "Validierungsfehler", details: parsed.error.flatten() },
-        { status: 400 }
+      reqLog.finish(400, { userId: user.id });
+      return withRateLimitHeaders(
+        withCorsHeaders(
+          NextResponse.json(
+            { error: "Validierungsfehler", details: parsed.error.flatten() },
+            { status: 400 }
+          )
+        )
       );
     }
 
@@ -94,18 +215,28 @@ export async function POST(request: NextRequest) {
       .single();
 
     if (profileError || !profile) {
-      return NextResponse.json(
-        { error: "Profil nicht gefunden" },
-        { status: 404 }
+      reqLog.finish(404, { userId: user.id });
+      return withRateLimitHeaders(
+        withCorsHeaders(
+          NextResponse.json(
+            { error: "Profil nicht gefunden" },
+            { status: 404 }
+          )
+        )
       );
     }
 
     const orgId = profile.organization_id;
 
     if (!orgId) {
-      return NextResponse.json(
-        { error: "Keine Organisation zugewiesen" },
-        { status: 400 }
+      reqLog.finish(400, { userId: user.id });
+      return withRateLimitHeaders(
+        withCorsHeaders(
+          NextResponse.json(
+            { error: "Keine Organisation zugewiesen" },
+            { status: 400 }
+          )
+        )
       );
     }
 
@@ -118,19 +249,33 @@ export async function POST(request: NextRequest) {
       .eq("is_active", true);
 
     if (countError) {
-      console.error("Count error:", countError);
-      return NextResponse.json(
-        { error: "Fehler beim Prüfen des OKR-Limits" },
-        { status: 500 }
+      logger.error("OKR count check failed", {
+        requestId,
+        userId: user.id,
+        error: countError.message,
+      });
+      reqLog.finish(500);
+      return withRateLimitHeaders(
+        withCorsHeaders(
+          NextResponse.json(
+            { error: "Fehler beim Prüfen des OKR-Limits" },
+            { status: 500 }
+          )
+        )
       );
     }
 
     if ((count || 0) >= MAX_OKRS_PER_QUARTER) {
-      return NextResponse.json(
-        {
-          error: `Maximal ${MAX_OKRS_PER_QUARTER} OKRs pro Quartal erlaubt`,
-        },
-        { status: 400 }
+      reqLog.finish(400, { userId: user.id });
+      return withRateLimitHeaders(
+        withCorsHeaders(
+          NextResponse.json(
+            {
+              error: `Maximal ${MAX_OKRS_PER_QUARTER} OKRs pro Quartal erlaubt`,
+            },
+            { status: 400 }
+          )
+        )
       );
     }
 
@@ -172,10 +317,19 @@ export async function POST(request: NextRequest) {
       .single();
 
     if (insertError || !newOkr) {
-      console.error("Insert OKR error:", insertError);
-      return NextResponse.json(
-        { error: "Fehler beim Erstellen des OKR" },
-        { status: 500 }
+      logger.error("OKR insert failed", {
+        requestId,
+        userId: user.id,
+        error: insertError?.message,
+      });
+      reqLog.finish(500);
+      return withRateLimitHeaders(
+        withCorsHeaders(
+          NextResponse.json(
+            { error: "Fehler beim Erstellen des OKR" },
+            { status: 500 }
+          )
+        )
       );
     }
 
@@ -196,27 +350,58 @@ export async function POST(request: NextRequest) {
       .select();
 
     if (krError) {
-      console.error("Insert KR error:", krError);
+      logger.error("Key results insert failed", {
+        requestId,
+        userId: user.id,
+        okrId: newOkr.id,
+        error: krError.message,
+      });
       // Rollback: delete the OKR if key results fail
       await serviceClient.from("okrs").delete().eq("id", newOkr.id);
-      return NextResponse.json(
-        { error: "Fehler beim Erstellen der Key Results" },
-        { status: 500 }
+      reqLog.finish(500);
+      return withRateLimitHeaders(
+        withCorsHeaders(
+          NextResponse.json(
+            { error: "Fehler beim Erstellen der Key Results" },
+            { status: 500 }
+          )
+        )
       );
     }
 
     // Audit log (non-blocking)
     logOKRCreate(user.id, orgId, newOkr.id, data.title).catch(() => {});
 
-    return NextResponse.json(
-      { okr: { ...newOkr, key_results: insertedKRs } },
-      { status: 201 }
+    logger.audit("okr.created", {
+      requestId,
+      userId: user.id,
+      okrId: newOkr.id,
+      quarter: data.quarter,
+    });
+
+    reqLog.finish(201, { userId: user.id });
+    return withRateLimitHeaders(
+      withCorsHeaders(
+        NextResponse.json(
+          { okr: { ...newOkr, key_results: insertedKRs } },
+          { status: 201 }
+        )
+      )
     );
   } catch (error) {
-    console.error("POST /api/okrs error:", error);
-    return NextResponse.json(
-      { error: "Interner Serverfehler" },
-      { status: 500 }
+    logger.error("POST /api/okrs unhandled error", {
+      requestId,
+      error: error instanceof Error ? error.message : String(error),
+      stack: error instanceof Error ? error.stack : undefined,
+    });
+    reqLog.finish(500);
+    return withRateLimitHeaders(
+      withCorsHeaders(
+        NextResponse.json(
+          { error: "Interner Serverfehler" },
+          { status: 500 }
+        )
+      )
     );
   }
 }
