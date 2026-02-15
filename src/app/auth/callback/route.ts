@@ -15,7 +15,7 @@ export async function GET(request: Request) {
 
       // Check if user exists
       const { data: existingUser } = await serviceClient
-        .from("users")
+        .from("profiles")
         .select("id, status")
         .eq("id", data.user.id)
         .single();
@@ -27,7 +27,7 @@ export async function GET(request: Request) {
 
       // Check if it's the first user (becomes super_admin)
       const { count } = await serviceClient
-        .from("users")
+        .from("profiles")
         .select("*", { count: "exact", head: true });
 
       const isFirstUser = count === 0;
@@ -37,7 +37,7 @@ export async function GET(request: Request) {
                            data.user.user_metadata.picture ||
                            null;
 
-      const { error: upsertError } = await serviceClient.from("users").upsert(
+      const { error: upsertError } = await serviceClient.from("profiles").upsert(
         {
           id: data.user.id,
           email: data.user.email!.toLowerCase(),

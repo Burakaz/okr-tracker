@@ -1,11 +1,11 @@
-import { createServerClient, type CookieOptions } from "@supabase/ssr";
+import { createServerClient } from "@supabase/ssr";
 import { createClient as createSupabaseClient } from "@supabase/supabase-js";
 import { cookies } from "next/headers";
 
 interface CookieToSet {
   name: string;
   value: string;
-  options?: CookieOptions;
+  options?: Record<string, unknown>;
 }
 
 export async function createClient() {
