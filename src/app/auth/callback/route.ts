@@ -26,11 +26,12 @@ export async function GET(request: Request) {
       }
 
       // Check if it's the first user (becomes super_admin)
+      // Note: The trigger creates a profile on auth signup, so count will be 1 for the first user
       const { count } = await serviceClient
         .from("profiles")
         .select("*", { count: "exact", head: true });
 
-      const isFirstUser = count === 0;
+      const isFirstUser = !existingUser && (count === 0 || count === 1);
 
       // Always update avatar_url from OAuth provider on each login
       const newAvatarUrl = data.user.user_metadata.avatar_url ||
