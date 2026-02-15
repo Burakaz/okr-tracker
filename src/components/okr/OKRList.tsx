@@ -10,11 +10,15 @@ import {
   Trash2,
   ArrowUpDown,
   Target,
+  TrendingUp,
+  Wrench,
+  BookOpen,
+  Briefcase,
 } from "lucide-react";
 import { ProgressBar } from "@/components/ui/ProgressBar";
 import { ScoreBadge } from "@/components/ui/ScoreBadge";
 import { StatusBadge } from "@/components/ui/StatusBadge";
-import type { OKR, OKRCategory } from "@/types";
+import type { OKR, OKRCategory, OKRFilterType } from "@/types";
 
 type SortField = "title" | "category" | "progress" | "score" | "status" | "due_date";
 type SortDirection = "asc" | "desc";
@@ -22,6 +26,7 @@ type SortDirection = "asc" | "desc";
 interface OKRListProps {
   okrs: OKR[];
   selectedId?: string;
+  activeFilter?: OKRFilterType;
   onSelect: (okr: OKR) => void;
   onEdit: (okr: OKR) => void;
   onFocus: (okr: OKR) => void;
@@ -29,6 +34,44 @@ interface OKRListProps {
   onDuplicate: (okr: OKR) => void;
   onDelete: (okr: OKR) => void;
 }
+
+const emptyStateConfig: Record<string, { icon: React.ReactNode; title: string; description: string }> = {
+  all: {
+    icon: <Target className="w-8 h-8 text-muted" />,
+    title: "Noch keine OKRs vorhanden",
+    description: "Erstelle dein erstes OKR, um deine Ziele zu verfolgen.",
+  },
+  performance: {
+    icon: <TrendingUp className="w-8 h-8 text-muted" />,
+    title: "Keine Performance-OKRs",
+    description: "Erstelle ein Performance-OKR, um KPIs wie ROAS, CPA, CTR oder Conversion Rate zu tracken.",
+  },
+  skill: {
+    icon: <Wrench className="w-8 h-8 text-muted" />,
+    title: "Keine Skill-OKRs",
+    description: "Erstelle ein Skill-OKR f\u00fcr Tool-Beherrschung, Zertifizierungen oder neue Strategien, die du testen m\u00f6chtest.",
+  },
+  learning: {
+    icon: <BookOpen className="w-8 h-8 text-muted" />,
+    title: "Keine Learning-OKRs",
+    description: "Erstelle ein Learning-OKR f\u00fcr Kurse, Weiterbildungen, Konferenzen oder Wissenstransfers innerhalb des Teams.",
+  },
+  career: {
+    icon: <Briefcase className="w-8 h-8 text-muted" />,
+    title: "Keine Karriere-OKRs",
+    description: "Erstelle ein Karriere-OKR f\u00fcr Projekte, Teamf\u00fchrung, Kundenpr\u00e4sentationen oder Verantwortungsbereiche.",
+  },
+  focus: {
+    icon: <Star className="w-8 h-8 text-muted" />,
+    title: "Keine Fokus-OKRs gesetzt",
+    description: "Setze bis zu 2 OKRs als Fokus, um sie oben in der \u00dcbersicht hervorzuheben.",
+  },
+  archive: {
+    icon: <Archive className="w-8 h-8 text-muted" />,
+    title: "Kein Archiv vorhanden",
+    description: "Archivierte OKRs erscheinen hier. Du kannst OKRs \u00fcber das Aktionsmen\u00fc archivieren.",
+  },
+};
 
 const categoryConfig: Record<OKRCategory, { label: string; colorClass: string }> = {
   performance: { label: "Performance", colorClass: "badge-blue" },
@@ -49,6 +92,7 @@ function calculateScore(okr: OKR): number {
 export function OKRList({
   okrs,
   selectedId,
+  activeFilter = "all",
   onSelect,
   onEdit,
   onFocus,
@@ -119,14 +163,15 @@ export function OKRList({
   const allSorted = [...sortedFocusOkrs, ...sortedNonFocusOkrs];
 
   if (okrs.length === 0) {
+    const config = emptyStateConfig[activeFilter] || emptyStateConfig.all;
     return (
       <div className="empty-state" role="status">
         <div className="w-16 h-16 rounded-2xl bg-cream-200 flex items-center justify-center mb-4">
-          <Target className="w-8 h-8 text-muted" />
+          {config.icon}
         </div>
-        <p className="empty-state-title">Noch keine OKRs vorhanden</p>
+        <p className="empty-state-title">{config.title}</p>
         <p className="empty-state-description mb-4">
-          Erstellen Sie Ihr erstes OKR, um Ihre Ziele zu verfolgen.
+          {config.description}
         </p>
       </div>
     );

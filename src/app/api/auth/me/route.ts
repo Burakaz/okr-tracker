@@ -1,4 +1,4 @@
-import { NextResponse } from "next/server";
+import { NextRequest, NextResponse } from "next/server";
 import { createClient, createServiceClient } from "@/lib/supabase/server";
 import { withCorsHeaders, withRateLimitHeaders } from "@/lib/api-utils";
 import { logger, generateRequestId } from "@/lib/logger";
@@ -78,6 +78,91 @@ export async function GET() {
           { error: "Interner Serverfehler" },
           { status: 500 }
         )
+      )
+    );
+  }
+}
+
+export async function PATCH(request: NextRequest) {
+  const requestId = generateRequestId();
+  const reqLog = logger.request("PATCH", "/api/auth/me", { requestId });
+
+  try {
+    const supabase = await createClient();
+    const {
+      data: { user: authUser },
+      error: authError,
+    } = await supabase.auth.getUser();
+
+    if (authError || !authUser) {
+      reqLog.finish(401);
+      return withRateLimitHeaders(
+        withCorsHeaders(
+          NextResponse.json({ error: "Nicht authentifiziert" }, { status: 401 })
+        )
+      );
+    }
+
+    const body = await request.json();
+    const allowedFields = ["name", "department"];
+    const updates: Record<string, string> = {};
+
+    for (const field of allowedFields) {
+      if (body[field] !== undefined) {
+        updates[field] = String(body[field]).trim();
+      }
+    }
+
+    if (Object.keys(updates).length === 0) {
+      reqLog.finish(400);
+      return withRateLimitHeaders(
+        withCorsHeaders(
+          NextResponse.json({ error: "Keine gültigen Felder zum Aktualisieren" }, { status: 400 })
+        )
+      );
+    }
+
+    // Validate name
+    if (updates.name !== undefined && updates.name.length < 2) {
+      reqLog.finish(400);
+      return withRateLimitHeaders(
+        withCorsHeaders(
+          NextResponse.json({ error: "Name muss mindestens 2 Zeichen lang sein" }, { status: 400 })
+        )
+      );
+    }
+
+    const serviceClient = await createServiceClient();
+    const { data: profile, error: updateError } = await serviceClient
+      .from("profiles")
+      .update(updates)
+      .eq("id", authUser.id)
+      .select("*")
+      .single();
+
+    if (updateError || !profile) {
+      logger.error("Failed to update profile", { requestId, error: updateError?.message });
+      reqLog.finish(500);
+      return withRateLimitHeaders(
+        withCorsHeaders(
+          NextResponse.json({ error: "Fehler beim Aktualisieren" }, { status: 500 })
+        )
+      );
+    }
+
+    reqLog.finish(200, { userId: authUser.id });
+    return withRateLimitHeaders(
+      withCorsHeaders(NextResponse.json({ user: profile }))
+    );
+  } catch (error) {
+    logger.error("PATCH /api/auth/me unhandled error", {
+      requestId,
+      error: error instanceof Error ? error.message : String(error),
+    });
+    reqLog.finish(500);
+    return withRateLimitHeaders(
+      withCorsHeaders(
+        NextResponse.json({ error: "Interner Serverfehler" }, { status: 500 })
       )
     );
   }

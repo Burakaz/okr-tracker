@@ -3,12 +3,11 @@ import { createClient, createServiceClient } from "@/lib/supabase/server";
 import { DashboardClientWrapper } from "@/components/layout/DashboardClientWrapper";
 import { DataPreloader } from "@/components/DataPreloader";
 
-export default async function DashboardLayout({
+export default async function AdminLayout({
   children,
 }: {
   children: React.ReactNode;
 }) {
-  // Create both clients in parallel
   const [supabase, serviceClient] = await Promise.all([
     createClient(),
     createServiceClient(),
@@ -22,7 +21,7 @@ export default async function DashboardLayout({
     redirect("/auth/login");
   }
 
-  // Fetch profile and logo in parallel (eliminates waterfall)
+  // Fetch profile and logo in parallel
   const [profileResult, logoResult] = await Promise.all([
     supabase
       .from("profiles")
@@ -41,12 +40,16 @@ export default async function DashboardLayout({
     redirect("/auth/login");
   }
 
-  // User ist gesperrt
+  // Only admins and super_admins can access admin pages
+  if (user.role !== "admin" && user.role !== "super_admin") {
+    redirect("/dashboard");
+  }
+
   if (user.status !== "active") {
     redirect("/auth/login?error=suspended");
   }
 
-  // Process logo result
+  // Process logo
   let orgLogo: string | null = null;
 
   try {
@@ -66,9 +69,6 @@ export default async function DashboardLayout({
   } catch {
     // Logo loading is non-critical
   }
-
-  // Don't set a fallback URL — the Sidebar handles the "no logo" case
-  // with a styled Building2 icon fallback, which is better than a broken image
 
   return (
     <>

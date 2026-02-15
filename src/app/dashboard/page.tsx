@@ -349,6 +349,7 @@ function DashboardContent() {
           <OKRList
             okrs={filteredOKRs}
             selectedId={showDetail ? selectedOKR?.id : undefined}
+            activeFilter={activeFilter}
             onSelect={handleSelectOKR}
             onEdit={handleEditOKR}
             onFocus={handleToggleFocus}

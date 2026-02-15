@@ -166,6 +166,7 @@ export interface UpdateOKRRequest {
   scope?: OKRScope;
   due_date?: string;
   is_active?: boolean;
+  is_focus?: boolean;
   sort_order?: number;
 }
 
