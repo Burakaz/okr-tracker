@@ -46,7 +46,6 @@ function LearningsContent() {
   const [activeTab, setActiveTab] = useState<LearningTab>("my-learnings");
   const [filters, setFilters] = useState<{
     category?: string;
-    provider?: string;
     status?: string;
     search?: string;
   }>({});
@@ -58,10 +57,9 @@ function LearningsContent() {
   const catalogFilters = useMemo(
     () => ({
       category: filters.category,
-      provider: filters.provider,
       search: filters.search,
     }),
-    [filters.category, filters.provider, filters.search]
+    [filters.category, filters.search]
   );
 
   const { data: coursesData, isLoading: isLoadingCourses } =
@@ -76,12 +74,6 @@ function LearningsContent() {
   const enrollMutation = useEnrollCourse();
   const unenrollMutation = useUnenroll();
   const suggestMutation = useSuggestCourses();
-
-  // Derive providers from courses for filter dropdown
-  const providers = useMemo(() => {
-    const providerSet = new Set(courses.map((c) => c.provider).filter(Boolean));
-    return Array.from(providerSet).sort();
-  }, [courses]);
 
   // Handlers
   const handleEnroll = useCallback(
@@ -238,7 +230,6 @@ function LearningsContent() {
               filters={filters}
               onFilterChange={setFilters}
               showStatusFilter={activeTab === "my-learnings"}
-              providers={providers}
             />
           )}
 

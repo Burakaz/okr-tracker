@@ -11,24 +11,22 @@ import {
   MessageSquare,
   Package,
   Lightbulb,
+  X,
 } from "lucide-react";
 import type { CourseCategory } from "@/types";
 
 interface LearningFiltersProps {
   filters: {
     category?: string;
-    provider?: string;
     status?: string;
     search?: string;
   };
   onFilterChange: (filters: {
     category?: string;
-    provider?: string;
     status?: string;
     search?: string;
   }) => void;
   showStatusFilter?: boolean;
-  providers: string[];
 }
 
 const categories: { value: CourseCategory | "all"; label: string; icon: React.ReactNode }[] = [
@@ -46,7 +44,7 @@ const categories: { value: CourseCategory | "all"; label: string; icon: React.Re
 const statusOptions = [
   { value: "all", label: "Alle" },
   { value: "in_progress", label: "In Arbeit" },
-  { value: "completed", label: "Abgeschlossen" },
+  { value: "completed", label: "Fertig" },
   { value: "paused", label: "Pausiert" },
 ];
 
@@ -54,10 +52,11 @@ export function LearningFilters({
   filters,
   onFilterChange,
   showStatusFilter = false,
-  providers,
 }: LearningFiltersProps) {
   const [searchInput, setSearchInput] = useState(filters.search ?? "");
+  const [showSearch, setShowSearch] = useState(!!filters.search);
   const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const searchInputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
     if (debounceRef.current) clearTimeout(debounceRef.current);
@@ -74,13 +73,22 @@ export function LearningFilters({
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [searchInput]);
 
+  // Focus input when search is toggled open
+  useEffect(() => {
+    if (showSearch && searchInputRef.current) {
+      searchInputRef.current.focus();
+    }
+  }, [showSearch]);
+
   const activeCategory = filters.category ?? "all";
   const activeStatus = filters.status ?? "all";
 
+  const hasActiveFilters = !!filters.category || !!filters.status || !!filters.search;
+
   return (
-    <div className="space-y-3">
-      {/* Category pills */}
-      <div className="flex items-center gap-2 overflow-x-auto pb-1">
+    <div className="flex items-center gap-2 flex-wrap">
+      {/* Category pills — scrollable on mobile */}
+      <div className="flex items-center gap-1.5 overflow-x-auto flex-shrink-0">
         {categories.map((cat) => (
           <button
             key={cat.value}
@@ -90,7 +98,7 @@ export function LearningFilters({
                 category: cat.value === "all" ? undefined : cat.value,
               })
             }
-            className={`filter-pill flex items-center gap-1.5 ${
+            className={`filter-pill flex items-center gap-1 ${
               activeCategory === cat.value ||
               (cat.value === "all" && !filters.category)
                 ? "active"
@@ -103,33 +111,11 @@ export function LearningFilters({
         ))}
       </div>
 
-      {/* Provider + Search row */}
-      <div className="flex items-center gap-3">
-        {/* Provider dropdown */}
-        {providers.length > 0 && (
-          <select
-            value={filters.provider ?? ""}
-            onChange={(e) =>
-              onFilterChange({
-                ...filters,
-                provider: e.target.value || undefined,
-              })
-            }
-            className="input"
-            style={{ maxWidth: "180px" }}
-          >
-            <option value="">Alle Anbieter</option>
-            {providers.map((p) => (
-              <option key={p} value={p}>
-                {p}
-              </option>
-            ))}
-          </select>
-        )}
-
-        {/* Status pills */}
-        {showStatusFilter && (
-          <div className="flex items-center gap-1.5">
+      {/* Divider between category and status */}
+      {showStatusFilter && (
+        <>
+          <div className="w-px h-5 bg-cream-300 flex-shrink-0" />
+          <div className="flex items-center gap-1.5 flex-shrink-0">
             {statusOptions.map((opt) => (
               <button
                 key={opt.value}
@@ -150,23 +136,58 @@ export function LearningFilters({
               </button>
             ))}
           </div>
-        )}
+        </>
+      )}
 
-        {/* Spacer */}
-        <div className="flex-1" />
+      {/* Spacer */}
+      <div className="flex-1" />
 
-        {/* Search input */}
-        <div className="relative" style={{ minWidth: "200px" }}>
+      {/* Search toggle + input */}
+      {showSearch ? (
+        <div className="relative flex-shrink-0" style={{ width: "200px" }}>
           <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-muted" />
           <input
+            ref={searchInputRef}
             type="text"
             value={searchInput}
             onChange={(e) => setSearchInput(e.target.value)}
-            placeholder="Kurse suchen..."
-            className="input pl-8"
+            placeholder="Suchen..."
+            className="input pl-8 pr-8 py-1.5 text-[12px]"
           />
+          <button
+            onClick={() => {
+              setShowSearch(false);
+              setSearchInput("");
+            }}
+            className="absolute right-2 top-1/2 -translate-y-1/2 p-0.5 hover:bg-cream-200 rounded"
+            aria-label="Suche schliessen"
+          >
+            <X className="h-3 w-3 text-muted" />
+          </button>
         </div>
-      </div>
+      ) : (
+        <button
+          onClick={() => setShowSearch(true)}
+          className="p-2 hover:bg-cream-200 rounded-lg transition-colors flex-shrink-0"
+          aria-label="Suche öffnen"
+        >
+          <Search className="h-4 w-4 text-muted" />
+        </button>
+      )}
+
+      {/* Clear all filters */}
+      {hasActiveFilters && (
+        <button
+          onClick={() => {
+            setSearchInput("");
+            setShowSearch(false);
+            onFilterChange({});
+          }}
+          className="text-[11px] text-muted hover:text-foreground transition-colors flex-shrink-0"
+        >
+          Zurücksetzen
+        </button>
+      )}
     </div>
   );
 }

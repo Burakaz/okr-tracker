@@ -270,7 +270,7 @@ export async function POST(request: NextRequest) {
     return withRateLimitHeaders(
       withCorsHeaders(
         NextResponse.json(
-          { course: { ...newCourse, course_modules: insertedModules } },
+          { course: { ...newCourse, modules: insertedModules } },
           { status: 201 }
         )
       )

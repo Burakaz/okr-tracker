@@ -62,24 +62,43 @@ export async function GET(
       );
     }
 
-    // Sort modules by sort_order
-    course.course_modules = (course.course_modules || []).sort(
+    // Map course_modules → modules and sort by sort_order
+    const sortedModules = (course.course_modules || []).sort(
       (a: { sort_order: number }, b: { sort_order: number }) =>
         a.sort_order - b.sort_order
     );
 
-    // Check if current user has an enrollment
+    // Check if current user has an enrollment (with module_completions + certificates)
     const { data: enrollment } = await serviceClient
       .from("enrollments")
-      .select("*")
+      .select("*, module_completions(*), certificates(*)")
       .eq("course_id", id)
       .eq("user_id", user.id)
       .maybeSingle();
 
+    // Calculate progress for enrollment
+    let enrichedEnrollment = null;
+    if (enrollment) {
+      const moduleCount = sortedModules.length;
+      const completionCount = enrollment.module_completions?.length || 0;
+      const progress = moduleCount > 0 ? Math.round((completionCount / moduleCount) * 100) : 0;
+      enrichedEnrollment = { ...enrollment, progress };
+    }
+
+    // Return course with modules mapped to expected field name
+    const responseBody = {
+      course: {
+        ...course,
+        modules: sortedModules,
+        course_modules: undefined,
+      },
+      enrollment: enrichedEnrollment,
+    };
+
     reqLog.finish(200, { userId: user.id });
     return withRateLimitHeaders(
       withCorsHeaders(
-        NextResponse.json({ course, enrollment: enrollment || null })
+        NextResponse.json(responseBody)
       )
     );
   } catch (error) {
@@ -255,13 +274,13 @@ export async function PATCH(
       );
     }
 
-    // Sort modules
-    if (updatedCourse) {
-      updatedCourse.course_modules = (updatedCourse.course_modules || []).sort(
-        (a: { sort_order: number }, b: { sort_order: number }) =>
-          a.sort_order - b.sort_order
-      );
-    }
+    // Sort modules and map course_modules → modules
+    const sortedModules = updatedCourse
+      ? (updatedCourse.course_modules || []).sort(
+          (a: { sort_order: number }, b: { sort_order: number }) =>
+            a.sort_order - b.sort_order
+        )
+      : [];
 
     logger.audit("course.updated", {
       requestId,
@@ -271,7 +290,13 @@ export async function PATCH(
 
     reqLog.finish(200, { userId: user.id });
     return withRateLimitHeaders(
-      withCorsHeaders(NextResponse.json({ course: updatedCourse }))
+      withCorsHeaders(
+        NextResponse.json({
+          course: updatedCourse
+            ? { ...updatedCourse, modules: sortedModules, course_modules: undefined }
+            : updatedCourse,
+        })
+      )
     );
   } catch (error) {
     logger.error("PATCH /api/courses/[id] unhandled error", {
