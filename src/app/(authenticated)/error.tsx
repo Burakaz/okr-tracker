@@ -2,7 +2,7 @@
 
 import { useEffect } from "react";
 
-export default function DashboardError({
+export default function AuthenticatedError({
   error,
   reset,
 }: {
@@ -10,7 +10,7 @@ export default function DashboardError({
   reset: () => void;
 }) {
   useEffect(() => {
-    console.error("Dashboard error boundary caught:", error);
+    console.error("Error boundary caught:", error);
   }, [error]);
 
   return (
@@ -34,14 +34,10 @@ export default function DashboardError({
           </div>
 
           <h2 className="text-lg font-semibold text-foreground mb-2">
-            Dashboard konnte nicht geladen werden
+            Seite konnte nicht geladen werden
           </h2>
-          <p className="text-muted text-sm mb-2">
-            Beim Laden deiner OKRs ist ein Fehler aufgetreten.
-          </p>
-          <p className="text-muted text-xs mb-6">
-            Dies kann an einer voruebergehenden Netzwerkstorung oder
-            Serverproblem liegen.
+          <p className="text-muted text-sm mb-6">
+            Beim Laden ist ein Fehler aufgetreten. Bitte versuche es erneut.
           </p>
 
           {error.digest && (

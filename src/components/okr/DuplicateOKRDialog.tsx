@@ -3,7 +3,7 @@
 import { useState, useEffect, useCallback } from "react";
 import { X } from "lucide-react";
 import type { OKR, DuplicateOKRRequest } from "@/types";
-import { getCurrentQuarter, getNextQuarter } from "@/components/layout/DashboardClientWrapper";
+import { getCurrentQuarter, getNextQuarter } from "@/lib/okr-logic";
 
 interface DuplicateOKRDialogProps {
   okr: OKR;

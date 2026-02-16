@@ -1,14 +1,13 @@
 import { redirect } from "next/navigation";
 import { createClient, createServiceClient } from "@/lib/supabase/server";
-import { DashboardClientWrapper } from "@/components/layout/DashboardClientWrapper";
+import { AppShell } from "./AppShell";
 import { DataPreloader } from "@/components/DataPreloader";
 
-export default async function DashboardLayout({
+export default async function AuthenticatedLayout({
   children,
 }: {
   children: React.ReactNode;
 }) {
-  // Create both clients in parallel
   const [supabase, serviceClient] = await Promise.all([
     createClient(),
     createServiceClient(),
@@ -22,17 +21,20 @@ export default async function DashboardLayout({
     redirect("/auth/login");
   }
 
-  // Fetch profile and logo in parallel (eliminates waterfall)
+  // Fetch profile and logo in parallel
   const [profileResult, logoResult] = await Promise.all([
     supabase
       .from("profiles")
       .select("*")
       .eq("id", authUser.id)
       .single(),
-    serviceClient.storage.from("logos").list("", {
-      limit: 10,
-      sortBy: { column: "created_at", order: "desc" },
-    }).catch(() => ({ data: null })),
+    serviceClient.storage
+      .from("logos")
+      .list("", {
+        limit: 10,
+        sortBy: { column: "created_at", order: "desc" },
+      })
+      .catch(() => ({ data: null })),
   ]);
 
   const user = profileResult.data;
@@ -41,12 +43,11 @@ export default async function DashboardLayout({
     redirect("/auth/login");
   }
 
-  // User ist gesperrt
   if (user.status !== "active") {
     redirect("/auth/login?error=suspended");
   }
 
-  // Process logo result
+  // Process logo
   let orgLogo: string | null = null;
 
   try {
@@ -67,18 +68,12 @@ export default async function DashboardLayout({
     // Logo loading is non-critical
   }
 
-  // Don't set a fallback URL — the Sidebar handles the "no logo" case
-  // with a styled Building2 icon fallback, which is better than a broken image
-
   return (
     <>
       <DataPreloader />
-      <DashboardClientWrapper
-        user={user}
-        orgLogo={orgLogo}
-      >
+      <AppShell user={user} orgLogo={orgLogo}>
         {children}
-      </DashboardClientWrapper>
+      </AppShell>
     </>
   );
 }

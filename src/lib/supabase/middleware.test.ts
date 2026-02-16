@@ -206,11 +206,11 @@ describe('updateSession - middleware', () => {
       });
 
       const response = await updateSession(
-        makeNextRequest('/dashboard/settings')
+        makeNextRequest('/settings')
       );
 
       const location = response.headers.get('location');
-      expect(location).toContain('redirect=%2Fdashboard%2Fsettings');
+      expect(location).toContain('redirect=%2Fsettings');
     });
   });
 });

@@ -6,7 +6,6 @@ import {
   Mail,
   Shield,
   Building2,
-  ChevronRight,
   Save,
   Loader2,
 } from "lucide-react";
@@ -80,8 +79,6 @@ export default function SettingsPage() {
       {/* Header */}
       <div className="h-14 flex items-center px-6 border-b border-cream-300/50">
         <div className="flex items-center gap-2 text-sm text-muted">
-          <span>Dashboard</span>
-          <ChevronRight className="h-3.5 w-3.5" />
           <span className="text-foreground font-medium">Einstellungen</span>
         </div>
       </div>

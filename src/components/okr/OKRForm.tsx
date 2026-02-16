@@ -12,7 +12,7 @@ import {
 } from "lucide-react";
 import type { OKR, OKRCategory, CreateOKRRequest } from "@/types";
 import type { SuggestedKR } from "@/lib/ai/types";
-import { getCurrentQuarter, getNextQuarter } from "@/components/layout/DashboardClientWrapper";
+import { getCurrentQuarter, getNextQuarter } from "@/lib/okr-logic";
 import AISuggestButton from "./AISuggestButton";
 
 interface OKRFormProps {
