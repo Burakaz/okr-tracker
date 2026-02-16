@@ -49,7 +49,7 @@ export default function CareerPage() {
         <div>
           <h1 className="text-[15px] font-semibold text-foreground">Career</h1>
           <p className="text-[11px] text-muted">
-            Dein Weg zum nachsten Level
+            Dein Weg zum nächsten Level
           </p>
         </div>
         <Link href="/settings" className="btn-ghost text-[13px] gap-1.5">
@@ -93,7 +93,7 @@ export default function CareerPage() {
                 </div>
                 <div>
                   <p className="text-[11px] text-muted uppercase tracking-wider">
-                    Nachster Schritt
+                    Nächster Schritt
                   </p>
                   <p className="text-[17px] font-semibold text-foreground">
                     {PLACEHOLDER_NEXT_LEVEL.name}

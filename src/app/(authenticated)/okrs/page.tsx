@@ -130,13 +130,13 @@ function OKRsContent() {
   };
 
   const handleSubmitOKR = async (data: CreateOKRRequest) => {
+    const wasEditing = !!editingOKR;
+    const editId = editingOKR?.id;
     setIsSubmitting(true);
-    setShowForm(false);
-    setEditingOKR(null);
 
     try {
-      const url = editingOKR ? `/api/okrs/${editingOKR.id}` : "/api/okrs";
-      const method = editingOKR ? "PATCH" : "POST";
+      const url = editId ? `/api/okrs/${editId}` : "/api/okrs";
+      const method = editId ? "PATCH" : "POST";
 
       const res = await fetch(url, {
         method,
@@ -145,7 +145,9 @@ function OKRsContent() {
       });
 
       if (res.ok) {
-        toast.success(editingOKR ? "OKR aktualisiert" : "OKR erstellt");
+        toast.success(wasEditing ? "OKR aktualisiert" : "OKR erstellt");
+        setShowForm(false);
+        setEditingOKR(null);
         await invalidateOKRs();
       } else {
         const error = await res.json();
@@ -232,11 +234,11 @@ function OKRsContent() {
       if (type === "delete") {
         const res = await fetch(`/api/okrs/${okr.id}`, { method: "DELETE" });
         if (res.ok) {
-          toast.success("OKR geloescht");
+          toast.success("OKR gelöscht");
           if (expandedId === okr.id) setExpandedId(null);
           await invalidateOKRs();
         } else {
-          toast.error("Loeschen fehlgeschlagen");
+          toast.error("Löschen fehlgeschlagen");
         }
       } else if (type === "archive") {
         const res = await fetch(`/api/okrs/${okr.id}`, {
@@ -326,7 +328,16 @@ function OKRsContent() {
           {/* 1. Page Header */}
           <div className="flex items-center justify-between">
             <h1 className="text-xl font-bold text-foreground">OKRs</h1>
-            <button onClick={handleNewOKR} className="btn-primary text-[13px] gap-1.5">
+            <button
+              onClick={handleNewOKR}
+              className="btn-primary text-[13px] gap-1.5"
+              disabled={activeOKRs.length >= MAX_OKRS_PER_QUARTER}
+              title={
+                activeOKRs.length >= MAX_OKRS_PER_QUARTER
+                  ? `Maximal ${MAX_OKRS_PER_QUARTER} OKRs pro Quartal erlaubt`
+                  : undefined
+              }
+            >
               <Plus className="h-4 w-4" aria-hidden="true" />
               OKR
             </button>
@@ -414,9 +425,16 @@ function OKRsContent() {
                 </button>
               ))}
             </div>
-            <span className="text-[12px] text-muted">
-              {filteredOKRs.length}/{MAX_OKRS_PER_QUARTER} OKRs in{" "}
-              {currentQuarter}
+            <span
+              className={`text-[12px] font-medium px-2 py-0.5 rounded-full ${
+                activeOKRs.length >= MAX_OKRS_PER_QUARTER
+                  ? "bg-red-100 text-red-700"
+                  : activeOKRs.length >= MAX_OKRS_PER_QUARTER - 1
+                    ? "bg-amber-100 text-amber-700"
+                    : "text-muted"
+              }`}
+            >
+              {activeOKRs.length}/{MAX_OKRS_PER_QUARTER} OKRs
             </span>
           </div>
 
@@ -510,16 +528,16 @@ function OKRsContent() {
         open={!!confirmDialog}
         title={
           confirmDialog?.type === "delete"
-            ? "OKR loeschen"
+            ? "OKR löschen"
             : "OKR archivieren"
         }
         description={
           confirmDialog?.type === "delete"
-            ? `"${confirmDialog?.okr.title}" wird unwiderruflich geloescht. Alle Check-ins und Key Results gehen verloren.`
-            : `"${confirmDialog?.okr.title}" wird archiviert und kann spaeter wiederhergestellt werden.`
+            ? `"${confirmDialog?.okr.title}" wird unwiderruflich gelöscht. Alle Check-ins und Key Results gehen verloren.`
+            : `"${confirmDialog?.okr.title}" wird archiviert und kann später wiederhergestellt werden.`
         }
         confirmLabel={
-          confirmDialog?.type === "delete" ? "Loeschen" : "Archivieren"
+          confirmDialog?.type === "delete" ? "Löschen" : "Archivieren"
         }
         variant={confirmDialog?.type === "delete" ? "danger" : "default"}
         icon={confirmDialog?.type === "delete" ? "delete" : "warning"}

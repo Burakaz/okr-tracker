@@ -35,7 +35,7 @@ const PLACEHOLDER_COURSES: Course[] = [
   {
     id: "2",
     name: "Fortgeschrittene Kommunikation",
-    description: "Verbessere deine Kommunikationsfaehigkeiten fuer Meetings und Praesentationen.",
+    description: "Verbessere deine Kommunikationsfähigkeiten für Meetings und Präsentationen.",
     duration: "6 Std.",
     category: "skill",
     provider: "LinkedIn Learning",
@@ -43,7 +43,7 @@ const PLACEHOLDER_COURSES: Course[] = [
   {
     id: "3",
     name: "Data Analytics Grundkurs",
-    description: "Einfuehrung in Datenanalyse mit praktischen Beispielen aus dem Marketing.",
+    description: "Einführung in Datenanalyse mit praktischen Beispielen aus dem Marketing.",
     duration: "8 Std.",
     category: "learning",
     provider: "Coursera",
@@ -51,7 +51,7 @@ const PLACEHOLDER_COURSES: Course[] = [
   {
     id: "4",
     name: "Leadership & Management",
-    description: "Fuehrungskompetenzen entwickeln und Teams effektiv leiten.",
+    description: "Führungskompetenzen entwickeln und Teams effektiv leiten.",
     duration: "10 Std.",
     category: "career",
     provider: "Intern",
@@ -67,7 +67,7 @@ const PLACEHOLDER_COURSES: Course[] = [
   {
     id: "6",
     name: "Performance Marketing Vertiefung",
-    description: "Google Ads, Meta Ads und Conversion-Optimierung fuer Fortgeschrittene.",
+    description: "Google Ads, Meta Ads und Conversion-Optimierung für Fortgeschrittene.",
     duration: "12 Std.",
     category: "performance",
     provider: "Google Skillshop",
@@ -173,11 +173,11 @@ export default function LearningsPage() {
                     {isAdding ? (
                       <Loader2 className="h-3.5 w-3.5 animate-spin" />
                     ) : isAdded ? (
-                      "Hinzugefuegt"
+                      "Hinzugefügt"
                     ) : (
                       <>
                         <Plus className="h-3.5 w-3.5" />
-                        Hinzufuegen
+                        Hinzufügen
                       </>
                     )}
                   </button>

@@ -13,6 +13,8 @@ export interface User {
   manager_id: string | null;
   career_level_id: string | null;
   organization_id: string | null;
+  position: string | null;
+  craft_focus: string | null;
   created_at: string;
   updated_at: string;
 }

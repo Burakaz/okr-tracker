@@ -8,6 +8,8 @@ import {
   Building2,
   Save,
   Loader2,
+  Briefcase,
+  Compass,
 } from "lucide-react";
 import { toast } from "sonner";
 import { useCurrentUser } from "@/lib/queries";
@@ -28,6 +30,8 @@ export default function SettingsPage() {
 
   const [name, setName] = useState("");
   const [department, setDepartment] = useState("");
+  const [position, setPosition] = useState("");
+  const [craftFocus, setCraftFocus] = useState("");
   const [isSaving, setIsSaving] = useState(false);
   const [hasInitialized, setHasInitialized] = useState(false);
 
@@ -35,6 +39,8 @@ export default function SettingsPage() {
   if (user && !hasInitialized) {
     setName(user.name || "");
     setDepartment(user.department || "");
+    setPosition(user.position || "");
+    setCraftFocus(user.craft_focus || "");
     setHasInitialized(true);
   }
 
@@ -46,7 +52,7 @@ export default function SettingsPage() {
       const res = await fetch("/api/auth/me", {
         method: "PATCH",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ name, department }),
+        body: JSON.stringify({ name, department, position, craft_focus: craftFocus }),
       });
 
       if (res.ok) {
@@ -62,7 +68,12 @@ export default function SettingsPage() {
     }
   };
 
-  const hasChanges = user && (name !== user.name || department !== (user.department || ""));
+  const hasChanges = user && (
+    name !== user.name ||
+    department !== (user.department || "") ||
+    position !== (user.position || "") ||
+    craftFocus !== (user.craft_focus || "")
+  );
 
   if (isLoadingUser) {
     return (
@@ -167,6 +178,48 @@ export default function SettingsPage() {
                   className="input w-full"
                   placeholder="z.B. Performance Marketing"
                 />
+              </div>
+
+              <div>
+                <label htmlFor="position" className="block text-sm font-medium text-foreground mb-1.5">
+                  <div className="flex items-center gap-1.5">
+                    <Briefcase className="h-3.5 w-3.5 text-muted" />
+                    Position
+                  </div>
+                </label>
+                <input
+                  id="position"
+                  type="text"
+                  value={position}
+                  onChange={(e) => setPosition(e.target.value)}
+                  className="input w-full"
+                  placeholder="z.B. Performance Marketing Manager"
+                />
+              </div>
+
+              <div>
+                <label htmlFor="craft-focus" className="block text-sm font-medium text-foreground mb-1.5">
+                  <div className="flex items-center gap-1.5">
+                    <Compass className="h-3.5 w-3.5 text-muted" />
+                    Craft Focus
+                  </div>
+                </label>
+                <select
+                  id="craft-focus"
+                  value={craftFocus}
+                  onChange={(e) => setCraftFocus(e.target.value)}
+                  className="input w-full"
+                >
+                  <option value="">Bitte wählen...</option>
+                  <option value="design">Design</option>
+                  <option value="development">Development</option>
+                  <option value="marketing">Marketing</option>
+                  <option value="sales">Sales</option>
+                  <option value="operations">Operations</option>
+                  <option value="hr">HR</option>
+                  <option value="finance">Finance</option>
+                  <option value="other">Sonstiges</option>
+                </select>
               </div>
 
               <div>

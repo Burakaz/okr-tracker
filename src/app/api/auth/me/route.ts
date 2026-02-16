@@ -54,6 +54,8 @@ export async function GET() {
       role: profile.role,
       status: profile.status,
       department: profile.department,
+      position: profile.position || null,
+      craft_focus: profile.craft_focus || null,
       manager_id: profile.manager_id,
       career_level_id: profile.career_level_id,
       organization_id: profile.organization_id,
@@ -104,7 +106,7 @@ export async function PATCH(request: NextRequest) {
     }
 
     const body = await request.json();
-    const allowedFields = ["name", "department"];
+    const allowedFields = ["name", "department", "position", "craft_focus"];
     const updates: Record<string, string> = {};
 
     for (const field of allowedFields) {

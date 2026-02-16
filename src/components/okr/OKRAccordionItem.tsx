@@ -123,7 +123,7 @@ export function OKRAccordionItem({
             onCheckin(okr);
           }}
           className="btn-success text-[12px] py-1 px-2.5 gap-1 flex-shrink-0"
-          aria-label={`Check-in fuer "${okr.title}"`}
+          aria-label={`Check-in für "${okr.title}"`}
         >
           <ClipboardCheck className="h-3.5 w-3.5" aria-hidden="true" />
           <span className="hidden lg:inline">Check-in</span>
@@ -162,7 +162,7 @@ export function OKRAccordionItem({
               <Calendar className="h-3.5 w-3.5" aria-hidden="true" />
               {okr.due_date
                 ? new Date(okr.due_date).toLocaleDateString("de-DE")
-                : "Kein Faelligkeitsdatum"}
+                : "Kein Fälligkeitsdatum"}
             </span>
             <span className={`badge ${getCategoryClassName(okr.category)}`}>
               {getCategoryLabel(okr.category)}
@@ -237,8 +237,8 @@ export function OKRAccordionItem({
             <button
               onClick={() => onDelete(okr)}
               className="p-2 hover:bg-red-50 rounded-lg transition-colors"
-              title="Loeschen"
-              aria-label={`"${okr.title}" loeschen`}
+              title="Löschen"
+              aria-label={`"${okr.title}" löschen`}
             >
               <Trash2 className="h-4 w-4 text-red-500" aria-hidden="true" />
             </button>

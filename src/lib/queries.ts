@@ -222,6 +222,73 @@ export function useCreateCheckin() {
   });
 }
 
+// ===== Organization =====
+export function useOrganization() {
+  return useQuery<{ organization: { id: string; name: string; slug: string; domain?: string; logo_url: string | null; created_at: string } }>({
+    queryKey: ["organization"],
+    queryFn: async () => {
+      const res = await fetch("/api/organization");
+      if (!res.ok) throw new Error("Fehler beim Laden der Organisation");
+      return res.json();
+    },
+    staleTime: 5 * 60 * 1000,
+  });
+}
+
+export function useOrganizationMembers() {
+  return useQuery<{ members: Array<{ id: string; name: string; email: string; role: string; department: string | null; avatar_url: string | null; status: string; created_at: string }> }>({
+    queryKey: ["organization", "members"],
+    queryFn: async () => {
+      const res = await fetch("/api/organization/members");
+      if (!res.ok) throw new Error("Fehler beim Laden der Mitglieder");
+      return res.json();
+    },
+    staleTime: 2 * 60 * 1000,
+  });
+}
+
+export function useUpdateOrganization() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: async (data: { name?: string; domain?: string; logo_url?: string }) => {
+      const res = await fetch("/api/organization", {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(data),
+      });
+      if (!res.ok) {
+        const error = await res.json();
+        throw new Error(error.error || "Fehler beim Aktualisieren");
+      }
+      return res.json();
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["organization"] });
+    },
+  });
+}
+
+export function useUpdateMemberRole() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: async ({ memberId, role }: { memberId: string; role: string }) => {
+      const res = await fetch(`/api/organization/members/${memberId}/role`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ role }),
+      });
+      if (!res.ok) {
+        const error = await res.json();
+        throw new Error(error.error || "Fehler beim Aktualisieren");
+      }
+      return res.json();
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["organization", "members"] });
+    },
+  });
+}
+
 // ===== Prefetch =====
 export function usePrefetchData(quarter?: string) {
   const queryClient = useQueryClient();

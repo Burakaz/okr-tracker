@@ -89,7 +89,7 @@ export default function DashboardPage() {
             Hallo, {user?.name?.split(" ")[0] || "dort"}
           </h1>
           <p className="text-sm text-muted mt-1">
-            {currentQuarter} &middot; Dein persoenliches Dashboard
+            {currentQuarter} &middot; Dein persönliches Dashboard
           </p>
         </div>
 
@@ -115,7 +115,7 @@ export default function DashboardPage() {
             <div className="flex items-center gap-2 mb-3">
               <AlertCircle className="h-4 w-4 text-red-500" />
               <h2 className="text-sm font-semibold text-foreground">
-                Diese Woche faellig
+                Diese Woche fällig
               </h2>
               <span className="badge badge-red text-[11px]">
                 {overdueOKRs.length}
@@ -237,7 +237,7 @@ export default function DashboardPage() {
                 </span>
               </div>
               <p className="text-[13px] font-medium text-foreground mb-1">
-                Skill-Gaps schliessen
+                Skill-Gaps schließen
               </p>
               <p className="text-[12px] text-muted mb-3">
                 Basierend auf deinen OKR-Kategorien
@@ -302,7 +302,7 @@ export default function DashboardPage() {
         <div className="card p-5">
           <div className="flex items-center justify-between mb-4">
             <h2 className="text-sm font-semibold text-foreground">
-              Quartalsueberblick
+              Quartalsüberblick
             </h2>
             <Link
               href="/okrs"

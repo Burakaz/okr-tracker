@@ -118,21 +118,23 @@ function SidebarContent({ user, orgLogo }: SidebarProps) {
           ))}
         </div>
 
-        {/* Management Section */}
-        <div>
-          <h3 className="section-header">Management</h3>
-          <div className="space-y-0.5">
-            {managementItems.map((item) => (
-              <NavItem
-                key={item.href}
-                href={item.href}
-                icon={<item.icon className="h-4 w-4" />}
-                label={item.label}
-                active={isActive(item.href)}
-              />
-            ))}
+        {/* Management Section - only for admin/manager/hr/super_admin */}
+        {["admin", "super_admin", "hr", "manager"].includes(user.role) && (
+          <div>
+            <h3 className="section-header">Management</h3>
+            <div className="space-y-0.5">
+              {managementItems.map((item) => (
+                <NavItem
+                  key={item.href}
+                  href={item.href}
+                  icon={<item.icon className="h-4 w-4" />}
+                  label={item.label}
+                  active={isActive(item.href)}
+                />
+              ))}
+            </div>
           </div>
-        </div>
+        )}
       </nav>
 
       {/* Footer mit Settings */}

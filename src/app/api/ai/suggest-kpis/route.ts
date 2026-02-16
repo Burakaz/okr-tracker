@@ -99,10 +99,14 @@ export async function POST(request: Request) {
       );
     }
 
-    // Check for ANTHROPIC_API_KEY
-    const apiKey = process.env.ANTHROPIC_API_KEY;
+    // Check for OPENAI_API_KEY (fallback to ANTHROPIC_API_KEY for backwards compat)
+    const openaiKey = process.env.OPENAI_API_KEY;
+    const anthropicKey = process.env.ANTHROPIC_API_KEY;
+    const apiKey = openaiKey || anthropicKey;
+    const useOpenAI = !!openaiKey;
+
     if (!apiKey) {
-      logger.error("ANTHROPIC_API_KEY not configured", { requestId });
+      logger.error("No AI API key configured (OPENAI_API_KEY or ANTHROPIC_API_KEY)", { requestId });
       return withRateLimitHeaders(
         withCorsHeaders(
           NextResponse.json(
@@ -113,47 +117,93 @@ export async function POST(request: Request) {
       );
     }
 
-    // Call Anthropic API
+    // Build prompts
     const systemPrompt = buildSystemPrompt();
     const userPrompt = buildUserPrompt(body);
 
-    const anthropicResponse = await fetch(
-      "https://api.anthropic.com/v1/messages",
-      {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          "x-api-key": apiKey,
-          "anthropic-version": "2023-06-01",
-        },
-        body: JSON.stringify({
-          model: "claude-haiku-4-20250404",
-          max_tokens: 1024,
-          system: systemPrompt,
-          messages: [{ role: "user", content: userPrompt }],
-        }),
-      }
-    );
+    let textContent: string | undefined;
 
-    if (!anthropicResponse.ok) {
-      const errorText = await anthropicResponse.text();
-      logger.error("Anthropic API error", {
-        requestId,
-        status: anthropicResponse.status,
-        error: errorText,
-      });
-      return withRateLimitHeaders(
-        withCorsHeaders(
-          NextResponse.json(
-            { error: "AI-Service vorübergehend nicht verfügbar" },
-            { status: 502 }
-          )
-        )
+    if (useOpenAI) {
+      // Call OpenAI API
+      const openaiResponse = await fetch(
+        "https://api.openai.com/v1/chat/completions",
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${apiKey}`,
+          },
+          body: JSON.stringify({
+            model: "gpt-4o-mini",
+            max_tokens: 1024,
+            messages: [
+              { role: "system", content: systemPrompt },
+              { role: "user", content: userPrompt },
+            ],
+            temperature: 0.7,
+          }),
+        }
       );
-    }
 
-    const aiResult = await anthropicResponse.json();
-    const textContent = aiResult.content?.[0]?.text;
+      if (!openaiResponse.ok) {
+        const errorText = await openaiResponse.text();
+        logger.error("OpenAI API error", {
+          requestId,
+          status: openaiResponse.status,
+          error: errorText,
+        });
+        return withRateLimitHeaders(
+          withCorsHeaders(
+            NextResponse.json(
+              { error: "AI-Service vorübergehend nicht verfügbar" },
+              { status: 502 }
+            )
+          )
+        );
+      }
+
+      const openaiResult = await openaiResponse.json();
+      textContent = openaiResult.choices?.[0]?.message?.content;
+    } else {
+      // Call Anthropic API (legacy fallback)
+      const anthropicResponse = await fetch(
+        "https://api.anthropic.com/v1/messages",
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            "x-api-key": apiKey,
+            "anthropic-version": "2023-06-01",
+          },
+          body: JSON.stringify({
+            model: "claude-haiku-4-20250404",
+            max_tokens: 1024,
+            system: systemPrompt,
+            messages: [{ role: "user", content: userPrompt }],
+          }),
+        }
+      );
+
+      if (!anthropicResponse.ok) {
+        const errorText = await anthropicResponse.text();
+        logger.error("Anthropic API error", {
+          requestId,
+          status: anthropicResponse.status,
+          error: errorText,
+        });
+        return withRateLimitHeaders(
+          withCorsHeaders(
+            NextResponse.json(
+              { error: "AI-Service vorübergehend nicht verfügbar" },
+              { status: 502 }
+            )
+          )
+        );
+      }
+
+      const aiResult = await anthropicResponse.json();
+      textContent = aiResult.content?.[0]?.text;
+    }
 
     if (!textContent) {
       logger.error("Empty AI response", { requestId });

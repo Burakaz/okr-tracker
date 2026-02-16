@@ -127,8 +127,12 @@ export function OKRForm({
     }
   };
 
+  const [formError, setFormError] = useState<string | null>(null);
+
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
+    setFormError(null);
+
     if (!title.trim()) return;
 
     const validKRs = keyResults
@@ -139,6 +143,11 @@ export function OKRForm({
         target_value: parseFloat(kr.target_value) || 100,
         unit: kr.unit || undefined,
       }));
+
+    if (validKRs.length === 0) {
+      setFormError("Mindestens 1 Key Result mit Titel ist erforderlich.");
+      return;
+    }
 
     onSubmit({
       title: title.trim(),
@@ -342,6 +351,13 @@ export function OKRForm({
               />
             </div>
           </div>
+
+          {/* Validation Error */}
+          {formError && (
+            <div className="mx-6 mb-0 p-3 bg-red-50 border border-red-200 rounded-lg">
+              <p className="text-[13px] text-red-600">{formError}</p>
+            </div>
+          )}
 
           {/* Footer */}
           <div className="flex items-center justify-end gap-3 p-6 border-t border-cream-300/50">
