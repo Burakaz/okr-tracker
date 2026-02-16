@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createClient, createServiceClient } from "@/lib/supabase/server";
-import { withCorsHeaders, withRateLimitHeaders } from "@/lib/api-utils";
+import { withCorsHeaders, withRateLimitHeaders, ensureProfileWithOrg } from "@/lib/api-utils";
 import { logger, generateRequestId } from "@/lib/logger";
 import { z } from "zod";
 
@@ -33,14 +33,16 @@ export async function PATCH(
 
     const serviceClient = await createServiceClient();
 
-    // Check requester is admin
-    const { data: profile } = await serviceClient
-      .from("profiles")
-      .select("organization_id, role")
-      .eq("id", user.id)
-      .single();
+    // Check requester is admin (self-healing)
+    const profileData = await ensureProfileWithOrg(serviceClient, user.id, user.email);
+    if (!profileData) {
+      return withRateLimitHeaders(withCorsHeaders(
+        NextResponse.json({ error: "Profil konnte nicht geladen werden" }, { status: 500 })
+      ));
+    }
+    const { organization_id: orgId, role: userRole } = profileData;
 
-    if (!profile?.organization_id || !["admin", "super_admin"].includes(profile.role)) {
+    if (!["admin", "super_admin"].includes(userRole)) {
       return withRateLimitHeaders(withCorsHeaders(
         NextResponse.json({ error: "Keine Berechtigung" }, { status: 403 })
       ));
@@ -62,7 +64,7 @@ export async function PATCH(
       .eq("id", memberId)
       .single();
 
-    if (!targetProfile || targetProfile.organization_id !== profile.organization_id) {
+    if (!targetProfile || targetProfile.organization_id !== orgId) {
       return withRateLimitHeaders(withCorsHeaders(
         NextResponse.json({ error: "Mitglied nicht gefunden" }, { status: 404 })
       ));

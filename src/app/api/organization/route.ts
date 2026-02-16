@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createClient, createServiceClient } from "@/lib/supabase/server";
-import { withCorsHeaders, withRateLimitHeaders } from "@/lib/api-utils";
+import { withCorsHeaders, withRateLimitHeaders, ensureProfileWithOrg } from "@/lib/api-utils";
 import { logger, generateRequestId } from "@/lib/logger";
 
 export async function GET() {
@@ -16,23 +16,19 @@ export async function GET() {
 
     const serviceClient = await createServiceClient();
 
-    // Get user's profile to find org
-    const { data: profile } = await serviceClient
-      .from("profiles")
-      .select("organization_id")
-      .eq("id", user.id)
-      .single();
-
-    if (!profile?.organization_id) {
+    // Get user's profile to find org (self-healing)
+    const profileData = await ensureProfileWithOrg(serviceClient, user.id, user.email);
+    if (!profileData) {
       return withRateLimitHeaders(withCorsHeaders(
-        NextResponse.json({ error: "Keine Organisation zugewiesen" }, { status: 404 })
+        NextResponse.json({ error: "Profil konnte nicht geladen werden" }, { status: 500 })
       ));
     }
+    const { organization_id: orgId } = profileData;
 
     const { data: org, error: orgError } = await serviceClient
       .from("organizations")
       .select("*")
-      .eq("id", profile.organization_id)
+      .eq("id", orgId)
       .single();
 
     if (orgError || !org) {
@@ -65,20 +61,16 @@ export async function PATCH(request: NextRequest) {
 
     const serviceClient = await createServiceClient();
 
-    // Check user is admin
-    const { data: profile } = await serviceClient
-      .from("profiles")
-      .select("organization_id, role")
-      .eq("id", user.id)
-      .single();
-
-    if (!profile?.organization_id) {
+    // Check user is admin (self-healing)
+    const profileData = await ensureProfileWithOrg(serviceClient, user.id, user.email);
+    if (!profileData) {
       return withRateLimitHeaders(withCorsHeaders(
-        NextResponse.json({ error: "Keine Organisation zugewiesen" }, { status: 404 })
+        NextResponse.json({ error: "Profil konnte nicht geladen werden" }, { status: 500 })
       ));
     }
+    const { organization_id: orgId, role: userRole } = profileData;
 
-    if (!["admin", "super_admin"].includes(profile.role)) {
+    if (!["admin", "super_admin"].includes(userRole)) {
       return withRateLimitHeaders(withCorsHeaders(
         NextResponse.json({ error: "Keine Berechtigung" }, { status: 403 })
       ));
@@ -102,7 +94,7 @@ export async function PATCH(request: NextRequest) {
     const { data: org, error: updateError } = await serviceClient
       .from("organizations")
       .update(updates)
-      .eq("id", profile.organization_id)
+      .eq("id", orgId)
       .select("*")
       .single();
 

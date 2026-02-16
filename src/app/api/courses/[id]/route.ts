@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createClient, createServiceClient } from "@/lib/supabase/server";
 import { updateCourseSchema } from "@/lib/validation";
-import { withCorsHeaders, withRateLimitHeaders } from "@/lib/api-utils";
+import { withCorsHeaders, withRateLimitHeaders, ensureProfileWithOrg } from "@/lib/api-utils";
 import { logger, generateRequestId } from "@/lib/logger";
 
 function isValidUUID(id: string): boolean {
@@ -186,14 +186,22 @@ export async function PATCH(
     }
 
     // Check permission: only owner or admin/super_admin
-    const { data: profile } = await serviceClient
-      .from("profiles")
-      .select("role")
-      .eq("id", user.id)
-      .single();
+    const profileData = await ensureProfileWithOrg(serviceClient, user.id, user.email);
+    if (!profileData) {
+      reqLog.finish(500, { userId: user.id });
+      return withRateLimitHeaders(
+        withCorsHeaders(
+          NextResponse.json(
+            { error: "Profil konnte nicht geladen werden" },
+            { status: 500 }
+          )
+        )
+      );
+    }
+    const { role: userRole } = profileData;
 
     const isOwner = existingCourse.created_by === user.id;
-    const isAdmin = profile?.role === "admin" || profile?.role === "super_admin";
+    const isAdmin = userRole === "admin" || userRole === "super_admin";
 
     if (!isOwner && !isAdmin) {
       reqLog.finish(403, { userId: user.id });
@@ -339,14 +347,22 @@ export async function DELETE(
     }
 
     // Check permission: only owner or admin/super_admin
-    const { data: profile } = await serviceClient
-      .from("profiles")
-      .select("role")
-      .eq("id", user.id)
-      .single();
+    const profileData = await ensureProfileWithOrg(serviceClient, user.id, user.email);
+    if (!profileData) {
+      reqLog.finish(500, { userId: user.id });
+      return withRateLimitHeaders(
+        withCorsHeaders(
+          NextResponse.json(
+            { error: "Profil konnte nicht geladen werden" },
+            { status: 500 }
+          )
+        )
+      );
+    }
+    const { role: userRole } = profileData;
 
     const isOwner = existingCourse.created_by === user.id;
-    const isAdmin = profile?.role === "admin" || profile?.role === "super_admin";
+    const isAdmin = userRole === "admin" || userRole === "super_admin";
 
     if (!isOwner && !isAdmin) {
       reqLog.finish(403, { userId: user.id });

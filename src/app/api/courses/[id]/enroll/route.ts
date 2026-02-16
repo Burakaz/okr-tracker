@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createClient, createServiceClient } from "@/lib/supabase/server";
 import { enrollCourseSchema } from "@/lib/validation";
-import { withCorsHeaders, withRateLimitHeaders } from "@/lib/api-utils";
+import { withCorsHeaders, withRateLimitHeaders, ensureProfileWithOrg } from "@/lib/api-utils";
 import { logger, generateRequestId } from "@/lib/logger";
 
 function isValidUUID(id: string): boolean {
@@ -65,24 +65,20 @@ export async function POST(
     const data = parsed.data;
     const serviceClient = await createServiceClient();
 
-    // Get user's organization_id from profile
-    const { data: profile, error: profileError } = await serviceClient
-      .from("profiles")
-      .select("organization_id")
-      .eq("id", user.id)
-      .single();
-
-    if (profileError || !profile?.organization_id) {
-      reqLog.finish(404, { userId: user.id });
+    // Get user's organization_id from profile (self-healing)
+    const profileData = await ensureProfileWithOrg(serviceClient, user.id, user.email);
+    if (!profileData) {
+      reqLog.finish(500, { userId: user.id });
       return withRateLimitHeaders(
         withCorsHeaders(
           NextResponse.json(
-            { error: "Profil nicht gefunden" },
-            { status: 404 }
+            { error: "Profil konnte nicht geladen werden" },
+            { status: 500 }
           )
         )
       );
     }
+    const { organization_id: orgId } = profileData;
 
     // Verify course exists
     const { data: course, error: courseError } = await serviceClient
@@ -109,7 +105,7 @@ export async function POST(
       .insert({
         user_id: user.id,
         course_id: id,
-        organization_id: profile.organization_id,
+        organization_id: orgId,
         status: "in_progress",
         started_at: new Date().toISOString(),
         notes: data.notes || null,

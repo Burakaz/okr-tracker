@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createClient, createServiceClient } from "@/lib/supabase/server";
 import { createCourseSchema } from "@/lib/validation";
-import { withCorsHeaders, withRateLimitHeaders } from "@/lib/api-utils";
+import { withCorsHeaders, withRateLimitHeaders, ensureProfileWithOrg } from "@/lib/api-utils";
 import { logger, generateRequestId } from "@/lib/logger";
 
 export async function GET(request: NextRequest) {
@@ -26,24 +26,20 @@ export async function GET(request: NextRequest) {
 
     const serviceClient = await createServiceClient();
 
-    // Get user's organization
-    const { data: profile } = await serviceClient
-      .from("profiles")
-      .select("organization_id")
-      .eq("id", user.id)
-      .single();
-
-    if (!profile?.organization_id) {
-      reqLog.finish(404);
+    // Get user's organization (self-healing)
+    const profileData = await ensureProfileWithOrg(serviceClient, user.id, user.email);
+    if (!profileData) {
+      reqLog.finish(500, { userId: user.id });
       return withRateLimitHeaders(
         withCorsHeaders(
           NextResponse.json(
-            { error: "Keine Organisation zugewiesen" },
-            { status: 404 }
+            { error: "Profil konnte nicht geladen werden" },
+            { status: 500 }
           )
         )
       );
     }
+    const { organization_id: orgId } = profileData;
 
     const { searchParams } = new URL(request.url);
     const category = searchParams.get("category");
@@ -54,7 +50,7 @@ export async function GET(request: NextRequest) {
     let query = serviceClient
       .from("courses")
       .select("*, course_modules(id)", { count: "exact" })
-      .eq("organization_id", profile.organization_id)
+      .eq("organization_id", orgId)
       .eq("is_published", true);
 
     if (category) {
@@ -179,30 +175,26 @@ export async function POST(request: NextRequest) {
     const data = parsed.data;
     const serviceClient = await createServiceClient();
 
-    // Get user's organization
-    const { data: profile, error: profileError } = await serviceClient
-      .from("profiles")
-      .select("organization_id")
-      .eq("id", user.id)
-      .single();
-
-    if (profileError || !profile?.organization_id) {
-      reqLog.finish(404, { userId: user.id });
+    // Get user's organization (self-healing)
+    const profileData = await ensureProfileWithOrg(serviceClient, user.id, user.email);
+    if (!profileData) {
+      reqLog.finish(500, { userId: user.id });
       return withRateLimitHeaders(
         withCorsHeaders(
           NextResponse.json(
-            { error: "Profil nicht gefunden" },
-            { status: 404 }
+            { error: "Profil konnte nicht geladen werden" },
+            { status: 500 }
           )
         )
       );
     }
+    const { organization_id: orgId } = profileData;
 
     // Insert the course
     const { data: newCourse, error: insertError } = await serviceClient
       .from("courses")
       .insert({
-        organization_id: profile.organization_id,
+        organization_id: orgId,
         created_by: user.id,
         title: data.title,
         description: data.description || null,

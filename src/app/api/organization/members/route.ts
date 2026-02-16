@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 import { createClient, createServiceClient } from "@/lib/supabase/server";
-import { withCorsHeaders, withRateLimitHeaders } from "@/lib/api-utils";
+import { withCorsHeaders, withRateLimitHeaders, ensureProfileWithOrg } from "@/lib/api-utils";
 import { logger, generateRequestId } from "@/lib/logger";
 
 export async function GET() {
@@ -16,22 +16,19 @@ export async function GET() {
 
     const serviceClient = await createServiceClient();
 
-    const { data: profile } = await serviceClient
-      .from("profiles")
-      .select("organization_id")
-      .eq("id", user.id)
-      .single();
-
-    if (!profile?.organization_id) {
+    // Get user's organization (self-healing)
+    const profileData = await ensureProfileWithOrg(serviceClient, user.id, user.email);
+    if (!profileData) {
       return withRateLimitHeaders(withCorsHeaders(
-        NextResponse.json({ error: "Keine Organisation zugewiesen" }, { status: 404 })
+        NextResponse.json({ error: "Profil konnte nicht geladen werden" }, { status: 500 })
       ));
     }
+    const { organization_id: orgId } = profileData;
 
     const { data: members, error: membersError } = await serviceClient
       .from("profiles")
       .select("id, name, email, role, department, avatar_url, status, created_at")
-      .eq("organization_id", profile.organization_id)
+      .eq("organization_id", orgId)
       .order("name");
 
     if (membersError) {

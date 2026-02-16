@@ -3,7 +3,7 @@ import { createClient, createServiceClient } from "@/lib/supabase/server";
 import { createOKRSchema } from "@/lib/validation";
 import { logOKRCreate } from "@/lib/audit";
 import { getQuarterDateRange, MAX_OKRS_PER_QUARTER } from "@/lib/okr-logic";
-import { withCorsHeaders, withRateLimitHeaders } from "@/lib/api-utils";
+import { withCorsHeaders, withRateLimitHeaders, ensureProfileWithOrg } from "@/lib/api-utils";
 import { logger, generateRequestId } from "@/lib/logger";
 
 export async function GET(request: NextRequest) {
@@ -207,38 +207,20 @@ export async function POST(request: NextRequest) {
     const data = parsed.data;
     const serviceClient = await createServiceClient();
 
-    // Get the user's profile to find organization_id
-    const { data: profile, error: profileError } = await serviceClient
-      .from("profiles")
-      .select("organization_id")
-      .eq("id", user.id)
-      .single();
-
-    if (profileError || !profile) {
-      reqLog.finish(404, { userId: user.id });
+    // Get the user's profile to find organization_id (self-healing)
+    const profileData = await ensureProfileWithOrg(serviceClient, user.id, user.email);
+    if (!profileData) {
+      reqLog.finish(500, { userId: user.id });
       return withRateLimitHeaders(
         withCorsHeaders(
           NextResponse.json(
-            { error: "Profil nicht gefunden" },
-            { status: 404 }
+            { error: "Profil konnte nicht geladen werden" },
+            { status: 500 }
           )
         )
       );
     }
-
-    const orgId = profile.organization_id;
-
-    if (!orgId) {
-      reqLog.finish(400, { userId: user.id });
-      return withRateLimitHeaders(
-        withCorsHeaders(
-          NextResponse.json(
-            { error: "Keine Organisation zugewiesen" },
-            { status: 400 }
-          )
-        )
-      );
-    }
+    const { organization_id: orgId } = profileData;
 
     // Enforce MAX_OKRS_PER_QUARTER limit
     const { count, error: countError } = await serviceClient

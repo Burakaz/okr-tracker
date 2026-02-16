@@ -24,26 +24,99 @@ export async function GET() {
     }
 
     const serviceClient = await createServiceClient();
-    const { data: profile, error: profileError } = await serviceClient
+    let { data: profile, error: profileError } = await serviceClient
       .from("profiles")
       .select("*")
       .eq("id", authUser.id)
       .single();
 
+    // Self-healing: create profile if missing (trigger may have failed)
     if (profileError || !profile) {
-      logger.warn("Profile not found for authenticated user", {
+      logger.warn("Profile missing, auto-creating for user", {
         requestId,
         userId: authUser.id,
       });
-      reqLog.finish(404, { userId: authUser.id });
-      return withRateLimitHeaders(
-        withCorsHeaders(
-          NextResponse.json(
-            { error: "Profil nicht gefunden" },
-            { status: 404 }
+
+      // Ensure default organization exists
+      let orgId: string | null = null;
+      const { data: defaultOrg } = await serviceClient
+        .from("organizations")
+        .select("id")
+        .eq("slug", "admkrs")
+        .single();
+
+      if (defaultOrg) {
+        orgId = defaultOrg.id;
+      } else {
+        // Create default org
+        const { data: newOrg } = await serviceClient
+          .from("organizations")
+          .insert({ name: "ADMKRS", slug: "admkrs" })
+          .select("id")
+          .single();
+        orgId = newOrg?.id ?? null;
+      }
+
+      // Create the profile
+      const { data: newProfile, error: createError } = await serviceClient
+        .from("profiles")
+        .upsert({
+          id: authUser.id,
+          email: authUser.email || "",
+          name: authUser.user_metadata?.full_name || authUser.user_metadata?.name || authUser.email?.split("@")[0] || "",
+          avatar_url: authUser.user_metadata?.avatar_url || authUser.user_metadata?.picture || "",
+          organization_id: orgId,
+          role: "employee",
+          status: "active",
+        })
+        .select("*")
+        .single();
+
+      if (createError || !newProfile) {
+        logger.error("Failed to auto-create profile", {
+          requestId,
+          userId: authUser.id,
+          error: createError?.message,
+        });
+        reqLog.finish(500, { userId: authUser.id });
+        return withRateLimitHeaders(
+          withCorsHeaders(
+            NextResponse.json(
+              { error: "Profil konnte nicht erstellt werden" },
+              { status: 500 }
+            )
           )
-        )
-      );
+        );
+      }
+
+      profile = newProfile;
+    }
+
+    // Self-healing: assign organization if profile exists but org is missing
+    if (!profile.organization_id) {
+      logger.warn("Profile missing organization_id, auto-assigning", {
+        requestId,
+        userId: authUser.id,
+      });
+
+      const { data: defaultOrg } = await serviceClient
+        .from("organizations")
+        .select("id")
+        .eq("slug", "admkrs")
+        .single();
+
+      if (defaultOrg) {
+        const { data: updatedProfile } = await serviceClient
+          .from("profiles")
+          .update({ organization_id: defaultOrg.id })
+          .eq("id", authUser.id)
+          .select("*")
+          .single();
+
+        if (updatedProfile) {
+          profile = updatedProfile;
+        }
+      }
     }
 
     const user = {

@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createClient, createServiceClient } from "@/lib/supabase/server";
-import { withCorsHeaders, withRateLimitHeaders } from "@/lib/api-utils";
+import { withCorsHeaders, withRateLimitHeaders, ensureProfileWithOrg } from "@/lib/api-utils";
 import { logger, generateRequestId } from "@/lib/logger";
 
 export async function GET(request: NextRequest) {
@@ -25,24 +25,20 @@ export async function GET(request: NextRequest) {
 
     const serviceClient = await createServiceClient();
 
-    // Get the user's profile to check role and organization
-    const { data: profile, error: profileError } = await serviceClient
-      .from("profiles")
-      .select("organization_id, role")
-      .eq("id", user.id)
-      .single();
-
-    if (profileError || !profile || !profile.organization_id) {
-      reqLog.finish(404, { userId: user.id });
+    // Get the user's profile to check role and organization (self-healing)
+    const profileData = await ensureProfileWithOrg(serviceClient, user.id, user.email);
+    if (!profileData) {
+      reqLog.finish(500, { userId: user.id });
       return withRateLimitHeaders(
         withCorsHeaders(
           NextResponse.json(
-            { error: "Profil nicht gefunden" },
-            { status: 404 }
+            { error: "Profil konnte nicht geladen werden" },
+            { status: 500 }
           )
         )
       );
     }
+    const { organization_id: orgId, role: userRole } = profileData;
 
     const { searchParams } = new URL(request.url);
     const page = Math.max(1, parseInt(searchParams.get("page") || "1", 10));
@@ -57,13 +53,13 @@ export async function GET(request: NextRequest) {
     // Build query -- regular users see only their own logs,
     // managers/hr/admin/super_admin see all org logs
     const isPrivileged = ["manager", "hr", "admin", "super_admin"].includes(
-      profile.role
+      userRole
     );
 
     let query = serviceClient
       .from("okr_audit_logs")
       .select("*", { count: "exact" })
-      .eq("organization_id", profile.organization_id)
+      .eq("organization_id", orgId)
       .order("created_at", { ascending: false })
       .range(offset, offset + limit - 1);
 
