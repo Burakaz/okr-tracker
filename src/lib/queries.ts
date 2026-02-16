@@ -10,6 +10,10 @@ import type {
   UpdateOKRRequest,
   CreateCheckinRequest,
   DuplicateOKRRequest,
+  Course,
+  Enrollment,
+  CreateCourseRequest,
+  TeamLearningMember,
 } from "@/types";
 
 // ===== OKRs =====
@@ -285,6 +289,201 @@ export function useUpdateMemberRole() {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["organization", "members"] });
+    },
+  });
+}
+
+// ===== Learnings =====
+export function useCourses(filters?: {
+  category?: string;
+  provider?: string;
+  difficulty?: string;
+  search?: string;
+}) {
+  return useQuery<{ courses: Course[] }>({
+    queryKey: ["courses", filters],
+    queryFn: async () => {
+      const params = new URLSearchParams();
+      if (filters?.category) params.set("category", filters.category);
+      if (filters?.provider) params.set("provider", filters.provider);
+      if (filters?.difficulty) params.set("difficulty", filters.difficulty);
+      if (filters?.search) params.set("search", filters.search);
+      const res = await fetch(`/api/courses?${params}`);
+      if (!res.ok) throw new Error("Fehler beim Laden der Kurse");
+      return res.json();
+    },
+    staleTime: 2 * 60 * 1000,
+  });
+}
+
+export function useCourse(id: string) {
+  return useQuery<{ course: Course; enrollment: Enrollment | null }>({
+    queryKey: ["course", id],
+    queryFn: async () => {
+      const res = await fetch(`/api/courses/${id}`);
+      if (!res.ok) throw new Error("Fehler beim Laden des Kurses");
+      return res.json();
+    },
+    enabled: !!id,
+  });
+}
+
+export function useEnrollments(status?: string) {
+  return useQuery<{ enrollments: Enrollment[] }>({
+    queryKey: ["enrollments", status],
+    queryFn: async () => {
+      const params = new URLSearchParams();
+      if (status) params.set("status", status);
+      const res = await fetch(`/api/enrollments?${params}`);
+      if (!res.ok) throw new Error("Fehler beim Laden der Einschreibungen");
+      return res.json();
+    },
+    staleTime: 1 * 60 * 1000,
+  });
+}
+
+export function useTeamLearnings() {
+  return useQuery<{ members: TeamLearningMember[] }>({
+    queryKey: ["teamLearnings"],
+    queryFn: async () => {
+      const res = await fetch("/api/team/learnings");
+      if (!res.ok) throw new Error("Fehler beim Laden der Team-Learnings");
+      return res.json();
+    },
+    staleTime: 5 * 60 * 1000,
+  });
+}
+
+export function useEnrollCourse() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: async (courseId: string) => {
+      const res = await fetch(`/api/courses/${courseId}/enroll`, {
+        method: "POST",
+      });
+      if (!res.ok) {
+        const error = await res.json();
+        throw new Error(error.error || "Fehler beim Einschreiben");
+      }
+      return res.json();
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["courses"] });
+      queryClient.invalidateQueries({ queryKey: ["enrollments"] });
+    },
+  });
+}
+
+export function useToggleModuleCompletion() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: async ({
+      courseId,
+      moduleId,
+    }: {
+      courseId: string;
+      moduleId: string;
+    }) => {
+      const res = await fetch(
+        `/api/courses/${courseId}/modules/${moduleId}/complete`,
+        { method: "POST" }
+      );
+      if (!res.ok) {
+        const error = await res.json();
+        throw new Error(error.error || "Fehler beim Aktualisieren");
+      }
+      return res.json();
+    },
+    onSuccess: (_data, variables) => {
+      queryClient.invalidateQueries({ queryKey: ["enrollments"] });
+      queryClient.invalidateQueries({ queryKey: ["course", variables.courseId] });
+    },
+  });
+}
+
+export function useCreateCourse() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: async (data: CreateCourseRequest) => {
+      const res = await fetch("/api/courses", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(data),
+      });
+      if (!res.ok) {
+        const error = await res.json();
+        throw new Error(error.error || "Fehler beim Erstellen");
+      }
+      return res.json();
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["courses"] });
+    },
+  });
+}
+
+export function useUploadCertificate() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: async ({
+      enrollmentId,
+      formData,
+    }: {
+      enrollmentId: string;
+      formData: FormData;
+    }) => {
+      const res = await fetch(
+        `/api/enrollments/${enrollmentId}/certificate`,
+        {
+          method: "POST",
+          body: formData,
+        }
+      );
+      if (!res.ok) {
+        const error = await res.json();
+        throw new Error(error.error || "Fehler beim Hochladen");
+      }
+      return res.json();
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["enrollments"] });
+    },
+  });
+}
+
+export function useUnenroll() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: async (enrollmentId: string) => {
+      const res = await fetch(`/api/enrollments/${enrollmentId}`, {
+        method: "DELETE",
+      });
+      if (!res.ok) {
+        const error = await res.json();
+        throw new Error(error.error || "Fehler beim Abmelden");
+      }
+      return res.json();
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["enrollments"] });
+      queryClient.invalidateQueries({ queryKey: ["courses"] });
+    },
+  });
+}
+
+export function useSuggestCourses() {
+  return useMutation({
+    mutationFn: async (data: { goals?: string; skills?: string[] }) => {
+      const res = await fetch("/api/ai/suggest-courses", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(data),
+      });
+      if (!res.ok) {
+        const error = await res.json();
+        throw new Error(error.error || "Fehler bei der KI-Empfehlung");
+      }
+      return res.json();
     },
   });
 }

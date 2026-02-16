@@ -50,3 +50,53 @@ export const duplicateOKRSchema = z.object({
   reset_progress: z.boolean(),
   copy_key_results: z.boolean(),
 });
+
+// ===== Learning Schemas =====
+export const courseCategoryEnum = z.enum([
+  "design", "development", "marketing", "leadership",
+  "data", "communication", "product", "other",
+]);
+
+export const courseDifficultyEnum = z.enum(["beginner", "intermediate", "advanced"]);
+
+export const createCourseSchema = z.object({
+  title: z.string().min(1, "Kursname ist erforderlich").max(200),
+  description: z.string().max(2000).optional(),
+  provider: z.string().max(100).optional().default("Intern"),
+  category: courseCategoryEnum,
+  estimated_duration_minutes: z.number().int().min(5).max(10000),
+  difficulty: courseDifficultyEnum.optional().default("beginner"),
+  external_url: z.string().url().optional().or(z.literal("")),
+  tags: z.array(z.string().max(50)).max(10).optional(),
+  modules: z
+    .array(
+      z.object({
+        title: z.string().min(1, "Modulname ist erforderlich").max(200),
+        description: z.string().max(1000).optional(),
+        estimated_minutes: z.number().int().min(1).max(600).optional(),
+      })
+    )
+    .min(1, "Mindestens ein Modul erforderlich")
+    .max(50),
+});
+
+export const updateCourseSchema = z.object({
+  title: z.string().min(1).max(200).optional(),
+  description: z.string().max(2000).optional().nullable(),
+  provider: z.string().max(100).optional(),
+  category: courseCategoryEnum.optional(),
+  estimated_duration_minutes: z.number().int().min(5).max(10000).optional(),
+  difficulty: courseDifficultyEnum.optional(),
+  external_url: z.string().url().optional().nullable(),
+  is_published: z.boolean().optional(),
+  tags: z.array(z.string().max(50)).max(10).optional(),
+});
+
+export const enrollCourseSchema = z.object({
+  notes: z.string().max(500).optional(),
+});
+
+export const updateEnrollmentSchema = z.object({
+  status: z.enum(["in_progress", "completed", "paused", "dropped"]).optional(),
+  notes: z.string().max(500).optional().nullable(),
+});

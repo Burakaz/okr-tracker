@@ -191,3 +191,102 @@ export interface DuplicateOKRRequest {
 
 // ===== Filter Types =====
 export type OKRFilterType = 'all' | 'performance' | 'skill' | 'learning' | 'career' | 'focus' | 'archive';
+
+// ===== Learning =====
+export type CourseCategory = 'design' | 'development' | 'marketing' | 'leadership' | 'data' | 'communication' | 'product' | 'other';
+export type CourseDifficulty = 'beginner' | 'intermediate' | 'advanced';
+export type EnrollmentStatus = 'in_progress' | 'completed' | 'paused' | 'dropped';
+
+export interface Course {
+  id: string;
+  organization_id: string;
+  created_by: string | null;
+  title: string;
+  description: string | null;
+  thumbnail_url: string | null;
+  provider: string;
+  category: CourseCategory;
+  estimated_duration_minutes: number;
+  difficulty: CourseDifficulty;
+  external_url: string | null;
+  is_published: boolean;
+  is_system: boolean;
+  tags: string[];
+  modules?: CourseModule[];
+  enrollment_count?: number;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface CourseModule {
+  id: string;
+  course_id: string;
+  title: string;
+  description: string | null;
+  sort_order: number;
+  estimated_minutes: number | null;
+  created_at: string;
+}
+
+export interface Enrollment {
+  id: string;
+  user_id: string;
+  course_id: string;
+  organization_id: string;
+  status: EnrollmentStatus;
+  started_at: string;
+  completed_at: string | null;
+  notes: string | null;
+  progress: number;
+  course?: Course;
+  module_completions?: ModuleCompletion[];
+  certificates?: Certificate[];
+  created_at: string;
+  updated_at: string;
+}
+
+export interface ModuleCompletion {
+  id: string;
+  enrollment_id: string;
+  module_id: string;
+  completed_at: string;
+}
+
+export interface Certificate {
+  id: string;
+  enrollment_id: string;
+  user_id: string;
+  file_name: string;
+  file_url: string;
+  file_size: number | null;
+  mime_type: string | null;
+  uploaded_at: string;
+}
+
+export interface CreateCourseRequest {
+  title: string;
+  description?: string;
+  provider?: string;
+  category: CourseCategory;
+  estimated_duration_minutes: number;
+  difficulty?: CourseDifficulty;
+  external_url?: string;
+  tags?: string[];
+  modules: Array<{
+    title: string;
+    description?: string;
+    estimated_minutes?: number;
+  }>;
+}
+
+export interface TeamLearningMember {
+  user_id: string;
+  user_name: string;
+  avatar_url: string | null;
+  department: string | null;
+  enrollments_count: number;
+  completed_count: number;
+  in_progress_count: number;
+  total_modules: number;
+  completed_modules: number;
+}
