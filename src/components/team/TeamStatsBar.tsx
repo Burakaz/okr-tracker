@@ -50,12 +50,12 @@ export function TeamStatsBar({
   ];
 
   return (
-    <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+    <div className="grid grid-cols-2 md:grid-cols-4 gap-2">
       {stats.map((stat) => (
-        <div key={stat.label} className="card p-4">
-          <div className="flex items-center gap-3">
+        <div key={stat.label} className="card p-3">
+          <div className="flex items-center gap-2.5">
             <div
-              className={`w-9 h-9 rounded-full flex items-center justify-center flex-shrink-0 ${stat.color}`}
+              className={`w-7 h-7 rounded-full flex items-center justify-center flex-shrink-0 ${stat.color}`}
             >
               {stat.icon}
             </div>
@@ -63,7 +63,7 @@ export function TeamStatsBar({
               <p className="text-[10px] font-semibold text-muted uppercase tracking-wider">
                 {stat.label}
               </p>
-              <p className="text-[18px] font-bold text-foreground leading-tight">
+              <p className="text-[16px] font-bold text-foreground leading-tight">
                 {stat.value}
               </p>
             </div>

@@ -129,21 +129,21 @@ export function CourseCard({
       </div>
 
       {/* Card body */}
-      <div className="p-4 flex-1 flex flex-col">
+      <div className="p-3 flex-1 flex flex-col">
         {/* Title */}
-        <h3 className="text-[14px] font-medium text-foreground mb-1 line-clamp-1">
+        <h3 className="text-[13px] font-medium text-foreground mb-0.5 line-clamp-1">
           {course.title}
         </h3>
 
         {/* Description */}
         {course.description && (
-          <p className="text-[12px] text-muted line-clamp-2 mb-3">
+          <p className="text-[12px] text-muted line-clamp-2 mb-2">
             {course.description}
           </p>
         )}
 
         {/* Meta row */}
-        <div className="flex items-center gap-3 text-[11px] text-muted mb-3">
+        <div className="flex items-center gap-2 text-[11px] text-muted mb-2">
           {course.provider && (
             <span className="truncate">{course.provider}</span>
           )}
@@ -155,7 +155,7 @@ export function CourseCard({
 
         {/* Progress section for enrolled courses */}
         {isEnrolled && (
-          <div className="flex items-center gap-3 mb-3">
+          <div className="flex items-center gap-2 mb-2">
             <svg
               width={ringSize}
               height={ringSize}

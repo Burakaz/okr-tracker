@@ -94,14 +94,14 @@ export default function SettingsPage() {
         </div>
       </div>
 
-      <div className="flex-1 overflow-y-auto p-6">
+      <div className="flex-1 overflow-y-auto p-4 sm:p-6">
         <div className="max-w-2xl">
           {/* Profile Card */}
-          <div className="card p-6 mb-6">
-            <h1 className="text-lg font-semibold text-foreground mb-6">Profil</h1>
+          <div className="card p-4 sm:p-5 mb-4">
+            <h1 className="text-lg font-semibold text-foreground mb-4">Profil</h1>
 
             {/* Avatar + Info */}
-            <div className="flex items-center gap-4 mb-8 p-4 bg-cream-50 rounded-xl">
+            <div className="flex items-center gap-3 mb-5 p-3 bg-cream-50 rounded-lg">
               {user.avatar_url ? (
                 <img
                   src={user.avatar_url}
@@ -126,7 +126,7 @@ export default function SettingsPage() {
             </div>
 
             {/* Form */}
-            <div className="space-y-5">
+            <div className="space-y-4">
               <div>
                 <label htmlFor="name" className="block text-sm font-medium text-foreground mb-1.5">
                   <div className="flex items-center gap-1.5">

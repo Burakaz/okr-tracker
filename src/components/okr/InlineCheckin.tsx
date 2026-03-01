@@ -46,8 +46,8 @@ export function InlineCheckin({ okr, onSubmit, isLoading = false }: InlineChecki
 
   if (showSuccess) {
     return (
-      <div className="bg-cream-50 rounded-lg p-4 border border-cream-200">
-        <div className="flex items-center justify-center gap-2 py-2">
+      <div className="bg-cream-50 rounded-lg p-3 border border-cream-200">
+        <div className="flex items-center justify-center gap-2 py-1">
           <div className="w-6 h-6 rounded-full bg-accent-green flex items-center justify-center">
             <Check className="h-3.5 w-3.5 text-white" aria-hidden="true" />
           </div>
@@ -60,13 +60,13 @@ export function InlineCheckin({ okr, onSubmit, isLoading = false }: InlineChecki
   }
 
   return (
-    <div className="bg-cream-50 rounded-lg p-4 border border-cream-200">
-      <h4 className="text-[11px] font-semibold text-muted uppercase tracking-wider mb-3">
+    <div className="bg-cream-50 rounded-lg p-3 border border-cream-200">
+      <h4 className="text-[11px] font-semibold text-muted uppercase tracking-wider mb-2">
         Quick Check-in
       </h4>
 
       {/* Confidence Selector */}
-      <div className="flex items-center gap-2 mb-3">
+      <div className="flex items-center gap-2 mb-2">
         {confidenceOptions.map((option) => (
           <button
             key={option.value}

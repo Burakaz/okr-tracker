@@ -40,7 +40,7 @@ export function CourseCatalog({
 }: CourseCatalogProps) {
   if (isLoading) {
     return (
-      <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4">
+      <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-3">
         {Array.from({ length: 6 }).map((_, i) => (
           <SkeletonCard key={i} />
         ))}
@@ -51,8 +51,8 @@ export function CourseCatalog({
   if (courses.length === 0) {
     return (
       <div className="empty-state" role="status">
-        <div className="w-16 h-16 rounded-2xl bg-cream-200 flex items-center justify-center mb-4">
-          <BookOpen className="w-8 h-8 text-muted" aria-hidden="true" />
+        <div className="w-12 h-12 rounded-xl bg-cream-200 flex items-center justify-center mb-3">
+          <BookOpen className="w-6 h-6 text-muted" aria-hidden="true" />
         </div>
         <p className="empty-state-title">Keine Kurse gefunden</p>
         <p className="empty-state-description">
@@ -63,7 +63,7 @@ export function CourseCatalog({
   }
 
   return (
-    <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4">
+    <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-3">
       {courses.map((course) => {
         const enrollment = enrollments.find(
           (e) => e.course_id === course.id

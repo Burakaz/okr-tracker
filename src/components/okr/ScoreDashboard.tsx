@@ -46,58 +46,58 @@ export function ScoreDashboard({ okrs, quarter }: ScoreDashboardProps) {
         : "text-red-600";
 
   return (
-    <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+    <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
       {/* SCORE */}
-      <div className="card p-4">
-        <div className="flex items-center gap-2 mb-2">
-          <div className="w-8 h-8 rounded-lg bg-cream-100 flex items-center justify-center">
-            <TrendingUp className="h-4 w-4 text-muted" aria-hidden="true" />
+      <div className="card p-3">
+        <div className="flex items-center gap-2 mb-1.5">
+          <div className="w-6 h-6 rounded-md bg-cream-100 flex items-center justify-center">
+            <TrendingUp className="h-3.5 w-3.5 text-muted" aria-hidden="true" />
           </div>
           <span className="text-[11px] font-semibold text-muted uppercase tracking-wider">
             Score
           </span>
         </div>
-        <p className={`text-2xl font-bold ${scoreColor}`}>
+        <p className={`text-xl font-bold ${scoreColor}`}>
           {averageScore.toFixed(2)}
         </p>
-        <p className="text-[11px] text-muted mt-1">
+        <p className="text-[11px] text-muted mt-0.5">
           Durchschnitt aller aktiven OKRs
         </p>
       </div>
 
       {/* AKTIVE OKRS */}
-      <div className="card p-4">
-        <div className="flex items-center gap-2 mb-2">
-          <div className="w-8 h-8 rounded-lg bg-cream-100 flex items-center justify-center">
-            <Target className="h-4 w-4 text-muted" aria-hidden="true" />
+      <div className="card p-3">
+        <div className="flex items-center gap-2 mb-1.5">
+          <div className="w-6 h-6 rounded-md bg-cream-100 flex items-center justify-center">
+            <Target className="h-3.5 w-3.5 text-muted" aria-hidden="true" />
           </div>
           <span className="text-[11px] font-semibold text-muted uppercase tracking-wider">
             Aktive OKRs
           </span>
         </div>
-        <p className="text-2xl font-bold text-foreground">
+        <p className="text-xl font-bold text-foreground">
           {activeOKRs.length}{" "}
-          <span className="text-base font-normal text-muted">
+          <span className="text-sm font-normal text-muted">
             / {MAX_OKRS_PER_QUARTER}
           </span>
         </p>
-        <p className="text-[11px] text-muted mt-1">
+        <p className="text-[11px] text-muted mt-0.5">
           Maximum pro Quartal
         </p>
       </div>
 
       {/* ZEIT VERGANGEN */}
-      <div className="card p-4">
-        <div className="flex items-center gap-2 mb-2">
-          <div className="w-8 h-8 rounded-lg bg-cream-100 flex items-center justify-center">
-            <Clock className="h-4 w-4 text-muted" aria-hidden="true" />
+      <div className="card p-3">
+        <div className="flex items-center gap-2 mb-1.5">
+          <div className="w-6 h-6 rounded-md bg-cream-100 flex items-center justify-center">
+            <Clock className="h-3.5 w-3.5 text-muted" aria-hidden="true" />
           </div>
           <span className="text-[11px] font-semibold text-muted uppercase tracking-wider">
             Zeit vergangen
           </span>
         </div>
-        <p className="text-2xl font-bold text-foreground">{quarterElapsed}%</p>
-        <ProgressBar value={quarterElapsed} size="sm" className="mt-2" />
+        <p className="text-xl font-bold text-foreground">{quarterElapsed}%</p>
+        <ProgressBar value={quarterElapsed} size="sm" className="mt-1.5" />
       </div>
     </div>
   );

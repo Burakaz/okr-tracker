@@ -21,8 +21,8 @@ export function FocusOKRSection({ okrs, onSelect, onToggleFocus }: FocusOKRSecti
   if (okrs.length === 0) return null;
 
   return (
-    <div className="px-6 pt-4">
-      <h2 className="text-[11px] font-semibold text-muted uppercase tracking-wider mb-3 flex items-center gap-1.5">
+    <div className="px-4 pt-3">
+      <h2 className="text-[11px] font-semibold text-muted uppercase tracking-wider mb-2 flex items-center gap-1.5">
         <Star className="h-3.5 w-3.5 text-accent-green fill-accent-green" />
         Fokus OKRs
       </h2>
@@ -31,11 +31,11 @@ export function FocusOKRSection({ okrs, onSelect, onToggleFocus }: FocusOKRSecti
           <div
             key={okr.id}
             onClick={() => onSelect(okr)}
-            className="card card-hover border-l-4 border-l-accent-green p-4 cursor-pointer"
+            className="card card-hover border-l-4 border-l-accent-green p-3 cursor-pointer"
           >
-            <div className="flex items-start justify-between mb-3">
+            <div className="flex items-start justify-between mb-2">
               <div className="flex-1 min-w-0">
-                <h3 className="text-[14px] font-semibold text-foreground truncate">
+                <h3 className="text-[13px] font-semibold text-foreground truncate">
                   {okr.title}
                 </h3>
                 <span className={`badge ${categoryConfig[okr.category]?.colorClass || "badge-gray"} mt-1`}>
@@ -55,7 +55,7 @@ export function FocusOKRSection({ okrs, onSelect, onToggleFocus }: FocusOKRSecti
               </button>
             </div>
 
-            <ProgressBar value={okr.progress} showLabel size="md" className="mb-3" />
+            <ProgressBar value={okr.progress} showLabel size="sm" className="mb-2" />
 
             {/* Inline Key Results */}
             {okr.key_results && okr.key_results.length > 0 && (
