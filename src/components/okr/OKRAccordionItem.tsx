@@ -97,12 +97,16 @@ const confidenceOptions = [
 function getKRProgress(kr: KeyResult, value: number) {
   const range = kr.target_value - kr.start_value;
   if (range === 0) return 0;
+  // Works correctly for both increasing (start<target) and decreasing (start>target) KRs
   return Math.min(100, Math.max(0, ((value - kr.start_value) / range) * 100));
 }
 
-function getSliderStep(_kr: KeyResult) {
-  // Always use integer steps — no decimals
-  return 1;
+/** Slider always needs min < max, regardless of KR direction */
+function getSliderMin(kr: KeyResult) {
+  return Math.round(Math.min(kr.start_value, kr.target_value));
+}
+function getSliderMax(kr: KeyResult) {
+  return Math.round(Math.max(kr.start_value, kr.target_value));
 }
 
 // ===== Component =====
@@ -284,10 +288,10 @@ export function OKRAccordionItem({
                     {checkinMode && (
                       <input
                         type="range"
-                        min={Math.round(kr.start_value)}
-                        max={Math.round(kr.target_value)}
-                        step={getSliderStep(kr)}
-                        value={currentVal}
+                        min={getSliderMin(kr)}
+                        max={getSliderMax(kr)}
+                        step={1}
+                        value={Math.min(getSliderMax(kr), Math.max(getSliderMin(kr), currentVal))}
                         onChange={(e) =>
                           setKrValues((prev) => ({
                             ...prev,
@@ -346,13 +350,13 @@ export function OKRAccordionItem({
                 className="text-[11px] font-semibold text-muted uppercase tracking-wider mb-1.5 flex items-center gap-1.5"
               >
                 <MessageSquare className="h-3 w-3" />
-                Notizen (optional)
+                Notizen
               </label>
               <textarea
                 id={`checkin-note-${okr.id}`}
                 value={checkinNote}
                 onChange={(e) => setCheckinNote(e.target.value)}
-                placeholder="Was hat sich getan? Blocker?"
+                placeholder="Was hat sich getan? Was hat dich blockiert? Wie fühlst du dich mit dem Ziel?"
                 rows={2}
                 className="input w-full text-[13px] resize-none mt-1"
               />
