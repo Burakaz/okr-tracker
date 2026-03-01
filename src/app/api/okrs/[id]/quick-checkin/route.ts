@@ -63,7 +63,7 @@ export async function POST(
     // Verify user owns the OKR and fetch current state
     const { data: okr, error: okrError } = await serviceClient
       .from("okrs")
-      .select("id, user_id, organization_id, is_active, progress")
+      .select("id, user_id, organization_id, is_active, progress, confidence")
       .eq("id", okrId)
       .eq("user_id", user.id)
       .single();
@@ -133,6 +133,9 @@ export async function POST(
 
     const newProgress = updatedOkr?.progress ?? okr.progress;
 
+    // Use provided confidence or fall back to current OKR confidence
+    const confidenceValue = data.confidence ?? okr.confidence ?? 3;
+
     // Create the check-in record
     const now = new Date();
     const nextCheckinAt = new Date(now.getTime() + 7 * 24 * 60 * 60 * 1000);
@@ -143,7 +146,7 @@ export async function POST(
         okr_id: okrId,
         user_id: user.id,
         progress_update: newProgress,
-        confidence: data.confidence,
+        confidence: confidenceValue,
         what_helped: data.note || null,
         change_type: "progress",
         change_details: {
@@ -178,7 +181,7 @@ export async function POST(
     const { error: okrUpdateError } = await serviceClient
       .from("okrs")
       .update({
-        confidence: data.confidence,
+        confidence: confidenceValue,
         last_checkin_at: now.toISOString(),
         next_checkin_at: nextCheckinAt.toISOString(),
       })

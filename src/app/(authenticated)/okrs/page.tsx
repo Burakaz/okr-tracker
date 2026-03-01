@@ -261,14 +261,14 @@ function OKRsContent() {
 
   const handleQuickCheckin = async (
     okr: OKR,
-    data: { confidence: number; note?: string; key_result_updates?: Array<{ id: string; current_value: number }> }
+    data: { confidence?: number; note?: string; key_result_updates?: Array<{ id: string; current_value: number }> }
   ) => {
     try {
       const res = await fetch(`/api/okrs/${okr.id}/quick-checkin`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          confidence: data.confidence,
+          confidence: data.confidence ?? undefined,
           note: data.note || undefined,
           key_result_updates: data.key_result_updates || [],
         }),
@@ -467,13 +467,11 @@ function OKRsContent() {
                   okr={okr}
                   isExpanded={expandedId === okr.id}
                   onToggle={() => handleToggleExpand(okr.id)}
-                  onCheckin={handleCheckin}
                   onEdit={handleEditOKR}
                   onArchive={handleArchive}
                   onDuplicate={handleDuplicate}
                   onDelete={handleDelete}
                   onQuickCheckin={handleQuickCheckin}
-                  onUpdateKR={handleUpdateKR}
                 />
               ))}
             </div>

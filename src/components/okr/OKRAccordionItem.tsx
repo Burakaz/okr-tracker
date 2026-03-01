@@ -17,7 +17,7 @@ import {
   BookOpen,
   Briefcase,
   Check,
-  History,
+  MessageSquare,
 } from "lucide-react";
 import { ProgressBar } from "@/components/ui/ProgressBar";
 import {
@@ -30,7 +30,6 @@ interface OKRAccordionItemProps {
   okr: OKR;
   isExpanded: boolean;
   onToggle: () => void;
-  onCheckin: (okr: OKR) => void;
   onEdit: (okr: OKR) => void;
   onArchive: (okr: OKR) => void;
   onDuplicate: (okr: OKR) => void;
@@ -38,12 +37,11 @@ interface OKRAccordionItemProps {
   onQuickCheckin?: (
     okr: OKR,
     data: {
-      confidence: number;
+      confidence?: number;
       note?: string;
       key_result_updates?: Array<{ id: string; current_value: number }>;
     }
   ) => void;
-  onUpdateKR?: (okrId: string, krId: string, newValue: number) => void;
 }
 
 // ===== Helpers =====
@@ -88,11 +86,12 @@ function StatusIndicatorIcon({ status }: { status: OKRStatus }) {
   }
 }
 
+// Reversed: Kritisch (left) → Sehr gut (right)
 const confidenceOptions = [
-  { value: 5, emoji: "🟢", label: "Sehr gut" },
-  { value: 4, emoji: "😊", label: "Gut" },
-  { value: 3, emoji: "😐", label: "Risiko" },
   { value: 2, emoji: "😟", label: "Kritisch" },
+  { value: 3, emoji: "😐", label: "Risiko" },
+  { value: 4, emoji: "😊", label: "Gut" },
+  { value: 5, emoji: "🟢", label: "Sehr gut" },
 ] as const;
 
 function getKRProgress(kr: KeyResult, value: number) {
@@ -101,12 +100,9 @@ function getKRProgress(kr: KeyResult, value: number) {
   return Math.min(100, Math.max(0, ((value - kr.start_value) / range) * 100));
 }
 
-function getSliderStep(kr: KeyResult) {
-  const range = kr.target_value - kr.start_value;
-  if (range <= 10) return 0.1;
-  if (range <= 100) return 1;
-  if (range <= 1000) return 5;
-  return Math.round(range / 100);
+function getSliderStep(_kr: KeyResult) {
+  // Always use integer steps — no decimals
+  return 1;
 }
 
 // ===== Component =====
@@ -115,7 +111,6 @@ export function OKRAccordionItem({
   okr,
   isExpanded,
   onToggle,
-  onCheckin,
   onEdit,
   onArchive,
   onDuplicate,
@@ -125,6 +120,7 @@ export function OKRAccordionItem({
   const [checkinMode, setCheckinMode] = useState(false);
   const [krValues, setKrValues] = useState<Record<string, number>>({});
   const [selectedConfidence, setSelectedConfidence] = useState<number | null>(null);
+  const [checkinNote, setCheckinNote] = useState("");
 
   const score = (okr.progress / 100).toFixed(2);
   const statusColor = getStatusColor(okr.status);
@@ -134,14 +130,23 @@ export function OKRAccordionItem({
   const daysRemaining = getCheckinDaysRemaining(okr.next_checkin_at);
   const CatIcon = cat.icon;
 
+  // Whole card is clickable, but not interactive children
+  const handleCardClick = (e: React.MouseEvent) => {
+    const target = e.target as HTMLElement;
+    if (target.closest("button, input, textarea, a, select")) return;
+    if (checkinMode) return;
+    onToggle();
+  };
+
   const enterCheckinMode = (e: React.MouseEvent) => {
     e.stopPropagation();
     const initial: Record<string, number> = {};
     okr.key_results?.forEach((kr) => {
-      initial[kr.id] = kr.current_value;
+      initial[kr.id] = Math.round(kr.current_value);
     });
     setKrValues(initial);
     setSelectedConfidence(null);
+    setCheckinNote("");
     setCheckinMode(true);
   };
 
@@ -149,47 +154,62 @@ export function OKRAccordionItem({
     setCheckinMode(false);
     setKrValues({});
     setSelectedConfidence(null);
+    setCheckinNote("");
+  };
+
+  const hasChanges = () => {
+    const krChanged = okr.key_results?.some(
+      (kr) => krValues[kr.id] !== undefined && krValues[kr.id] !== Math.round(kr.current_value)
+    );
+    const confChanged = selectedConfidence !== null;
+    const noteAdded = checkinNote.trim().length > 0;
+    return krChanged || confChanged || noteAdded;
   };
 
   const saveCheckin = () => {
-    if (selectedConfidence === null) return;
+    if (!hasChanges()) return;
+
     const updates = Object.entries(krValues)
       .filter(([id]) => {
         const kr = okr.key_results?.find((k) => k.id === id);
-        return kr && krValues[id] !== kr.current_value;
+        return kr && krValues[id] !== Math.round(kr.current_value);
       })
-      .map(([id, current_value]) => ({ id, current_value }));
+      .map(([id, current_value]) => ({ id, current_value: Math.round(current_value) }));
 
     onQuickCheckin?.(okr, {
-      confidence: selectedConfidence,
+      confidence: selectedConfidence ?? undefined,
+      note: checkinNote.trim() || undefined,
       key_result_updates: updates.length > 0 ? updates : undefined,
     });
     cancelCheckin();
   };
 
   return (
-    <div className="card">
+    <div
+      className={`card ${checkinMode ? "" : "cursor-pointer"}`}
+      onClick={handleCardClick}
+      role={checkinMode ? undefined : "button"}
+      tabIndex={checkinMode ? undefined : 0}
+      onKeyDown={
+        checkinMode
+          ? undefined
+          : (e) => {
+              if (e.key === "Enter" || e.key === " ") {
+                e.preventDefault();
+                onToggle();
+              }
+            }
+      }
+      aria-expanded={isExpanded}
+    >
       <div className="p-4 sm:p-5">
         {/* Row 1: Title + Chevron */}
-        <div
-          role="button"
-          tabIndex={0}
-          onClick={onToggle}
-          onKeyDown={(e) => {
-            if (e.key === "Enter" || e.key === " ") {
-              e.preventDefault();
-              onToggle();
-            }
-          }}
-          className="flex items-start justify-between gap-3 cursor-pointer group"
-          aria-expanded={isExpanded}
-          aria-controls={`okr-detail-${okr.id}`}
-        >
+        <div className="flex items-start justify-between gap-3">
           <h3 className="text-[16px] font-semibold text-foreground leading-tight">
             {okr.title}
           </h3>
           <ChevronDown
-            className={`h-4 w-4 text-cream-400 flex-shrink-0 mt-0.5 transition-transform duration-200 group-hover:text-muted ${
+            className={`h-4 w-4 text-cream-400 flex-shrink-0 mt-0.5 transition-transform duration-200 ${
               isExpanded ? "rotate-180" : ""
             }`}
             aria-hidden="true"
@@ -243,8 +263,8 @@ export function OKRAccordionItem({
           <div className="mt-4 space-y-2.5">
             {okr.key_results.map((kr) => {
               const currentVal = checkinMode
-                ? (krValues[kr.id] ?? kr.current_value)
-                : kr.current_value;
+                ? Math.round(krValues[kr.id] ?? kr.current_value)
+                : Math.round(kr.current_value);
               const progress = checkinMode
                 ? getKRProgress(kr, currentVal)
                 : kr.progress;
@@ -264,14 +284,14 @@ export function OKRAccordionItem({
                     {checkinMode && (
                       <input
                         type="range"
-                        min={kr.start_value}
-                        max={kr.target_value}
+                        min={Math.round(kr.start_value)}
+                        max={Math.round(kr.target_value)}
                         step={getSliderStep(kr)}
                         value={currentVal}
                         onChange={(e) =>
                           setKrValues((prev) => ({
                             ...prev,
-                            [kr.id]: Number(e.target.value),
+                            [kr.id]: Math.round(Number(e.target.value)),
                           }))
                         }
                         className="kr-slider"
@@ -284,7 +304,7 @@ export function OKRAccordionItem({
                       checkinMode ? "text-foreground font-medium" : "text-muted"
                     }`}
                   >
-                    {currentVal} / {kr.target_value}
+                    {currentVal} / {Math.round(kr.target_value)}
                     {kr.unit ? ` ${kr.unit}` : ""}
                   </span>
                 </div>
@@ -293,29 +313,49 @@ export function OKRAccordionItem({
           </div>
         )}
 
-        {/* Check-in mode: Confidence selector */}
+        {/* Check-in mode: Confidence selector + Notes */}
         {checkinMode && (
-          <div className="mt-4 pt-3 border-t border-cream-200">
-            <p className="text-[11px] font-semibold text-muted uppercase tracking-wider mb-2">
-              Wie zuversichtlich bist du?
-            </p>
-            <div className="flex flex-wrap items-center gap-2">
-              {confidenceOptions.map((opt) => (
-                <button
-                  key={opt.value}
-                  type="button"
-                  onClick={() => setSelectedConfidence(opt.value)}
-                  className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-[12px] font-medium transition-all ${
-                    selectedConfidence === opt.value
-                      ? "bg-foreground text-white"
-                      : "bg-cream-100 text-muted hover:bg-cream-200"
-                  }`}
-                  aria-pressed={selectedConfidence === opt.value}
-                >
-                  <span aria-hidden="true">{opt.emoji}</span>
-                  <span>{opt.label}</span>
-                </button>
-              ))}
+          <div className="mt-4 pt-3 border-t border-cream-200 space-y-3">
+            <div>
+              <p className="text-[11px] font-semibold text-muted uppercase tracking-wider mb-2">
+                Wirst du dieses Ziel erreichen?
+              </p>
+              <div className="flex flex-wrap items-center gap-2">
+                {confidenceOptions.map((opt) => (
+                  <button
+                    key={opt.value}
+                    type="button"
+                    onClick={() => setSelectedConfidence(opt.value)}
+                    className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-[12px] font-medium transition-all ${
+                      selectedConfidence === opt.value
+                        ? "bg-foreground text-white"
+                        : "bg-cream-100 text-muted hover:bg-cream-200"
+                    }`}
+                    aria-pressed={selectedConfidence === opt.value}
+                  >
+                    <span aria-hidden="true">{opt.emoji}</span>
+                    <span>{opt.label}</span>
+                  </button>
+                ))}
+              </div>
+            </div>
+
+            <div>
+              <label
+                htmlFor={`checkin-note-${okr.id}`}
+                className="text-[11px] font-semibold text-muted uppercase tracking-wider mb-1.5 flex items-center gap-1.5"
+              >
+                <MessageSquare className="h-3 w-3" />
+                Notizen (optional)
+              </label>
+              <textarea
+                id={`checkin-note-${okr.id}`}
+                value={checkinNote}
+                onChange={(e) => setCheckinNote(e.target.value)}
+                placeholder="Was hat sich getan? Blocker?"
+                rows={2}
+                className="input w-full text-[13px] resize-none mt-1"
+              />
             </div>
           </div>
         )}
@@ -334,7 +374,7 @@ export function OKRAccordionItem({
               <button
                 type="button"
                 onClick={saveCheckin}
-                disabled={selectedConfidence === null}
+                disabled={!hasChanges()}
                 className="btn-success text-[12px] py-1.5 px-4 gap-1.5"
               >
                 <Check className="h-3.5 w-3.5" aria-hidden="true" />
@@ -370,7 +410,7 @@ export function OKRAccordionItem({
         </div>
       </div>
 
-      {/* ===== Expanded: Additional Info + Actions (seamless, same background) ===== */}
+      {/* ===== Expanded: Additional Info + Actions (seamless) ===== */}
       {isExpanded && !checkinMode && (
         <div
           id={`okr-detail-${okr.id}`}
@@ -390,13 +430,6 @@ export function OKRAccordionItem({
 
           {/* Action Buttons */}
           <div className="flex flex-wrap items-center gap-2 pt-2 border-t border-cream-200">
-            <button
-              onClick={() => onCheckin(okr)}
-              className="btn-ghost text-[12px] py-1.5 px-3 gap-1.5"
-            >
-              <History className="h-3.5 w-3.5" aria-hidden="true" />
-              Ausführliches Check-in
-            </button>
             <button
               onClick={() => onEdit(okr)}
               className="btn-ghost text-[12px] py-1.5 px-3 gap-1.5"
