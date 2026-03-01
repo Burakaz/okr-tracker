@@ -115,7 +115,7 @@ export const updateEnrollmentSchema = z.object({
 // ===== Redesign Schemas =====
 export const quickCheckinSchema = z.object({
   confidence: z.number().int().min(1).max(5).optional(),
-  note: z.string().max(2000).optional(),
+  note: z.string().min(1, "Beschreibung ist erforderlich").max(2000),
   key_result_updates: z.array(
     z.object({
       id: z.string().uuid(),

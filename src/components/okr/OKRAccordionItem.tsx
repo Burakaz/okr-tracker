@@ -164,17 +164,19 @@ export function OKRAccordionItem({
     setCheckinNote("");
   };
 
-  const hasChanges = () => {
+  const hasNote = checkinNote.trim().length > 0;
+
+  const canSave = () => {
+    if (!hasNote) return false;
     const krChanged = okr.key_results?.some(
       (kr) => krValues[kr.id] !== undefined && krValues[kr.id] !== Math.round(kr.current_value)
     );
     const confChanged = selectedConfidence !== null;
-    const noteAdded = checkinNote.trim().length > 0;
-    return krChanged || confChanged || noteAdded;
+    return krChanged || confChanged || hasNote;
   };
 
   const saveCheckin = () => {
-    if (!hasChanges()) return;
+    if (!canSave()) return;
 
     const updates = Object.entries(krValues)
       .filter(([id]) => {
@@ -356,16 +358,23 @@ export function OKRAccordionItem({
                 className="text-[11px] font-semibold text-muted uppercase tracking-wider mb-1.5 flex items-center gap-1.5"
               >
                 <MessageSquare className="h-3 w-3" />
-                Notizen
+                Was ist passiert? <span className="text-red-400">*</span>
               </label>
               <textarea
                 id={`checkin-note-${okr.id}`}
                 value={checkinNote}
                 onChange={(e) => setCheckinNote(e.target.value)}
-                placeholder="Was hat sich getan? Was hat dich blockiert? Wie fühlst du dich mit dem Ziel?"
+                placeholder="Welche Kampagnen liefen? Welche Postings? Welche Titel? Was hat funktioniert, was nicht?"
                 rows={2}
-                className="input w-full text-[13px] resize-none mt-1"
+                className={`input w-full text-[13px] resize-none mt-1 ${
+                  !hasNote && checkinNote.length === 0 ? "" : !hasNote ? "border-red-300 focus:ring-red-300" : "border-green-300 focus:ring-green-300"
+                }`}
               />
+              {!hasNote && (
+                <p className="text-[11px] text-muted mt-1">
+                  Ohne Beschreibung kein Check-in — halte fest, was du gemacht hast.
+                </p>
+              )}
             </div>
           </div>
         )}
@@ -384,7 +393,7 @@ export function OKRAccordionItem({
               <button
                 type="button"
                 onClick={saveCheckin}
-                disabled={!hasChanges()}
+                disabled={!canSave()}
                 className="btn-success text-[12px] py-1.5 px-4 gap-1.5"
               >
                 <Check className="h-3.5 w-3.5" aria-hidden="true" />

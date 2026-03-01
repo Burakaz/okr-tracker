@@ -147,7 +147,7 @@ export async function POST(
         user_id: user.id,
         progress_update: newProgress,
         confidence: confidenceValue,
-        what_helped: data.note || null,
+        what_helped: data.note,
         change_type: "progress",
         change_details: {
           quick_checkin: true,
