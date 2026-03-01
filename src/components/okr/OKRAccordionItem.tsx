@@ -72,13 +72,13 @@ export function OKRAccordionItem({
         tabIndex={0}
         onClick={onToggle}
         onKeyDown={(e) => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); onToggle(); } }}
-        className="w-full flex items-center gap-3 px-4 py-3 text-left hover:bg-cream-50 transition-colors cursor-pointer"
+        className="w-full flex items-center gap-2 sm:gap-3 px-3 sm:px-4 py-3 text-left hover:bg-cream-50 transition-colors cursor-pointer"
         aria-expanded={isExpanded}
         aria-controls={`okr-detail-${okr.id}`}
       >
-        {/* Drag handle (visual only) */}
+        {/* Drag handle (visual only, hidden on mobile) */}
         <GripVertical
-          className="h-4 w-4 text-cream-300 flex-shrink-0 cursor-grab"
+          className="h-4 w-4 text-cream-300 flex-shrink-0 cursor-grab hidden sm:block"
           aria-hidden="true"
         />
 
@@ -136,11 +136,11 @@ export function OKRAccordionItem({
             e.stopPropagation();
             onCheckin(okr);
           }}
-          className="btn-success text-[12px] py-1 px-2.5 gap-1 flex-shrink-0"
+          className="btn-success text-[12px] py-1 px-2 sm:px-2.5 gap-1 flex-shrink-0"
           aria-label={`Check-in für "${okr.title}"`}
         >
           <ClipboardCheck className="h-3.5 w-3.5" aria-hidden="true" />
-          <span className="hidden lg:inline">Check-in</span>
+          <span className="hidden sm:inline">Check-in</span>
         </button>
 
         {/* Chevron */}
@@ -217,7 +217,7 @@ export function OKRAccordionItem({
           )}
 
           {/* Action buttons */}
-          <div className="flex items-center gap-2 pt-2 border-t border-cream-200">
+          <div className="flex flex-wrap items-center gap-2 pt-2 border-t border-cream-200">
             <button
               onClick={() => onCheckin(okr)}
               className="btn-ghost text-[12px] py-1.5 px-3 gap-1.5"

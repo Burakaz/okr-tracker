@@ -87,7 +87,7 @@ export default function TeamPage() {
   return (
     <div className="h-full flex flex-col">
       {/* Header */}
-      <div className="px-6 pt-6 pb-4 border-b border-cream-300/50">
+      <div className="px-4 sm:px-6 pt-4 sm:pt-6 pb-4 border-b border-cream-300/50">
         <div className="flex items-center justify-between mb-4">
           <div>
             <h1 className="text-lg font-semibold text-foreground">Team & Organisation</h1>
@@ -192,7 +192,7 @@ export default function TeamPage() {
       </div>
 
       {/* Content */}
-      <div className="flex-1 overflow-y-auto p-6">
+      <div className="flex-1 overflow-y-auto p-4 sm:p-6">
         {/* Team tabs */}
         {topTab === "team" && (
           <>

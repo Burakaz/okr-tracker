@@ -136,11 +136,11 @@ function ReviewContent() {
   // Loading skeleton
   if (isLoading) {
     return (
-      <div className="h-full overflow-y-auto p-6 space-y-6">
+      <div className="h-full overflow-y-auto p-4 sm:p-6 space-y-5 sm:space-y-6">
         <div className="flex items-center justify-between">
           <h1 className="text-xl font-bold text-foreground">R&uuml;ckblick</h1>
         </div>
-        <div className="card p-6 animate-pulse">
+        <div className="card p-4 sm:p-6 animate-pulse">
           <Skeleton className="h-8 w-24 mb-4" />
           <Skeleton className="h-16 w-32" />
         </div>
@@ -166,7 +166,7 @@ function ReviewContent() {
   return (
     <div className="h-full flex flex-col overflow-hidden">
       <div className="flex-1 overflow-y-auto">
-        <div className="p-6 space-y-6">
+        <div className="p-4 sm:p-6 space-y-5 sm:space-y-6">
           {/* 1. Page Header */}
           <div className="flex items-center justify-between">
             <h1 className="text-xl font-bold text-foreground">R&uuml;ckblick</h1>

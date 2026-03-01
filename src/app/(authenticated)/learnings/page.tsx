@@ -168,14 +168,14 @@ function LearningsContent() {
   return (
     <div className="h-full flex flex-col overflow-hidden">
       <div className="flex-1 overflow-y-auto">
-        <div className="p-6 space-y-5">
+        <div className="p-4 sm:p-6 space-y-5">
           {/* 1. Page header */}
-          <div className="flex items-center justify-between">
+          <div className="flex flex-wrap items-start sm:items-center justify-between gap-3">
             <div>
               <h1 className="text-xl font-bold text-foreground">
                 Learning Hub
               </h1>
-              <p className="text-[12px] text-muted mt-0.5">
+              <p className="text-[12px] text-muted mt-0.5 hidden sm:block">
                 Dein Lern- und Entwicklungsprotokoll
               </p>
             </div>
@@ -190,14 +190,14 @@ function LearningsContent() {
                 ) : (
                   <Sparkles className="h-3.5 w-3.5" />
                 )}
-                KI Vorschlagen
+                <span className="hidden sm:inline">KI Vorschlagen</span>
               </button>
               <button
                 onClick={() => setShowAddForm(true)}
                 className="btn-primary text-[13px] gap-1.5"
               >
                 <Plus className="h-4 w-4" aria-hidden="true" />
-                Kurs hinzufügen
+                <span className="hidden sm:inline">Kurs</span> hinzufügen
               </button>
             </div>
           </div>

@@ -663,3 +663,26 @@ body:not(:focus-within) .blur-on-unfocus {
 .slide-panel-right {
   animation: slide-in-right 0.25s ease-out;
 }
+
+/* Mobile sidebar slide-in from left */
+@keyframes slide-in-left {
+  from {
+    transform: translateX(-100%);
+  }
+  to {
+    transform: translateX(0);
+  }
+}
+
+.animate-slide-in-left {
+  animation: slide-in-left 0.2s ease-out;
+}
+
+/* Responsive: Sidebar margin/height adjustments on mobile overlay */
+@media (max-width: 1023px) {
+  .sidebar-container {
+    margin: 0;
+    height: 100vh;
+    border-radius: 0 1.25rem 1.25rem 0;
+  }
+}

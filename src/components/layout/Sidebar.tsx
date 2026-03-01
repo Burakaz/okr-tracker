@@ -10,16 +10,17 @@ import {
   Trophy,
   Users,
   Building2,
-  Settings,
   ChevronDown,
   LogOut,
   User as UserIcon,
+  X,
 } from "lucide-react";
 import type { User } from "@/types";
 
 interface SidebarProps {
   user: User;
   orgLogo?: string | null;
+  onNavClick?: () => void;
 }
 
 export function Sidebar(props: SidebarProps) {
@@ -49,7 +50,7 @@ const managementItems = [
   { href: "/team", icon: Users, label: "Team & Orga" },
 ];
 
-function SidebarContent({ user, orgLogo }: SidebarProps) {
+function SidebarContent({ user, orgLogo, onNavClick }: SidebarProps) {
   const pathname = usePathname();
   const [showProfileMenu, setShowProfileMenu] = useState(false);
 
@@ -92,12 +93,22 @@ function SidebarContent({ user, orgLogo }: SidebarProps) {
               <Building2 className="h-4 w-4 text-muted" />
             </div>
           )}
-          <div>
+          <div className="flex-1 min-w-0">
             <span className="text-sm font-semibold text-foreground">
               ADMKRS
             </span>
             <p className="text-[10px] text-muted">Personal Development OS</p>
           </div>
+          {/* Close button - only visible on mobile overlay */}
+          {onNavClick && (
+            <button
+              onClick={onNavClick}
+              className="lg:hidden p-1.5 rounded-lg hover:bg-black/[0.04] transition-colors"
+              aria-label="Menu schließen"
+            >
+              <X className="h-4 w-4 text-muted" />
+            </button>
+          )}
         </div>
       </div>
 
@@ -114,6 +125,7 @@ function SidebarContent({ user, orgLogo }: SidebarProps) {
               icon={<item.icon className="h-4 w-4" />}
               label={item.label}
               active={isActive(item.href)}
+              onClick={onNavClick}
             />
           ))}
         </div>
@@ -130,6 +142,7 @@ function SidebarContent({ user, orgLogo }: SidebarProps) {
                   icon={<item.icon className="h-4 w-4" />}
                   label={item.label}
                   active={isActive(item.href)}
+                  onClick={onNavClick}
                 />
               ))}
             </div>
@@ -191,7 +204,10 @@ function SidebarContent({ user, orgLogo }: SidebarProps) {
               </div>
               <Link
                 href="/settings"
-                onClick={() => setShowProfileMenu(false)}
+                onClick={() => {
+                  setShowProfileMenu(false);
+                  onNavClick?.();
+                }}
                 className="dropdown-item text-[13px]"
                 role="menuitem"
               >
@@ -225,14 +241,20 @@ function NavItem({
   icon,
   label,
   active,
+  onClick,
 }: {
   href: string;
   icon: React.ReactNode;
   label: string;
   active: boolean;
+  onClick?: () => void;
 }) {
   return (
-    <Link href={href} className={`sidebar-item ${active ? "active" : ""}`}>
+    <Link
+      href={href}
+      className={`sidebar-item ${active ? "active" : ""}`}
+      onClick={onClick}
+    >
       {icon}
       <span>{label}</span>
     </Link>
