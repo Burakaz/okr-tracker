@@ -95,10 +95,13 @@ const confidenceOptions = [
 ] as const;
 
 function getKRProgress(kr: KeyResult, value: number) {
-  const range = kr.target_value - kr.start_value;
+  // Round all values to match slider range (integer-only)
+  const start = Math.round(kr.start_value);
+  const target = Math.round(kr.target_value);
+  const range = target - start;
   if (range === 0) return 0;
   // Works correctly for both increasing (start<target) and decreasing (start>target) KRs
-  return Math.min(100, Math.max(0, ((value - kr.start_value) / range) * 100));
+  return Math.min(100, Math.max(0, ((Math.round(value) - start) / range) * 100));
 }
 
 /** Slider always needs min < max, regardless of KR direction */
