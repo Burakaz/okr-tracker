@@ -2,7 +2,6 @@
 
 import {
   ChevronDown,
-  Star,
   GripVertical,
   ClipboardCheck,
   History,
@@ -30,7 +29,6 @@ interface OKRAccordionItemProps {
   onToggle: () => void;
   onCheckin: (okr: OKR) => void;
   onEdit: (okr: OKR) => void;
-  onFocus: (okr: OKR) => void;
   onArchive: (okr: OKR) => void;
   onDuplicate: (okr: OKR) => void;
   onDelete: (okr: OKR) => void;
@@ -51,7 +49,6 @@ export function OKRAccordionItem({
   onToggle,
   onCheckin,
   onEdit,
-  onFocus,
   onArchive,
   onDuplicate,
   onDelete,
@@ -64,7 +61,7 @@ export function OKRAccordionItem({
     <div
       className={`card overflow-hidden transition-shadow ${
         isExpanded ? "ring-1 ring-cream-300 shadow-md" : ""
-      } ${okr.is_focus ? "border-l-4 border-l-accent-green" : ""}`}
+      }`}
     >
       {/* Collapsed row */}
       <div
@@ -81,30 +78,6 @@ export function OKRAccordionItem({
           className="h-4 w-4 text-cream-300 flex-shrink-0 cursor-grab hidden sm:block"
           aria-hidden="true"
         />
-
-        {/* Star / Focus toggle */}
-        <button
-          type="button"
-          onClick={(e) => {
-            e.stopPropagation();
-            onFocus(okr);
-          }}
-          className="p-1 hover:bg-cream-200 rounded transition-colors flex-shrink-0"
-          aria-label={
-            okr.is_focus
-              ? `Fokus von "${okr.title}" entfernen`
-              : `"${okr.title}" als Fokus setzen`
-          }
-        >
-          <Star
-            className={`h-4 w-4 ${
-              okr.is_focus
-                ? "text-accent-green fill-accent-green"
-                : "text-cream-300"
-            }`}
-            aria-hidden="true"
-          />
-        </button>
 
         {/* Title */}
         <span className="flex-1 font-medium text-[14px] text-foreground truncate min-w-0">

@@ -3,11 +3,10 @@
 import { useState, useMemo, Suspense } from "react";
 import { useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
-import { Plus, Star, Target } from "lucide-react";
+import { Plus, Target } from "lucide-react";
 import { OKRForm } from "@/components/okr/OKRForm";
 import { CheckinDialog } from "@/components/okr/CheckinDialog";
 import { DuplicateOKRDialog } from "@/components/okr/DuplicateOKRDialog";
-import { FocusOKRSection } from "@/components/okr/FocusOKRSection";
 import { ConfirmDialog } from "@/components/ui/ConfirmDialog";
 import { QuarterSelector } from "@/components/okr/QuarterSelector";
 import { ScoreDashboard } from "@/components/okr/ScoreDashboard";
@@ -17,7 +16,6 @@ import { useOKRsRealtime } from "@/hooks/useRealtimeQuery";
 import {
   getCurrentQuarter,
   MAX_OKRS_PER_QUARTER,
-  MAX_FOCUS,
 } from "@/lib/okr-logic";
 import type {
   OKR,
@@ -84,11 +82,6 @@ function OKRsContent() {
   const archivedOKRs = useMemo(
     () => okrs.filter((o) => !o.is_active),
     [okrs]
-  );
-
-  const focusOKRs = useMemo(
-    () => activeOKRs.filter((o) => o.is_focus),
-    [activeOKRs]
   );
 
   // Apply tab + scope filter
@@ -189,31 +182,6 @@ function OKRsContent() {
       toast.error("Fehler beim Check-in");
     } finally {
       setIsSubmitting(false);
-    }
-  };
-
-  const handleToggleFocus = async (okr: OKR) => {
-    // Prevent adding more than MAX_FOCUS
-    if (!okr.is_focus && focusOKRs.length >= MAX_FOCUS) {
-      toast.error(`Maximal ${MAX_FOCUS} Fokus-OKRs erlaubt`);
-      return;
-    }
-
-    try {
-      const res = await fetch(`/api/okrs/${okr.id}`, {
-        method: "PATCH",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ is_focus: !okr.is_focus }),
-      });
-
-      if (res.ok) {
-        toast.success(okr.is_focus ? "Fokus entfernt" : "Fokus gesetzt");
-        await invalidateOKRs();
-      } else {
-        toast.error("Fehler beim Aktualisieren");
-      }
-    } catch {
-      toast.error("Fehler beim Aktualisieren");
     }
   };
 
@@ -419,29 +387,7 @@ function OKRsContent() {
           {/* 3. Score Dashboard */}
           <ScoreDashboard okrs={okrs} quarter={currentQuarter} />
 
-          {/* 4. Dein Fokus */}
-          <div>
-            <h2 className="text-[11px] font-semibold text-muted uppercase tracking-wider mb-3 flex items-center gap-1.5">
-              <Star className="h-3.5 w-3.5 text-accent-green fill-accent-green" aria-hidden="true" />
-              Dein Fokus ({focusOKRs.length}/{MAX_FOCUS})
-            </h2>
-            {focusOKRs.length > 0 ? (
-              <FocusOKRSection
-                okrs={focusOKRs}
-                onSelect={(okr) => handleToggleExpand(okr.id)}
-                onToggleFocus={handleToggleFocus}
-              />
-            ) : (
-              <div className="card p-4 text-center">
-                <Star className="h-5 w-5 text-cream-300 mx-auto mb-2" aria-hidden="true" />
-                <p className="text-[13px] text-muted">
-                  Markiere bis zu {MAX_FOCUS} OKRs als Fokus, um sie hier hervorzuheben.
-                </p>
-              </div>
-            )}
-          </div>
-
-          {/* 5. Tab Navigation: Aktiv / Archiv */}
+          {/* 4. Tab Navigation: Aktiv / Archiv */}
           <div className="flex items-center gap-1 border-b border-cream-200">
             <button
               onClick={() => setTabFilter("active")}
@@ -523,7 +469,6 @@ function OKRsContent() {
                   onToggle={() => handleToggleExpand(okr.id)}
                   onCheckin={handleCheckin}
                   onEdit={handleEditOKR}
-                  onFocus={handleToggleFocus}
                   onArchive={handleArchive}
                   onDuplicate={handleDuplicate}
                   onDelete={handleDelete}

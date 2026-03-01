@@ -44,11 +44,6 @@ export function ScoreDashboard({ okrs, quarter }: ScoreDashboardProps) {
     [activeOKRs]
   );
 
-  const focusCount = useMemo(
-    () => activeOKRs.filter((o) => o.is_focus).length,
-    [activeOKRs]
-  );
-
   const scoreColor =
     averageScore >= 0.7
       ? "text-green-600"
@@ -141,17 +136,9 @@ export function ScoreDashboard({ okrs, quarter }: ScoreDashboardProps) {
             / {MAX_OKRS_PER_QUARTER}
           </span>
         </p>
-        {activeOKRs.length > 3 && (
-          <p className="text-[11px] text-amber-600 mt-1 flex items-center gap-1">
-            <AlertCircle className="h-3 w-3" aria-hidden="true" />
-            Optimal: 3 fokussierte Ziele
-          </p>
-        )}
-        {activeOKRs.length <= 3 && (
-          <p className="text-[11px] text-muted mt-1">
-            {focusCount > 0 ? `${focusCount} im Fokus` : "Maximum pro Quartal"}
-          </p>
-        )}
+        <p className="text-[11px] text-muted mt-1">
+          Maximum pro Quartal
+        </p>
       </div>
 
       {/* ZEIT VERGANGEN */}

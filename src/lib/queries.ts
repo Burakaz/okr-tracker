@@ -184,23 +184,6 @@ export function useDuplicateOKR() {
   });
 }
 
-export function useToggleFocus() {
-  const queryClient = useQueryClient();
-  return useMutation({
-    mutationFn: async (id: string) => {
-      const res = await fetch(`/api/okrs/${id}/focus`, { method: "POST" });
-      if (!res.ok) {
-        const error = await res.json();
-        throw new Error(error.error || "Fehler beim Fokus-Toggle");
-      }
-      return res.json();
-    },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["okrs"] });
-    },
-  });
-}
-
 export function useCreateCheckin() {
   const queryClient = useQueryClient();
   return useMutation({

@@ -28,7 +28,6 @@ export const updateOKRSchema = z.object({
   scope: z.enum(["personal", "team", "company"]).optional(),
   due_date: z.string().optional().nullable(),
   is_active: z.boolean().optional(),
-  is_focus: z.boolean().optional(),
   sort_order: z.number().optional(),
 });
 

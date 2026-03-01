@@ -158,18 +158,3 @@ export async function logCheckinCreate(
   });
 }
 
-export async function logFocusToggle(
-  userId: string,
-  orgId: string,
-  okrId: string,
-  isFocus: boolean
-): Promise<void> {
-  await createAuditLog({
-    userId,
-    orgId,
-    action: "focus_toggle",
-    resourceType: "okr",
-    resourceId: okrId,
-    details: { is_focus: isFocus },
-  });
-}

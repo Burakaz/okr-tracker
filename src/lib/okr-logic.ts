@@ -3,7 +3,6 @@ import type { OKRStatus, KeyResult, ConfidenceLevel } from '@/types';
 // Constants
 export const MAX_OKRS_PER_QUARTER = 5;
 export const RECOMMENDED_OKRS = 3;
-export const MAX_FOCUS = 2;
 export const CHECKIN_INTERVAL_DAYS = 14;
 export const TARGET_SCORE = 0.7;
 export const MIN_OKRS_FOR_LEVEL_UP = 4;
@@ -183,10 +182,6 @@ export function getCheckinDaysRemaining(nextCheckinAt: string | null): number | 
 }
 
 // ===== Limits =====
-export function canAddFocus(currentFocusCount: number): boolean {
-  return currentFocusCount < MAX_FOCUS;
-}
-
 export function canCreateOKR(currentCount: number): boolean {
   return currentCount < MAX_OKRS_PER_QUARTER;
 }

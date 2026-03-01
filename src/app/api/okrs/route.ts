@@ -32,7 +32,6 @@ export async function GET(request: NextRequest) {
     const category = searchParams.get("category");
     const scope = searchParams.get("scope");
     const showArchived = searchParams.get("archived") === "true";
-    const focusOnly = searchParams.get("focus") === "true";
     const sortBy = searchParams.get("sort_by") || "sort_order";
     const sortDir = searchParams.get("sort_dir") || "asc";
     const page = Math.max(1, parseInt(searchParams.get("page") || "1", 10));
@@ -69,10 +68,6 @@ export async function GET(request: NextRequest) {
 
     if (scope) {
       query = query.eq("scope", scope);
-    }
-
-    if (focusOnly) {
-      query = query.eq("is_focus", true);
     }
 
     // Sorting

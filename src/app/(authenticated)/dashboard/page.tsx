@@ -4,27 +4,20 @@ import { useMemo, Suspense } from "react";
 import Link from "next/link";
 import {
   Target,
-  Zap,
-  GraduationCap,
-  TrendingUp,
   AlertCircle,
   ArrowRight,
   Clock,
   Loader2,
-  Star,
   BookOpen,
   CheckCircle2,
-  Sparkles,
 } from "lucide-react";
 import { useOKRs, useCurrentUser, useEnrollments } from "@/lib/queries";
 import {
   getCurrentQuarter,
   isCheckinOverdue,
-  getCategoryLabel,
-  getCategoryClassName,
 } from "@/lib/okr-logic";
 import { ProgressBar } from "@/components/ui/ProgressBar";
-import type { OKR, OKRCategory } from "@/types";
+import type { OKR } from "@/types";
 
 const currentQuarter = getCurrentQuarter();
 
@@ -53,12 +46,6 @@ function DashboardContent() {
 
   // Active OKRs
   const activeOKRs = useMemo(() => okrs.filter((o) => o.is_active), [okrs]);
-
-  // Focus OKRs (pinned, max 3)
-  const focusOKRs = useMemo(
-    () => activeOKRs.filter((o) => o.is_focus).slice(0, 3),
-    [activeOKRs]
-  );
 
   // Overdue check-ins
   const overdueOKRs = useMemo(
@@ -177,12 +164,6 @@ function DashboardContent() {
                     {activeOKRs.length} Ziele aktiv
                   </span>
                 </div>
-                <div className="flex items-center gap-1.5">
-                  <Star className="h-3.5 w-3.5 text-amber-500" />
-                  <span className="text-[13px] text-foreground">
-                    {focusOKRs.length} im Fokus
-                  </span>
-                </div>
               </div>
               {/* Full-width progress bar */}
               <div className="mt-3">
@@ -218,29 +199,6 @@ function DashboardContent() {
                 <Clock className="h-3 w-3" />
                 Check-in
               </Link>
-            </div>
-          </div>
-        )}
-
-        {/* Focus OKRs */}
-        {focusOKRs.length > 0 && (
-          <div>
-            <div className="flex items-center justify-between mb-3">
-              <h2 className="text-sm font-semibold text-foreground">
-                Deine Focus-Ziele
-              </h2>
-              <Link
-                href="/okrs"
-                className="text-[12px] text-muted hover:text-foreground transition-colors flex items-center gap-1"
-              >
-                Alle Ziele
-                <ArrowRight className="h-3 w-3" />
-              </Link>
-            </div>
-            <div className="space-y-2">
-              {focusOKRs.map((okr) => (
-                <FocusOKRCard key={okr.id} okr={okr} />
-              ))}
             </div>
           </div>
         )}
@@ -352,69 +310,6 @@ function DashboardContent() {
 }
 
 // ===== Sub-Components =====
-
-const categoryIcons: Record<OKRCategory, typeof Target> = {
-  performance: Target,
-  skill: Zap,
-  learning: GraduationCap,
-  career: TrendingUp,
-};
-
-function FocusOKRCard({ okr }: { okr: OKR }) {
-  const Icon = categoryIcons[okr.category] || Target;
-
-  return (
-    <Link href="/okrs" className="card p-4 card-hover block">
-      <div className="flex items-start gap-3">
-        <div className="flex-shrink-0 mt-0.5">
-          <Star className="h-4 w-4 text-amber-400 fill-amber-400" />
-        </div>
-        <div className="flex-1 min-w-0">
-          <div className="flex items-center gap-2 mb-1">
-            <span className="text-[13px] font-medium text-foreground truncate">
-              {okr.title}
-            </span>
-            <span
-              className={`badge ${getCategoryClassName(okr.category)} text-[10px] flex-shrink-0`}
-            >
-              {getCategoryLabel(okr.category)}
-            </span>
-          </div>
-          <div className="flex items-center gap-2">
-            <ProgressBar value={okr.progress} size="sm" className="flex-1" />
-            <span className="text-[12px] font-medium text-foreground flex-shrink-0">
-              {okr.progress}%
-            </span>
-          </div>
-          {/* Key results preview */}
-          {okr.key_results.length > 0 && (
-            <div className="mt-2 space-y-1">
-              {okr.key_results.slice(0, 2).map((kr) => (
-                <div key={kr.id} className="flex items-center gap-2">
-                  <div
-                    className={`w-1.5 h-1.5 rounded-full flex-shrink-0 ${
-                      kr.progress >= 100
-                        ? "bg-green-500"
-                        : kr.progress >= 50
-                          ? "bg-amber-500"
-                          : "bg-cream-400"
-                    }`}
-                  />
-                  <span className="text-[11px] text-muted truncate">
-                    {kr.title}
-                  </span>
-                  <span className="text-[11px] text-muted flex-shrink-0">
-                    {kr.current_value}/{kr.target_value}
-                  </span>
-                </div>
-              ))}
-            </div>
-          )}
-        </div>
-      </div>
-    </Link>
-  );
-}
 
 function QuickStatCard({
   icon,

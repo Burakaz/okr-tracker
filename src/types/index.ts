@@ -128,7 +128,7 @@ export type AuditAction =
   | 'okr_create' | 'okr_update' | 'okr_delete'
   | 'okr_archive' | 'okr_restore' | 'okr_duplicate'
   | 'kr_update' | 'checkin_create'
-  | 'focus_toggle' | 'career_level_up'
+  | 'career_level_up'
   | 'login' | 'logout';
 
 export interface AuditLog {
@@ -168,7 +168,6 @@ export interface UpdateOKRRequest {
   scope?: OKRScope;
   due_date?: string;
   is_active?: boolean;
-  is_focus?: boolean;
   sort_order?: number;
 }
 
@@ -190,7 +189,7 @@ export interface DuplicateOKRRequest {
 }
 
 // ===== Filter Types =====
-export type OKRFilterType = 'all' | 'performance' | 'skill' | 'learning' | 'career' | 'focus' | 'archive';
+export type OKRFilterType = 'all' | 'performance' | 'skill' | 'learning' | 'career' | 'archive';
 
 // ===== Learning =====
 export type CourseCategory = 'design' | 'development' | 'marketing' | 'leadership' | 'data' | 'communication' | 'product' | 'other';
@@ -325,7 +324,6 @@ export interface QuarterSummary {
   quarter: string;
   total_okrs: number;
   avg_progress: number;
-  focus_count: number;
   overdue_checkins: number;
   active_courses: number;
   completed_modules: number;

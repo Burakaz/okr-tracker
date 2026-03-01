@@ -18,13 +18,11 @@ import {
   getConfidenceColor,
   isCheckinOverdue,
   getCheckinDaysRemaining,
-  canAddFocus,
   canCreateOKR,
   qualifiesForLevelUp,
   getCategoryLabel,
   getCategoryClassName,
   MAX_OKRS_PER_QUARTER,
-  MAX_FOCUS,
   CHECKIN_INTERVAL_DAYS,
   TARGET_SCORE,
   MIN_OKRS_FOR_LEVEL_UP,
@@ -416,16 +414,6 @@ describe('Check-in', () => {
 });
 
 describe('Limits', () => {
-  it('canAddFocus returns true when under limit', () => {
-    expect(canAddFocus(0)).toBe(true);
-    expect(canAddFocus(1)).toBe(true);
-  });
-
-  it('canAddFocus returns false at limit', () => {
-    expect(canAddFocus(2)).toBe(false);
-    expect(canAddFocus(3)).toBe(false);
-  });
-
   it('canCreateOKR returns true when under limit', () => {
     expect(canCreateOKR(0)).toBe(true);
     expect(canCreateOKR(4)).toBe(true);
@@ -489,7 +477,6 @@ describe('Category', () => {
 describe('Constants', () => {
   it('has correct values', () => {
     expect(MAX_OKRS_PER_QUARTER).toBe(5);
-    expect(MAX_FOCUS).toBe(2);
     expect(CHECKIN_INTERVAL_DAYS).toBe(14);
     expect(TARGET_SCORE).toBe(0.7);
     expect(MIN_OKRS_FOR_LEVEL_UP).toBe(4);
