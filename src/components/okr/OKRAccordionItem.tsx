@@ -272,6 +272,8 @@ export function OKRAccordionItem({
               const progress = checkinMode
                 ? getKRProgress(kr, currentVal)
                 : kr.progress;
+              // Inverted KRs: start > target (e.g., CPA senken: 30 → 15)
+              const isInverted = kr.start_value > kr.target_value;
 
               return (
                 <div key={kr.id} className="flex items-center gap-3">
@@ -299,6 +301,7 @@ export function OKRAccordionItem({
                           }))
                         }
                         className="kr-slider"
+                        style={isInverted ? { direction: "rtl" } : undefined}
                         aria-label={`${kr.title} anpassen`}
                       />
                     )}
