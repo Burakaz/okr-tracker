@@ -6,6 +6,7 @@ import { usePathname } from "next/navigation";
 import {
   LayoutDashboard,
   Target,
+  BookOpen,
   Trophy,
   Users,
   Building2,
@@ -40,6 +41,7 @@ export function Sidebar(props: SidebarProps) {
 const navItems = [
   { href: "/dashboard", icon: LayoutDashboard, label: "Mein Quartal" },
   { href: "/okrs", icon: Target, label: "Ziele" },
+  { href: "/learnings", icon: BookOpen, label: "Lernen" },
   { href: "/review", icon: Trophy, label: "Rückblick" },
 ];
 
