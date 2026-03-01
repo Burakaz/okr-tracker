@@ -47,7 +47,9 @@ export function AppShell({ user, orgLogo, children }: AppShellProps) {
         />
 
         <main id="main-content" className="flex-1 overflow-hidden" role="main">
-          {children}
+          <div className="h-full max-w-5xl mx-auto w-full">
+            {children}
+          </div>
         </main>
       </div>
     </div>

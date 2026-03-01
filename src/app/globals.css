@@ -257,20 +257,25 @@ body {
   box-shadow: 0 0 0 1px var(--foreground);
 }
 
-/* Card Styles - Minimalistischer mit mehr Weißraum */
+/* Card Styles - Modern, borderless with hover shadow */
 .card {
   background-color: white;
   border-radius: 1rem;
   box-shadow: 0 1px 3px rgba(0, 0, 0, 0.04);
-  border: 1px solid var(--cream-300);
+  border: none;
+  transition: box-shadow 0.2s ease, transform 0.2s ease;
+}
+
+.card:hover {
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.08);
 }
 
 .card-hover {
-  transition: box-shadow 0.15s ease;
+  transition: box-shadow 0.2s ease, transform 0.2s ease;
 }
 
 .card-hover:hover {
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.06);
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.08);
 }
 
 /* Sidebar Styles - Neues Design mit abgerundeter Box */
