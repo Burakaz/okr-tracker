@@ -649,3 +649,17 @@ body:not(:focus-within) .blur-on-unfocus {
   max-height: 90vh;
   overflow-y: auto;
 }
+
+/* Slide-over panel from right */
+@keyframes slide-in-right {
+  from {
+    transform: translateX(100%);
+  }
+  to {
+    transform: translateX(0);
+  }
+}
+
+.slide-panel-right {
+  animation: slide-in-right 0.25s ease-out;
+}

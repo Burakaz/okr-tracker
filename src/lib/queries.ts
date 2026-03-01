@@ -488,6 +488,131 @@ export function useSuggestCourses() {
   });
 }
 
+// ===== Redesign: New Hooks =====
+export function useQuickCheckin() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: async ({
+      okrId,
+      ...data
+    }: {
+      okrId: string;
+      confidence: number;
+      note?: string;
+      key_result_updates?: Array<{ id: string; current_value: number }>;
+    }) => {
+      const res = await fetch(`/api/okrs/${okrId}/quick-checkin`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(data),
+      });
+      if (!res.ok) {
+        const error = await res.json();
+        throw new Error(error.error || "Fehler beim Quick Check-in");
+      }
+      return res.json();
+    },
+    onSuccess: (_data, variables) => {
+      queryClient.invalidateQueries({ queryKey: ["okrs"] });
+      queryClient.invalidateQueries({ queryKey: ["okr", variables.okrId] });
+      queryClient.invalidateQueries({ queryKey: ["checkins", variables.okrId] });
+    },
+  });
+}
+
+export function useLinkCourse() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: async ({
+      okrId,
+      key_result_id,
+      enrollment_id,
+      auto_update,
+    }: {
+      okrId: string;
+      key_result_id: string;
+      enrollment_id: string;
+      auto_update?: boolean;
+    }) => {
+      const res = await fetch(`/api/okrs/${okrId}/link-course`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ key_result_id, enrollment_id, auto_update }),
+      });
+      if (!res.ok) {
+        const error = await res.json();
+        throw new Error(error.error || "Fehler beim Verknüpfen");
+      }
+      return res.json();
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["okrs"] });
+      queryClient.invalidateQueries({ queryKey: ["enrollments"] });
+    },
+  });
+}
+
+export function useReview(quarter?: string) {
+  return useQuery<{ review: import("@/types").ReviewData }>({
+    queryKey: ["review", quarter],
+    queryFn: async () => {
+      const params = new URLSearchParams();
+      if (quarter) params.set("quarter", quarter);
+      const res = await fetch(`/api/review?${params}`);
+      if (!res.ok) throw new Error("Fehler beim Laden des Rückblicks");
+      return res.json();
+    },
+    staleTime: 5 * 60 * 1000,
+  });
+}
+
+export function useAchievements() {
+  return useQuery<{ achievements: import("@/types").Achievement[] }>({
+    queryKey: ["achievements"],
+    queryFn: async () => {
+      const res = await fetch("/api/achievements");
+      if (!res.ok) throw new Error("Fehler beim Laden der Achievements");
+      return res.json();
+    },
+    staleTime: 5 * 60 * 1000,
+  });
+}
+
+export function useCheckAchievements() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: async (event: string) => {
+      const res = await fetch("/api/achievements/check", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ event }),
+      });
+      if (!res.ok) throw new Error("Fehler beim Achievement-Check");
+      return res.json();
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["achievements"] });
+    },
+  });
+}
+
+export function useSuggestKRs() {
+  return useMutation({
+    mutationFn: async (data: { title: string; category: string }) => {
+      const res = await fetch("/api/ai/suggest-krs", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(data),
+      });
+      if (!res.ok) {
+        const error = await res.json();
+        throw new Error(error.error || "Fehler bei KR-Vorschlägen");
+      }
+      return res.json();
+    },
+  });
+}
+
 // ===== Prefetch =====
 export function usePrefetchData(quarter?: string) {
   const queryClient = useQueryClient();

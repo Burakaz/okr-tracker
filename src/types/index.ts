@@ -290,3 +290,78 @@ export interface TeamLearningMember {
   total_modules: number;
   completed_modules: number;
 }
+
+// ===== OKR-Course Links =====
+export interface OKRCourseLink {
+  id: string;
+  key_result_id: string;
+  enrollment_id: string;
+  auto_update: boolean;
+  created_at: string;
+}
+
+// ===== Achievements =====
+export type AchievementType =
+  | 'first_okr'
+  | 'first_checkin'
+  | 'first_course_completed'
+  | 'streak_3w'
+  | 'streak_8w'
+  | 'quarter_hero'
+  | 'learning_machine'
+  | 'all_completed';
+
+export interface Achievement {
+  id: string;
+  user_id: string;
+  organization_id: string;
+  type: AchievementType;
+  earned_at: string;
+  metadata: Record<string, unknown>;
+}
+
+// ===== Dashboard =====
+export interface QuarterSummary {
+  quarter: string;
+  total_okrs: number;
+  avg_progress: number;
+  focus_count: number;
+  overdue_checkins: number;
+  active_courses: number;
+  completed_modules: number;
+  total_modules: number;
+  days_remaining: number;
+}
+
+// ===== Review =====
+export interface ReviewOKRSummary {
+  id: string;
+  title: string;
+  category: OKRCategory;
+  progress: number;
+  status: OKRStatus;
+  key_results_count: number;
+}
+
+export interface ReviewData {
+  quarter: string;
+  score: number;
+  okrs: ReviewOKRSummary[];
+  learning_summary: {
+    courses_enrolled: number;
+    courses_completed: number;
+    certificates_earned: number;
+  };
+  achievements: Achievement[];
+  trend: Array<{ quarter: string; score: number }>;
+}
+
+// ===== Quick Check-in =====
+export interface QuickCheckinRequest {
+  confidence: ConfidenceLevel;
+  note?: string;
+  key_result_updates?: Array<{
+    id: string;
+    current_value: number;
+  }>;
+}

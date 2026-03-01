@@ -291,6 +291,61 @@ function OKRsContent() {
     }
   };
 
+  const handleQuickCheckin = async (
+    okr: OKR,
+    data: { confidence: number; note?: string; key_result_updates?: Array<{ id: string; current_value: number }> }
+  ) => {
+    try {
+      const res = await fetch(`/api/okrs/${okr.id}/quick-checkin`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          confidence: data.confidence,
+          note: data.note || undefined,
+          key_result_updates: data.key_result_updates || [],
+        }),
+      });
+
+      if (res.ok) {
+        toast.success("Quick Check-in gespeichert");
+        await invalidateOKRs();
+      } else {
+        const error = await res.json();
+        toast.error(error.error || "Fehler beim Quick Check-in");
+      }
+    } catch {
+      toast.error("Fehler beim Quick Check-in");
+    }
+  };
+
+  const handleUpdateKR = async (okrId: string, krId: string, newValue: number) => {
+    // Use the quick-checkin endpoint to update a single KR value
+    // while preserving the current OKR confidence
+    const okr = okrs.find((o) => o.id === okrId);
+    if (!okr) return;
+
+    try {
+      const res = await fetch(`/api/okrs/${okrId}/quick-checkin`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          confidence: okr.confidence,
+          key_result_updates: [{ id: krId, current_value: newValue }],
+        }),
+      });
+
+      if (res.ok) {
+        toast.success("Key Result aktualisiert");
+        await invalidateOKRs();
+      } else {
+        const error = await res.json();
+        toast.error(error.error || "Fehler beim Aktualisieren");
+      }
+    } catch {
+      toast.error("Fehler beim Aktualisieren");
+    }
+  };
+
   const handleToggleExpand = (id: string) => {
     setExpandedId((prev) => (prev === id ? null : id));
   };
@@ -460,6 +515,8 @@ function OKRsContent() {
                   onArchive={handleArchive}
                   onDuplicate={handleDuplicate}
                   onDelete={handleDelete}
+                  onQuickCheckin={handleQuickCheckin}
+                  onUpdateKR={handleUpdateKR}
                 />
               ))}
             </div>

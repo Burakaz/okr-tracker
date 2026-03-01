@@ -10,12 +10,18 @@ import {
   Loader2,
   UserPlus,
   ArrowRight,
+  Building2,
+  Shield,
+  CreditCard,
+  Layers,
 } from "lucide-react";
 import { useQuery } from "@tanstack/react-query";
-import { useCurrentUser, useOKRs } from "@/lib/queries";
+import { useCurrentUser, useOKRs, useOrganization, useOrganizationMembers } from "@/lib/queries";
 import { getCurrentQuarter, progressToScore, getCategoryLabel, getCategoryClassName } from "@/lib/okr-logic";
 import { ProgressBar } from "@/components/ui/ProgressBar";
 import { TeamStatsBar } from "@/components/team/TeamStatsBar";
+import { OrgGeneralTab } from "@/components/organization/OrgGeneralTab";
+import { OrgMembersTab } from "@/components/organization/OrgMembersTab";
 import type { OKR } from "@/types";
 
 interface TeamMember {
@@ -48,22 +54,27 @@ function useTeamData() {
   });
 }
 
-type TabId = "overview" | "development" | "okrs";
+type TopTabId = "team" | "org";
+type TeamTabId = "overview" | "development" | "okrs";
+type OrgTabId = "general" | "members" | "teams" | "rights" | "billing";
 
 export default function TeamPage() {
-  const [activeTab, setActiveTab] = useState<TabId>("overview");
+  const [topTab, setTopTab] = useState<TopTabId>("team");
+  const [teamTab, setTeamTab] = useState<TeamTabId>("overview");
+  const [orgTab, setOrgTab] = useState<OrgTabId>("general");
+
   const { data: teamData, isLoading } = useTeamData();
   const { data: userData } = useCurrentUser();
   const currentQuarter = getCurrentQuarter();
   const { data: okrData } = useOKRs(currentQuarter);
+  const { data: orgData } = useOrganization();
 
   const members = teamData?.members || [];
   const stats = teamData?.stats || { totalMembers: 0, totalOKRs: 0, avgProgress: 0, atRiskCount: 0 };
   const currentUser = userData?.user;
   const isAdmin = currentUser && ["admin", "super_admin"].includes(currentUser.role);
-
-  // Team OKRs - all OKRs visible (for managers/admins this shows all org OKRs)
-  const allOKRs: OKR[] = okrData?.okrs || [];
+  const isManager = currentUser && ["admin", "super_admin", "hr", "manager"].includes(currentUser.role);
+  const org = orgData?.organization;
 
   if (isLoading) {
     return (
@@ -79,63 +90,161 @@ export default function TeamPage() {
       <div className="px-6 pt-6 pb-4 border-b border-cream-300/50">
         <div className="flex items-center justify-between mb-4">
           <div>
-            <h1 className="text-lg font-semibold text-foreground">Team</h1>
+            <h1 className="text-lg font-semibold text-foreground">Team & Organisation</h1>
             <p className="text-[12px] text-muted">
               {stats.totalMembers} {stats.totalMembers === 1 ? "Mitglied" : "Mitglieder"}
+              {org ? ` · ${org.name}` : ""}
             </p>
           </div>
+        </div>
+
+        {/* Top-level tabs: Team / Organisation */}
+        <div className="flex items-center gap-1 mb-4">
+          <button
+            onClick={() => setTopTab("team")}
+            className={`flex items-center gap-1.5 px-4 py-2 text-[13px] font-medium rounded-lg transition-colors ${
+              topTab === "team"
+                ? "bg-foreground text-white"
+                : "text-muted hover:bg-cream-200"
+            }`}
+          >
+            <Users className="h-3.5 w-3.5" />
+            Übersicht
+          </button>
           {isAdmin && (
-            <Link href="/organization" className="btn-secondary text-[13px] gap-1.5">
-              <UserPlus className="h-3.5 w-3.5" />
-              Einladen
-            </Link>
+            <button
+              onClick={() => setTopTab("org")}
+              className={`flex items-center gap-1.5 px-4 py-2 text-[13px] font-medium rounded-lg transition-colors ${
+                topTab === "org"
+                  ? "bg-foreground text-white"
+                  : "text-muted hover:bg-cream-200"
+              }`}
+            >
+              <Building2 className="h-3.5 w-3.5" />
+              Organisation
+            </button>
           )}
         </div>
 
-        {/* Stats Bar */}
-        <TeamStatsBar
-          teamCount={stats.totalMembers}
-          okrCount={stats.totalOKRs}
-          avgProgress={stats.avgProgress}
-          atRiskCount={stats.atRiskCount}
-        />
+        {/* Sub-tabs for team view */}
+        {topTab === "team" && (
+          <>
+            <TeamStatsBar
+              teamCount={stats.totalMembers}
+              okrCount={stats.totalOKRs}
+              avgProgress={stats.avgProgress}
+              atRiskCount={stats.atRiskCount}
+            />
+            <div className="flex items-center gap-1 mt-4">
+              {([
+                { id: "overview" as TeamTabId, label: "Mitglieder", icon: Users },
+                { id: "development" as TeamTabId, label: "Entwicklung", icon: TrendingUp },
+                { id: "okrs" as TeamTabId, label: "OKRs", icon: Target },
+              ]).map((tab) => {
+                const Icon = tab.icon;
+                return (
+                  <button
+                    key={tab.id}
+                    onClick={() => setTeamTab(tab.id)}
+                    className={`flex items-center gap-1.5 px-3 py-2 text-[12px] font-medium rounded-lg transition-colors ${
+                      teamTab === tab.id
+                        ? "bg-cream-200 text-foreground"
+                        : "text-muted hover:bg-cream-100"
+                    }`}
+                  >
+                    <Icon className="h-3.5 w-3.5" />
+                    {tab.label}
+                  </button>
+                );
+              })}
+            </div>
+          </>
+        )}
 
-        {/* Tabs */}
-        <div className="flex items-center gap-1 mt-4">
-          {([
-            { id: "overview" as TabId, label: "Übersicht", icon: Users },
-            { id: "development" as TabId, label: "Entwicklung", icon: TrendingUp },
-            { id: "okrs" as TabId, label: "OKRs", icon: Target },
-          ]).map((tab) => {
-            const Icon = tab.icon;
-            return (
-              <button
-                key={tab.id}
-                onClick={() => setActiveTab(tab.id)}
-                className={`flex items-center gap-1.5 px-3 py-2 text-[13px] font-medium rounded-lg transition-colors ${
-                  activeTab === tab.id
-                    ? "bg-foreground text-white"
-                    : "text-muted hover:bg-cream-200"
-                }`}
-              >
-                <Icon className="h-3.5 w-3.5" />
-                {tab.label}
-              </button>
-            );
-          })}
-        </div>
+        {/* Sub-tabs for org view */}
+        {topTab === "org" && (
+          <div className="flex items-center gap-1 overflow-x-auto">
+            {([
+              { id: "general" as OrgTabId, label: "Allgemein", icon: Building2 },
+              { id: "members" as OrgTabId, label: "Mitglieder", icon: Users },
+              { id: "teams" as OrgTabId, label: "Teams", icon: Layers },
+              { id: "rights" as OrgTabId, label: "Rechte", icon: Shield },
+              { id: "billing" as OrgTabId, label: "Billing", icon: CreditCard },
+            ]).map((tab) => {
+              const Icon = tab.icon;
+              return (
+                <button
+                  key={tab.id}
+                  onClick={() => setOrgTab(tab.id)}
+                  className={`flex items-center gap-1.5 px-3 py-2 text-[12px] font-medium rounded-lg transition-colors whitespace-nowrap ${
+                    orgTab === tab.id
+                      ? "bg-cream-200 text-foreground"
+                      : "text-muted hover:bg-cream-100"
+                  }`}
+                >
+                  <Icon className="h-3.5 w-3.5" />
+                  {tab.label}
+                </button>
+              );
+            })}
+          </div>
+        )}
       </div>
 
       {/* Content */}
       <div className="flex-1 overflow-y-auto p-6">
-        {activeTab === "overview" && (
-          <OverviewTab members={members} />
+        {/* Team tabs */}
+        {topTab === "team" && (
+          <>
+            {teamTab === "overview" && <OverviewTab members={members} />}
+            {teamTab === "development" && <DevelopmentTab members={members} />}
+            {teamTab === "okrs" && <TeamOKRsTab members={members} />}
+          </>
         )}
-        {activeTab === "development" && (
-          <DevelopmentTab members={members} />
-        )}
-        {activeTab === "okrs" && (
-          <TeamOKRsTab members={members} />
+
+        {/* Organization tabs */}
+        {topTab === "org" && (
+          <>
+            {orgTab === "general" && <OrgGeneralTab />}
+            {orgTab === "members" && <OrgMembersTab />}
+            {orgTab === "teams" && (
+              <div className="empty-state">
+                <Layers className="empty-state-icon" />
+                <p className="empty-state-title">Teams</p>
+                <p className="empty-state-description">
+                  Team-Verwaltung wird in Kürze verfügbar sein.
+                </p>
+              </div>
+            )}
+            {orgTab === "rights" && (
+              <div className="space-y-4">
+                <h3 className="text-[15px] font-semibold text-foreground">Rollenübersicht</h3>
+                <div className="space-y-3">
+                  {[
+                    { role: "Super Admin", desc: "Vollzugriff auf alle Funktionen, kann nicht geändert werden.", badge: "badge-red" },
+                    { role: "Admin", desc: "Kann Organisation verwalten, Mitglieder einladen und Rollen ändern.", badge: "badge-yellow" },
+                    { role: "HR", desc: "Kann Mitgliederprofile einsehen und Karrierepfade verwalten.", badge: "badge-green" },
+                    { role: "Manager", desc: "Kann Team-OKRs einsehen und Team-Mitglieder coachen.", badge: "badge-blue" },
+                    { role: "Mitarbeiter", desc: "Kann eigene OKRs verwalten und an Kursen teilnehmen.", badge: "badge-gray" },
+                  ].map((item) => (
+                    <div key={item.role} className="card p-4 flex items-start gap-3">
+                      <span className={`badge ${item.badge} text-[11px] flex-shrink-0 mt-0.5`}>{item.role}</span>
+                      <p className="text-[13px] text-muted">{item.desc}</p>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
+            {orgTab === "billing" && (
+              <div className="empty-state">
+                <CreditCard className="empty-state-icon" />
+                <p className="empty-state-title">Billing</p>
+                <p className="empty-state-description">
+                  Du befindest dich im kostenlosen Trial. Billing-Optionen werden in Kürze verfügbar sein.
+                </p>
+              </div>
+            )}
+          </>
         )}
       </div>
     </div>

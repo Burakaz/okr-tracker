@@ -4,15 +4,15 @@ import { Suspense, useState } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import {
-  LayoutGrid,
+  LayoutDashboard,
   Target,
-  BookOpen,
-  TrendingUp,
+  Trophy,
   Users,
   Building2,
   Settings,
   ChevronDown,
   LogOut,
+  User as UserIcon,
 } from "lucide-react";
 import type { User } from "@/types";
 
@@ -38,15 +38,13 @@ export function Sidebar(props: SidebarProps) {
 }
 
 const navItems = [
-  { href: "/dashboard", icon: LayoutGrid, label: "Startseite" },
-  { href: "/okrs", icon: Target, label: "OKRs" },
-  { href: "/learnings", icon: BookOpen, label: "Learnings" },
-  { href: "/career", icon: TrendingUp, label: "Karriere" },
+  { href: "/dashboard", icon: LayoutDashboard, label: "Mein Quartal" },
+  { href: "/okrs", icon: Target, label: "Ziele" },
+  { href: "/review", icon: Trophy, label: "Rückblick" },
 ];
 
 const managementItems = [
-  { href: "/team", icon: Users, label: "Team" },
-  { href: "/organization", icon: Building2, label: "Organisation" },
+  { href: "/team", icon: Users, label: "Team & Orga" },
 ];
 
 function SidebarContent({ user, orgLogo }: SidebarProps) {
@@ -137,16 +135,6 @@ function SidebarContent({ user, orgLogo }: SidebarProps) {
         )}
       </nav>
 
-      {/* Footer mit Settings */}
-      <div className="px-3 py-2 border-t border-cream-300/50">
-        <NavItem
-          href="/settings"
-          icon={<Settings className="h-4 w-4" />}
-          label="Einstellungen"
-          active={pathname === "/settings"}
-        />
-      </div>
-
       {/* User Profile with Dropdown */}
       <div className="p-3 border-t border-cream-300/50 relative">
         <button
@@ -193,14 +181,20 @@ function SidebarContent({ user, orgLogo }: SidebarProps) {
               role="menu"
               aria-label="Profil-Menu"
             >
+              <div className="px-3 py-2 border-b border-cream-300/50">
+                <p className="text-[12px] text-muted truncate">{user.email}</p>
+                {user.craft_focus && (
+                  <p className="text-[11px] text-muted/70 truncate mt-0.5">{user.craft_focus}</p>
+                )}
+              </div>
               <Link
                 href="/settings"
                 onClick={() => setShowProfileMenu(false)}
                 className="dropdown-item text-[13px]"
                 role="menuitem"
               >
-                <Settings className="h-3.5 w-3.5" aria-hidden="true" />
-                Einstellungen
+                <UserIcon className="h-3.5 w-3.5" aria-hidden="true" />
+                Profil & Einstellungen
               </Link>
               <div
                 className="border-t border-cream-300/50 my-0.5"

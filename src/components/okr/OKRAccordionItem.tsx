@@ -13,9 +13,10 @@ import {
   Calendar,
   Target,
 } from "lucide-react";
-import { ProgressBar } from "@/components/ui/ProgressBar";
 import { ScoreBadge } from "@/components/ui/ScoreBadge";
 import { StatusBadge } from "@/components/ui/StatusBadge";
+import { KRInlineEdit } from "@/components/okr/KRInlineEdit";
+import { InlineCheckin } from "@/components/okr/InlineCheckin";
 import {
   progressToScore,
   getCategoryLabel,
@@ -33,6 +34,15 @@ interface OKRAccordionItemProps {
   onArchive: (okr: OKR) => void;
   onDuplicate: (okr: OKR) => void;
   onDelete: (okr: OKR) => void;
+  onQuickCheckin?: (
+    okr: OKR,
+    data: {
+      confidence: number;
+      note?: string;
+      key_result_updates?: Array<{ id: string; current_value: number }>;
+    }
+  ) => void;
+  onUpdateKR?: (okrId: string, krId: string, newValue: number) => void;
 }
 
 export function OKRAccordionItem({
@@ -45,6 +55,8 @@ export function OKRAccordionItem({
   onArchive,
   onDuplicate,
   onDelete,
+  onQuickCheckin,
+  onUpdateKR,
 }: OKRAccordionItemProps) {
   const score = progressToScore(okr.progress);
 
@@ -173,7 +185,7 @@ export function OKRAccordionItem({
             </span>
           </div>
 
-          {/* Key Results */}
+          {/* Key Results - inline editable */}
           {okr.key_results && okr.key_results.length > 0 && (
             <div>
               <h4 className="text-[11px] font-semibold text-muted uppercase tracking-wider mb-2 flex items-center gap-1.5">
@@ -182,32 +194,34 @@ export function OKRAccordionItem({
               </h4>
               <div className="space-y-2">
                 {okr.key_results.map((kr) => (
-                  <div key={kr.id} className="bg-white rounded-lg p-3">
-                    <div className="flex items-center justify-between mb-1.5">
-                      <p className="text-[13px] font-medium text-foreground flex-1 truncate pr-2">
-                        {kr.title}
-                      </p>
-                      <span className="text-[11px] text-muted whitespace-nowrap">
-                        {kr.current_value}
-                        {kr.unit ? ` ${kr.unit}` : ""} / {kr.target_value}
-                        {kr.unit ? ` ${kr.unit}` : ""}
-                      </span>
-                    </div>
-                    <ProgressBar value={kr.progress} size="sm" />
-                  </div>
+                  <KRInlineEdit
+                    key={kr.id}
+                    kr={kr}
+                    onUpdate={(krId, newValue) => {
+                      onUpdateKR?.(okr.id, krId, newValue);
+                    }}
+                  />
                 ))}
               </div>
             </div>
+          )}
+
+          {/* Quick Check-in */}
+          {onQuickCheckin && (
+            <InlineCheckin
+              okr={okr}
+              onSubmit={(data) => onQuickCheckin(okr, data)}
+            />
           )}
 
           {/* Action buttons */}
           <div className="flex items-center gap-2 pt-2 border-t border-cream-200">
             <button
               onClick={() => onCheckin(okr)}
-              className="btn-success text-[12px] py-1.5 px-3 gap-1.5"
+              className="btn-ghost text-[12px] py-1.5 px-3 gap-1.5"
             >
-              <ClipboardCheck className="h-3.5 w-3.5" aria-hidden="true" />
-              Check-in
+              <History className="h-3.5 w-3.5" aria-hidden="true" />
+              Ausführliches Check-in
             </button>
             <button
               onClick={() => onEdit(okr)}

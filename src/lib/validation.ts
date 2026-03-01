@@ -100,3 +100,26 @@ export const updateEnrollmentSchema = z.object({
   status: z.enum(["in_progress", "completed", "paused", "dropped"]).optional(),
   notes: z.string().max(500).optional().nullable(),
 });
+
+// ===== Redesign Schemas =====
+export const quickCheckinSchema = z.object({
+  confidence: z.number().int().min(1).max(5),
+  note: z.string().max(2000).optional(),
+  key_result_updates: z.array(
+    z.object({
+      id: z.string().uuid(),
+      current_value: z.number(),
+    })
+  ).optional(),
+});
+
+export const linkCourseSchema = z.object({
+  key_result_id: z.string().uuid(),
+  enrollment_id: z.string().uuid(),
+  auto_update: z.boolean().optional().default(true),
+});
+
+export const suggestKRsSchema = z.object({
+  title: z.string().min(1).max(200),
+  category: z.enum(["performance", "skill", "learning", "career"]),
+});
