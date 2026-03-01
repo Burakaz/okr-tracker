@@ -20,6 +20,7 @@ import {
   MessageSquare,
 } from "lucide-react";
 import { ProgressBar } from "@/components/ui/ProgressBar";
+import { CheckinCelebration, type CelebrationLevel } from "@/components/okr/CheckinCelebration";
 import {
   isCheckinOverdue,
   getCheckinDaysRemaining,
@@ -41,7 +42,7 @@ interface OKRAccordionItemProps {
       note?: string;
       key_result_updates?: Array<{ id: string; current_value: number }>;
     }
-  ) => void;
+  ) => Promise<CelebrationLevel | null>;
 }
 
 // ===== Helpers =====
@@ -128,6 +129,7 @@ export function OKRAccordionItem({
   const [krValues, setKrValues] = useState<Record<string, number>>({});
   const [selectedConfidence, setSelectedConfidence] = useState<number | null>(null);
   const [checkinNote, setCheckinNote] = useState("");
+  const [celebrationLevel, setCelebrationLevel] = useState<CelebrationLevel | null>(null);
 
   const score = (okr.progress / 100).toFixed(2);
   const statusColor = getStatusColor(okr.status);
@@ -175,9 +177,12 @@ export function OKRAccordionItem({
     return krChanged || confChanged || hasNote;
   };
 
-  const saveCheckin = () => {
+  const saveCheckin = async () => {
     if (!canSave()) return;
 
+    // Capture values before resetting form
+    const savedConfidence = selectedConfidence;
+    const savedNote = checkinNote.trim();
     const updates = Object.entries(krValues)
       .filter(([id]) => {
         const kr = okr.key_results?.find((k) => k.id === id);
@@ -185,12 +190,20 @@ export function OKRAccordionItem({
       })
       .map(([id, current_value]) => ({ id, current_value: Math.round(current_value) }));
 
-    onQuickCheckin?.(okr, {
-      confidence: selectedConfidence ?? undefined,
-      note: checkinNote.trim() || undefined,
-      key_result_updates: updates.length > 0 ? updates : undefined,
-    });
+    // Close form immediately for snappy UX
     cancelCheckin();
+
+    // Fire API call and await result
+    if (onQuickCheckin) {
+      const level = await onQuickCheckin(okr, {
+        confidence: savedConfidence ?? undefined,
+        note: savedNote || undefined,
+        key_result_updates: updates.length > 0 ? updates : undefined,
+      });
+      if (level) {
+        setCelebrationLevel(level);
+      }
+    }
   };
 
   return (
@@ -330,7 +343,7 @@ export function OKRAccordionItem({
           <div className="mt-4 pt-3 border-t border-cream-200 space-y-3">
             <div>
               <p className="text-[11px] font-semibold text-muted uppercase tracking-wider mb-2">
-                Wirst du dieses Ziel erreichen?
+                Wirst du deine Ziele erreichen?
               </p>
               <div className="flex flex-wrap items-center gap-2">
                 {confidenceOptions.map((opt) => (
@@ -364,7 +377,7 @@ export function OKRAccordionItem({
                 id={`checkin-note-${okr.id}`}
                 value={checkinNote}
                 onChange={(e) => setCheckinNote(e.target.value)}
-                placeholder="Welche Kampagnen liefen? Welche Postings? Welche Titel? Was hat funktioniert, was nicht?"
+                placeholder="Welche Ergebnisse hast du erzielt und warum rechtfertigen sie die Erhöhung deines OKR-Fortschritts? Was verhindert den nächsten Schritt?"
                 rows={2}
                 className={`input w-full text-[13px] resize-none mt-1 ${
                   !hasNote && checkinNote.length === 0 ? "" : !hasNote ? "border-red-300 focus:ring-red-300" : "border-green-300 focus:ring-green-300"
@@ -376,6 +389,16 @@ export function OKRAccordionItem({
                 </p>
               )}
             </div>
+          </div>
+        )}
+
+        {/* Inline Celebration */}
+        {celebrationLevel && (
+          <div className="mt-4">
+            <CheckinCelebration
+              level={celebrationLevel}
+              onComplete={() => setCelebrationLevel(null)}
+            />
           </div>
         )}
 

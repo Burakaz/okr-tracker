@@ -11,6 +11,7 @@ import { ConfirmDialog } from "@/components/ui/ConfirmDialog";
 import { QuarterSelector } from "@/components/okr/QuarterSelector";
 import { ScoreDashboard } from "@/components/okr/ScoreDashboard";
 import { OKRAccordionItem } from "@/components/okr/OKRAccordionItem";
+import type { CelebrationLevel } from "@/components/okr/CheckinCelebration";
 import { useOKRs, useCurrentUser } from "@/lib/queries";
 import { useOKRsRealtime } from "@/hooks/useRealtimeQuery";
 import {
@@ -19,7 +20,6 @@ import {
 } from "@/lib/okr-logic";
 import type {
   OKR,
-  OKRScope,
   CreateOKRRequest,
   CreateCheckinRequest,
   DuplicateOKRRequest,
@@ -73,6 +73,7 @@ function OKRsContent() {
     type: "delete" | "archive";
     okr: OKR;
   } | null>(null);
+  // celebration state is now local to each OKRAccordionItem
 
   // Derived data
   const activeOKRs = useMemo(
@@ -262,7 +263,7 @@ function OKRsContent() {
   const handleQuickCheckin = async (
     okr: OKR,
     data: { confidence?: number; note?: string; key_result_updates?: Array<{ id: string; current_value: number }> }
-  ) => {
+  ): Promise<CelebrationLevel | null> => {
     try {
       const res = await fetch(`/api/okrs/${okr.id}/quick-checkin`, {
         method: "POST",
@@ -275,14 +276,25 @@ function OKRsContent() {
       });
 
       if (res.ok) {
-        toast.success("Quick Check-in gespeichert");
-        await invalidateOKRs();
+        // Determine celebration level based on confidence + progress
+        const conf = data.confidence ?? okr.confidence ?? 3;
+        const progress = okr.progress;
+        let level: CelebrationLevel = "medium";
+        if (conf >= 4 || progress >= 70) level = "high";
+        else if (conf <= 2 || progress < 30) level = "low";
+
+        // Delay data refresh so celebration animation plays first
+        setTimeout(() => invalidateOKRs(), 1500);
+
+        return level;
       } else {
         const error = await res.json();
         toast.error(error.error || "Fehler beim Quick Check-in");
+        return null;
       }
     } catch {
       toast.error("Fehler beim Quick Check-in");
+      return null;
     }
   };
 
