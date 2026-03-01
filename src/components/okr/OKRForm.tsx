@@ -204,10 +204,12 @@ export function OKRForm({
       });
     }
 
-    // Collect manually added KRs
+    // Collect manually added KRs (include id for existing ones)
     const manualKRs = keyResults
       .filter((kr) => kr.title.trim())
       .map((kr) => ({
+        // Only pass id for real database UUIDs (not client-generated ids)
+        ...(isEditing && !kr.id.startsWith("kr-") ? { id: kr.id } : {}),
         title: kr.title.trim(),
         start_value: parseFloat(kr.start_value) || 0,
         target_value: parseFloat(kr.target_value) || 100,

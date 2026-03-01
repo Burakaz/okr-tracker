@@ -154,6 +154,7 @@ export interface CreateOKRRequest {
   due_date?: string;
   team_id?: string;
   key_results: Array<{
+    id?: string;
     title: string;
     start_value: number;
     target_value: number;

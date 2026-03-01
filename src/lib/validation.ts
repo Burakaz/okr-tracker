@@ -29,6 +29,18 @@ export const updateOKRSchema = z.object({
   due_date: z.string().optional().nullable(),
   is_active: z.boolean().optional(),
   sort_order: z.number().optional(),
+  key_results: z
+    .array(
+      z.object({
+        id: z.string().uuid().optional(),
+        title: z.string().min(1, "KR-Titel ist erforderlich"),
+        start_value: z.number().default(0),
+        target_value: z.number(),
+        unit: z.string().optional(),
+      })
+    )
+    .max(5)
+    .optional(),
 });
 
 export const createCheckinSchema = z.object({

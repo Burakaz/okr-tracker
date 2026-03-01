@@ -216,31 +216,115 @@ export async function PATCH(
       }
     }
 
-    const { data: updatedOkr, error: updateError } = await serviceClient
-      .from("okrs")
-      .update(updateData)
-      .eq("id", id)
-      .eq("user_id", user.id)
-      .select("*, key_results(*)")
-      .single();
+    // Update OKR metadata (only if there are changed fields)
+    if (Object.keys(updateData).length > 0) {
+      const { error: updateError } = await serviceClient
+        .from("okrs")
+        .update(updateData)
+        .eq("id", id)
+        .eq("user_id", user.id);
 
-    if (updateError) {
-      logger.error("OKR update failed", {
-        requestId,
-        userId: user.id,
-        okrId: id,
-        error: updateError.message,
-      });
-      reqLog.finish(500);
-      return withRateLimitHeaders(
-        withCorsHeaders(
-          NextResponse.json(
-            { error: "Fehler beim Aktualisieren" },
-            { status: 500 }
+      if (updateError) {
+        logger.error("OKR update failed", {
+          requestId,
+          userId: user.id,
+          okrId: id,
+          error: updateError.message,
+        });
+        reqLog.finish(500);
+        return withRateLimitHeaders(
+          withCorsHeaders(
+            NextResponse.json(
+              { error: "Fehler beim Aktualisieren" },
+              { status: 500 }
+            )
           )
-        )
-      );
+        );
+      }
     }
+
+    // Handle key_results if provided
+    const incomingKRs = parsed.data.key_results;
+    if (incomingKRs) {
+      const existingKRs: Array<{ id: string; sort_order: number }> =
+        (existingOkr.key_results || []) as Array<{ id: string; sort_order: number }>;
+      const existingKRIds = new Set(existingKRs.map((kr) => kr.id));
+      const incomingKRIds = new Set(
+        incomingKRs.filter((kr) => kr.id).map((kr) => kr.id!)
+      );
+
+      // 1. Delete KRs that were removed
+      const toDelete = [...existingKRIds].filter((krId) => !incomingKRIds.has(krId));
+      if (toDelete.length > 0) {
+        const { error: deleteError } = await serviceClient
+          .from("key_results")
+          .delete()
+          .in("id", toDelete)
+          .eq("okr_id", id);
+
+        if (deleteError) {
+          logger.error("KR delete failed", {
+            requestId,
+            userId: user.id,
+            okrId: id,
+            error: deleteError.message,
+          });
+        }
+      }
+
+      // 2. Update existing KRs
+      for (const kr of incomingKRs) {
+        if (kr.id && existingKRIds.has(kr.id)) {
+          const sortIndex = incomingKRs.indexOf(kr);
+          await serviceClient
+            .from("key_results")
+            .update({
+              title: kr.title,
+              start_value: kr.start_value,
+              target_value: kr.target_value,
+              unit: kr.unit || null,
+              sort_order: sortIndex,
+            })
+            .eq("id", kr.id)
+            .eq("okr_id", id);
+        }
+      }
+
+      // 3. Insert new KRs (no id or id not in existing)
+      const toInsert = incomingKRs
+        .filter((kr) => !kr.id || !existingKRIds.has(kr.id))
+        .map((kr, idx) => ({
+          okr_id: id,
+          title: kr.title,
+          start_value: kr.start_value,
+          target_value: kr.target_value,
+          current_value: kr.start_value,
+          unit: kr.unit || null,
+          sort_order: existingKRs.length + idx,
+        }));
+
+      if (toInsert.length > 0) {
+        const { error: insertError } = await serviceClient
+          .from("key_results")
+          .insert(toInsert);
+
+        if (insertError) {
+          logger.error("KR insert failed", {
+            requestId,
+            userId: user.id,
+            okrId: id,
+            error: insertError.message,
+          });
+        }
+      }
+    }
+
+    // Re-fetch the complete OKR with updated key_results
+    const { data: updatedOkr } = await serviceClient
+      .from("okrs")
+      .select("*, key_results(*)")
+      .eq("id", id)
+      .single();
 
     // Sort key_results
     if (updatedOkr) {
