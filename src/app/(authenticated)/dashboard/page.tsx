@@ -126,7 +126,7 @@ function DashboardContent() {
 
   return (
     <div className="h-full overflow-y-auto">
-      <div className="max-w-4xl mx-auto px-4 sm:px-6 py-6 sm:py-8 space-y-5 sm:space-y-6">
+      <div className="px-4 sm:px-6 py-6 sm:py-8 space-y-5 sm:space-y-6">
         {/* Quarter Hero */}
         <div className="card p-6">
           <div className="flex items-center gap-6">
