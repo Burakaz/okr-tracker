@@ -466,11 +466,157 @@ body {
 .celebration-inline {
   animation: celebration-card-glow 2s ease-out forwards;
 }
+.celebration-inline.style-fire-fill {
+  animation: celebration-card-glow-fire 1.6s ease-out forwards;
+}
 
 @keyframes celebration-card-glow {
   0% { box-shadow: 0 0 0 0 rgba(255, 100, 0, 0.2); }
   30% { box-shadow: 0 0 20px 4px rgba(255, 100, 0, 0.15); }
   100% { box-shadow: 0 0 0 0 rgba(255, 100, 0, 0); }
+}
+@keyframes celebration-card-glow-fire {
+  0% { box-shadow: 0 0 0 0 rgba(255, 80, 0, 0.3); }
+  20% { box-shadow: 0 0 35px 10px rgba(255, 80, 0, 0.35); }
+  50% { box-shadow: 0 0 20px 5px rgba(255, 80, 0, 0.15); }
+  100% { box-shadow: 0 0 0 0 rgba(255, 80, 0, 0); }
+}
+
+/* ===== Fire Fill Animation Style ===== */
+
+/* Main fire sweep — gradient fills card from bottom to top, then fades */
+.fire-fill-sweep {
+  background: linear-gradient(
+    to top,
+    rgba(255, 50, 0, 0.85) 0%,
+    rgba(255, 100, 0, 0.65) 25%,
+    rgba(255, 160, 0, 0.45) 50%,
+    rgba(255, 210, 0, 0.2) 78%,
+    transparent 100%
+  );
+  animation: fire-fill-sweep 1.3s cubic-bezier(0.22, 1, 0.36, 1) forwards;
+  z-index: 5;
+}
+
+@keyframes fire-fill-sweep {
+  0% {
+    clip-path: inset(100% 0 0 0);
+    opacity: 0.9;
+  }
+  35% {
+    clip-path: inset(0% 0 0 0);
+    opacity: 1;
+  }
+  60% {
+    clip-path: inset(0% 0 0 0);
+    opacity: 0.7;
+  }
+  100% {
+    clip-path: inset(0% 0 0 0);
+    opacity: 0;
+  }
+}
+
+/* Individual fire tongue rising from bottom for organic texture */
+.fire-tongue {
+  position: absolute;
+  bottom: 0;
+  left: var(--ft-x);
+  width: var(--ft-width);
+  height: 130%;
+  background: linear-gradient(
+    to top,
+    rgba(255, 80, 0, 0.7) 0%,
+    rgba(255, 150, 0, 0.35) 40%,
+    transparent 100%
+  );
+  border-radius: 40% 40% 0 0;
+  transform-origin: bottom center;
+  animation: fire-tongue-rise var(--ft-duration) ease-out var(--ft-delay) both;
+  z-index: 6;
+}
+
+@keyframes fire-tongue-rise {
+  0% {
+    transform: scaleY(0) scaleX(0.7);
+    opacity: 0;
+  }
+  25% {
+    transform: scaleY(0.9) scaleX(1);
+    opacity: 0.8;
+  }
+  50% {
+    transform: scaleY(1) scaleX(0.85);
+    opacity: 0.55;
+  }
+  75% {
+    transform: scaleY(0.5) scaleX(0.65);
+    opacity: 0.25;
+  }
+  100% {
+    transform: scaleY(0.08) scaleX(0.3);
+    opacity: 0;
+  }
+}
+
+/* Inner glow overlay during fire fill */
+.fire-fill-glow {
+  box-shadow: inset 0 0 40px rgba(255, 80, 0, 0.3), inset 0 0 80px rgba(255, 60, 0, 0.12);
+  animation: fire-fill-glow-pulse 1.3s ease-out forwards;
+  z-index: 7;
+}
+
+@keyframes fire-fill-glow-pulse {
+  0% { opacity: 0; }
+  25% { opacity: 1; }
+  55% { opacity: 0.7; }
+  100% { opacity: 0; }
+}
+
+/* Floating ember particle */
+.fire-ember {
+  position: absolute;
+  left: var(--em-x);
+  top: var(--em-y);
+  width: var(--em-size);
+  height: var(--em-size);
+  background: var(--em-color);
+  border-radius: 50%;
+  box-shadow: 0 0 6px var(--em-color);
+  animation: ember-float-up var(--em-duration) ease-out var(--em-delay) both;
+  z-index: 8;
+}
+
+@keyframes ember-float-up {
+  0% {
+    opacity: 0;
+    transform: translateY(0) scale(1);
+  }
+  18% {
+    opacity: 1;
+  }
+  100% {
+    opacity: 0;
+    transform: translateY(-50px) translateX(var(--em-drift)) scale(0.12);
+  }
+}
+
+/* Bright radial flash at fire peak (high level only) */
+.fire-fill-flash {
+  background: radial-gradient(
+    ellipse at center 65%,
+    rgba(255, 255, 200, 0.35),
+    rgba(255, 200, 100, 0.1),
+    transparent 70%
+  );
+  animation: fire-flash 0.6s ease-out 0.3s both;
+  z-index: 9;
+}
+
+@keyframes fire-flash {
+  0% { opacity: 0; }
+  35% { opacity: 1; }
+  100% { opacity: 0; }
 }
 
 /* Sidebar Styles - Neues Design mit abgerundeter Box */

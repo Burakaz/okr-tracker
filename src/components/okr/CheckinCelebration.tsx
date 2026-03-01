@@ -51,13 +51,15 @@ const lowMessages = [
 
 export type CelebrationLevel = "high" | "medium" | "low";
 
+type AnimStyle = "dragon" | "fire-fill";
+
 function getRandomMessage(level: CelebrationLevel) {
   const messages =
     level === "high" ? highMessages : level === "medium" ? mediumMessages : lowMessages;
   return messages[Math.floor(Math.random() * messages.length)];
 }
 
-// ===== Fire Particles =====
+// ===== Dragon Style — Fire Particles =====
 
 interface FireParticle {
   id: number;
@@ -77,13 +79,58 @@ function generateFireParticles(count: number): FireParticle[] {
   ];
   return Array.from({ length: count }, (_, i) => ({
     id: i,
-    x: Math.random() * 30 + 10, // Left side trail area
+    x: Math.random() * 30 + 10,
     y: Math.random() * 100,
     size: Math.random() * 8 + 3,
     color: fireColors[Math.floor(Math.random() * fireColors.length)],
     delay: Math.random() * 0.8,
     duration: 0.6 + Math.random() * 0.6,
     drift: (Math.random() - 0.5) * 30,
+  }));
+}
+
+// ===== Fire-Fill Style — Tongues & Embers =====
+
+interface FireTongue {
+  id: number;
+  x: number;
+  width: number;
+  delay: number;
+  duration: number;
+}
+
+function generateFireTongues(count: number): FireTongue[] {
+  return Array.from({ length: count }, (_, i) => ({
+    id: i,
+    x: (i / count) * 90 + Math.random() * 8,
+    width: Math.random() * 30 + 18,
+    delay: Math.random() * 0.2,
+    duration: 0.9 + Math.random() * 0.35,
+  }));
+}
+
+interface Ember {
+  id: number;
+  x: number;
+  y: number;
+  size: number;
+  color: string;
+  delay: number;
+  duration: number;
+  drift: number;
+}
+
+function generateEmbers(count: number): Ember[] {
+  const colors = ["#ff4500", "#ff6b35", "#ffa726", "#ffcc02", "#fff176"];
+  return Array.from({ length: count }, (_, i) => ({
+    id: i,
+    x: Math.random() * 94 + 3,
+    y: 20 + Math.random() * 65,
+    size: Math.random() * 4 + 2,
+    color: colors[Math.floor(Math.random() * colors.length)],
+    delay: 0.15 + Math.random() * 0.7,
+    duration: 0.7 + Math.random() * 0.6,
+    drift: (Math.random() - 0.5) * 35,
   }));
 }
 
@@ -96,8 +143,24 @@ interface CheckinCelebrationProps {
 
 export function CheckinCelebration({ level, onComplete }: CheckinCelebrationProps) {
   const [message] = useState(() => getRandomMessage(level));
-  const [fireParticles] = useState(() => generateFireParticles(level === "high" ? 24 : level === "medium" ? 14 : 8));
-  const [phase, setPhase] = useState<"dragon-fly" | "message" | "exit">("dragon-fly");
+  const [animStyle] = useState<AnimStyle>(() =>
+    Math.random() > 0.5 ? "dragon" : "fire-fill"
+  );
+
+  // Dragon style
+  const [fireParticles] = useState(() =>
+    generateFireParticles(level === "high" ? 24 : level === "medium" ? 14 : 8)
+  );
+
+  // Fire-fill style
+  const [fireTongues] = useState(() =>
+    generateFireTongues(level === "high" ? 10 : level === "medium" ? 7 : 5)
+  );
+  const [embers] = useState(() =>
+    generateEmbers(level === "high" ? 18 : level === "medium" ? 12 : 7)
+  );
+
+  const [phase, setPhase] = useState<"enter" | "message" | "exit">("enter");
 
   const dismiss = useCallback(() => {
     setPhase("exit");
@@ -105,7 +168,6 @@ export function CheckinCelebration({ level, onComplete }: CheckinCelebrationProp
   }, [onComplete]);
 
   useEffect(() => {
-    // Dragon flies across → message appears → auto-dismiss
     const msgTimer = setTimeout(() => setPhase("message"), 1200);
     const dismissTimer = setTimeout(dismiss, level === "high" ? 4000 : 3200);
     return () => {
@@ -114,12 +176,19 @@ export function CheckinCelebration({ level, onComplete }: CheckinCelebrationProp
     };
   }, [level, dismiss]);
 
+  // Background gradient per level & style
   const bgGradient =
-    level === "high"
-      ? "from-orange-500/8 via-red-500/5 to-yellow-500/8"
-      : level === "medium"
-        ? "from-blue-500/6 via-indigo-500/4 to-cyan-500/6"
-        : "from-amber-500/6 via-orange-500/4 to-yellow-500/6";
+    animStyle === "fire-fill"
+      ? level === "high"
+        ? "from-red-600/10 via-orange-500/8 to-yellow-500/10"
+        : level === "medium"
+          ? "from-orange-500/8 via-amber-500/6 to-yellow-500/8"
+          : "from-amber-500/6 via-yellow-500/4 to-orange-500/6"
+      : level === "high"
+        ? "from-orange-500/8 via-red-500/5 to-yellow-500/8"
+        : level === "medium"
+          ? "from-blue-500/6 via-indigo-500/4 to-cyan-500/6"
+          : "from-amber-500/6 via-orange-500/4 to-yellow-500/6";
 
   const glowColor =
     level === "high"
@@ -130,9 +199,11 @@ export function CheckinCelebration({ level, onComplete }: CheckinCelebrationProp
 
   const dragonEmoji = level === "high" ? "🐉" : level === "medium" ? "🔥" : "⚡";
 
+  const styleClass = animStyle === "fire-fill" ? "style-fire-fill" : "";
+
   return (
     <div
-      className={`celebration-inline relative overflow-hidden rounded-xl bg-gradient-to-r ${bgGradient} ${glowColor} cursor-pointer`}
+      className={`celebration-inline ${styleClass} relative overflow-hidden rounded-xl bg-gradient-to-r ${bgGradient} ${glowColor} cursor-pointer`}
       onClick={dismiss}
       role="alert"
       aria-live="polite"
@@ -142,46 +213,101 @@ export function CheckinCelebration({ level, onComplete }: CheckinCelebrationProp
         transition: "all 400ms cubic-bezier(0.22, 1, 0.36, 1)",
       }}
     >
-      {/* Fire particles trail */}
-      <div className="absolute inset-0 pointer-events-none overflow-hidden">
-        {fireParticles.map((p) => (
+      {/* ===== Dragon Style ===== */}
+      {animStyle === "dragon" && (
+        <>
+          {/* Fire particles trail */}
+          <div className="absolute inset-0 pointer-events-none overflow-hidden">
+            {fireParticles.map((p) => (
+              <div
+                key={p.id}
+                className="fire-particle"
+                style={{
+                  "--fx": `${p.x}%`,
+                  "--fy": `${p.y}%`,
+                  "--fsize": `${p.size}px`,
+                  "--fcolor": p.color,
+                  "--fdelay": `${p.delay}s`,
+                  "--fduration": `${p.duration}s`,
+                  "--fdrift": `${p.drift}px`,
+                } as React.CSSProperties}
+              />
+            ))}
+          </div>
+
+          {/* Dragon flying across */}
           <div
-            key={p.id}
-            className="fire-particle"
+            className="dragon-fly absolute pointer-events-none"
             style={{
-              "--fx": `${p.x}%`,
-              "--fy": `${p.y}%`,
-              "--fsize": `${p.size}px`,
-              "--fcolor": p.color,
-              "--fdelay": `${p.delay}s`,
-              "--fduration": `${p.duration}s`,
-              "--fdrift": `${p.drift}px`,
-            } as React.CSSProperties}
-          />
-        ))}
-      </div>
+              fontSize: level === "high" ? "48px" : "36px",
+              top: "50%",
+              transform: "translateY(-50%)",
+              zIndex: 10,
+            }}
+          >
+            {dragonEmoji}
+            <span className="dragon-fire-breath" />
+          </div>
 
-      {/* Dragon flying across */}
-      <div
-        className="dragon-fly absolute pointer-events-none"
-        style={{
-          fontSize: level === "high" ? "48px" : "36px",
-          top: "50%",
-          transform: "translateY(-50%)",
-          zIndex: 10,
-        }}
-      >
-        {dragonEmoji}
-        {/* Fire breath trail */}
-        <span className="dragon-fire-breath" />
-      </div>
-
-      {/* Shockwave ring on high */}
-      {level === "high" && (
-        <div className="dragon-shockwave absolute inset-0 pointer-events-none" />
+          {/* Shockwave ring on high */}
+          {level === "high" && (
+            <div className="dragon-shockwave absolute inset-0 pointer-events-none" />
+          )}
+        </>
       )}
 
-      {/* Message content */}
+      {/* ===== Fire-Fill Style ===== */}
+      {animStyle === "fire-fill" && (
+        <>
+          {/* Main fire sweep overlay — fills from bottom */}
+          <div className="fire-fill-sweep absolute inset-0 pointer-events-none rounded-xl" />
+
+          {/* Fire tongues for organic texture */}
+          <div className="absolute inset-0 pointer-events-none overflow-hidden rounded-xl">
+            {fireTongues.map((t) => (
+              <div
+                key={t.id}
+                className="fire-tongue"
+                style={{
+                  "--ft-x": `${t.x}%`,
+                  "--ft-width": `${t.width}px`,
+                  "--ft-delay": `${t.delay}s`,
+                  "--ft-duration": `${t.duration}s`,
+                } as React.CSSProperties}
+              />
+            ))}
+          </div>
+
+          {/* Inner glow */}
+          <div className="fire-fill-glow absolute inset-0 pointer-events-none rounded-xl" />
+
+          {/* Floating embers */}
+          <div className="absolute inset-0 pointer-events-none overflow-hidden rounded-xl">
+            {embers.map((e) => (
+              <div
+                key={e.id}
+                className="fire-ember"
+                style={{
+                  "--em-x": `${e.x}%`,
+                  "--em-y": `${e.y}%`,
+                  "--em-size": `${e.size}px`,
+                  "--em-color": e.color,
+                  "--em-delay": `${e.delay}s`,
+                  "--em-duration": `${e.duration}s`,
+                  "--em-drift": `${e.drift}px`,
+                } as React.CSSProperties}
+              />
+            ))}
+          </div>
+
+          {/* Bright flash at peak (high only) */}
+          {level === "high" && (
+            <div className="fire-fill-flash absolute inset-0 pointer-events-none rounded-xl" />
+          )}
+        </>
+      )}
+
+      {/* ===== Message (shared) ===== */}
       <div
         className="relative z-20 flex items-center justify-center gap-3 py-5 px-6"
         style={{
