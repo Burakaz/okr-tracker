@@ -382,7 +382,19 @@ function OKRsContent() {
         <div className="p-4 sm:p-6 space-y-5 sm:space-y-6">
           {/* 1. Page Header */}
           <div className="flex items-center justify-between">
-            <h1 className="text-xl font-bold text-foreground">OKRs</h1>
+            <div>
+              <h1 className="text-xl font-bold text-foreground">OKRs</h1>
+              {activeOKRs.length > 0 && (
+                <p className="text-[13px] text-muted mt-0.5">
+                  {(() => {
+                    const avgProgress = activeOKRs.reduce((s, o) => s + o.progress, 0) / activeOKRs.length;
+                    if (avgProgress >= 70) return "Starke Performance. Du erreichst deine ambitionierten Ziele.";
+                    if (avgProgress >= 40) return "Guter Fortschritt. Bleib fokussiert auf deine Ziele.";
+                    return "Setze dir Ziele und verfolge deinen Fortschritt.";
+                  })()}
+                </p>
+              )}
+            </div>
             <button
               onClick={handleNewOKR}
               className="btn-primary text-[13px] gap-1.5"
@@ -411,7 +423,7 @@ function OKRsContent() {
           <div>
             <h2 className="text-[11px] font-semibold text-muted uppercase tracking-wider mb-3 flex items-center gap-1.5">
               <Star className="h-3.5 w-3.5 text-accent-green fill-accent-green" aria-hidden="true" />
-              Dein Fokus
+              Dein Fokus ({focusOKRs.length}/{MAX_FOCUS})
             </h2>
             {focusOKRs.length > 0 ? (
               <FocusOKRSection
@@ -489,7 +501,7 @@ function OKRsContent() {
                     : "text-muted"
               }`}
             >
-              {activeOKRs.length}/{MAX_OKRS_PER_QUARTER} OKRs
+              {activeOKRs.length}/{MAX_OKRS_PER_QUARTER} OKRs in {currentQuarter}
             </span>
           </div>
 
