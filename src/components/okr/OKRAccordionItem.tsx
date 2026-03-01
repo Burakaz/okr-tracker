@@ -156,7 +156,7 @@ export function OKRAccordionItem({
       {isExpanded && (
         <div
           id={`okr-detail-${okr.id}`}
-          className="border-t border-cream-200 bg-cream-50/50 px-3 py-3 space-y-3"
+          className="border-t border-cream-200 bg-cream-50/50 px-4 py-4 space-y-4"
         >
           {/* Why it matters */}
           {okr.why_it_matters && (
@@ -171,7 +171,7 @@ export function OKRAccordionItem({
           )}
 
           {/* Meta row */}
-          <div className="flex flex-wrap items-center gap-3 text-[12px] text-muted">
+          <div className="flex flex-wrap items-center gap-4 text-[12px] text-muted">
             <span className="flex items-center gap-1">
               <Calendar className="h-3.5 w-3.5" aria-hidden="true" />
               {okr.due_date

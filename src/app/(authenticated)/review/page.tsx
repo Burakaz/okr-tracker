@@ -151,9 +151,9 @@ function ReviewContent() {
             </div>
           ))}
         </div>
-        <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+        <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
           {[1, 2, 3].map((i) => (
-            <div key={i} className="card p-3 animate-pulse">
+            <div key={i} className="card p-4 animate-pulse">
               <Skeleton className="h-4 w-24 mb-3" />
               <Skeleton className="h-8 w-16" />
             </div>
@@ -166,7 +166,7 @@ function ReviewContent() {
   return (
     <div className="h-full flex flex-col overflow-hidden">
       <div className="flex-1 overflow-y-auto">
-        <div className="p-4 sm:p-6 space-y-3 sm:space-y-4">
+        <div className="p-4 sm:p-6 space-y-5 sm:space-y-6">
           {/* 1. Page Header */}
           <div className="flex items-center justify-between">
             <h1 className="text-xl font-bold text-foreground">R&uuml;ckblick</h1>
@@ -209,8 +209,8 @@ function ReviewContent() {
           {/* Empty state */}
           {!review || review.okrs.length === 0 ? (
             <div className="empty-state" role="status">
-              <div className="w-12 h-12 rounded-xl bg-cream-200 flex items-center justify-center mb-3">
-                <Target className="w-6 h-6 text-muted" aria-hidden="true" />
+              <div className="w-16 h-16 rounded-2xl bg-cream-200 flex items-center justify-center mb-4">
+                <Target className="w-8 h-8 text-muted" aria-hidden="true" />
               </div>
               <p className="empty-state-title">
                 Keine OKRs f&uuml;r {selectedQuarter}
@@ -222,17 +222,17 @@ function ReviewContent() {
           ) : (
             <>
               {/* a) QuarterScoreCard */}
-              <div className="card p-4">
-                <div className="flex items-center gap-2 mb-3">
-                  <div className="w-7 h-7 rounded-lg bg-cream-100 flex items-center justify-center">
-                    <TrendingUp className="h-3.5 w-3.5 text-muted" aria-hidden="true" />
+              <div className="card p-6">
+                <div className="flex items-center gap-2 mb-4">
+                  <div className="w-8 h-8 rounded-lg bg-cream-100 flex items-center justify-center">
+                    <TrendingUp className="h-4 w-4 text-muted" aria-hidden="true" />
                   </div>
                   <span className="text-[11px] font-semibold text-muted uppercase tracking-wider">
                     Quartal-Score
                   </span>
                 </div>
 
-                <div className="flex items-baseline gap-3 mb-3">
+                <div className="flex items-baseline gap-3 mb-4">
                   <p
                     className={`text-4xl font-bold ${
                       review.score >= 70
@@ -306,7 +306,7 @@ function ReviewContent() {
                   {review.okrs.map((okr) => (
                     <div
                       key={okr.id}
-                      className="card p-3 flex items-center gap-3"
+                      className="card p-4 flex items-center gap-3"
                     >
                       <StatusIcon status={okr.status} />
                       <div className="flex-1 min-w-0">
@@ -345,33 +345,33 @@ function ReviewContent() {
                   <BookOpen className="h-3.5 w-3.5 text-muted" aria-hidden="true" />
                   Lern&uuml;bersicht
                 </h2>
-                <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
-                  <div className="card p-3">
+                <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                  <div className="card p-4">
                     <p className="text-[11px] font-semibold text-muted uppercase tracking-wider mb-1">
                       Eingeschrieben
                     </p>
-                    <p className="text-xl font-bold text-foreground">
+                    <p className="text-2xl font-bold text-foreground">
                       {review.learning_summary.courses_enrolled}
                     </p>
-                    <p className="text-[11px] text-muted mt-0.5">Kurse</p>
+                    <p className="text-[11px] text-muted mt-1">Kurse</p>
                   </div>
-                  <div className="card p-3">
+                  <div className="card p-4">
                     <p className="text-[11px] font-semibold text-muted uppercase tracking-wider mb-1">
                       Abgeschlossen
                     </p>
-                    <p className="text-xl font-bold text-green-600">
+                    <p className="text-2xl font-bold text-green-600">
                       {review.learning_summary.courses_completed}
                     </p>
-                    <p className="text-[11px] text-muted mt-0.5">Kurse</p>
+                    <p className="text-[11px] text-muted mt-1">Kurse</p>
                   </div>
-                  <div className="card p-3">
+                  <div className="card p-4">
                     <p className="text-[11px] font-semibold text-muted uppercase tracking-wider mb-1">
                       Zertifikate
                     </p>
-                    <p className="text-xl font-bold text-foreground">
+                    <p className="text-2xl font-bold text-foreground">
                       {review.learning_summary.certificates_earned}
                     </p>
-                    <p className="text-[11px] text-muted mt-0.5">Erhalten</p>
+                    <p className="text-[11px] text-muted mt-1">Erhalten</p>
                   </div>
                 </div>
               </div>
@@ -383,7 +383,7 @@ function ReviewContent() {
                     <BarChart3 className="h-3.5 w-3.5 text-muted" aria-hidden="true" />
                     Trend
                   </h2>
-                  <div className="card p-3">
+                  <div className="card p-4">
                     <div className="flex items-end gap-3 h-32">
                       {review.trend.map((t) => {
                         const maxScore = Math.max(
@@ -444,9 +444,9 @@ function ReviewContent() {
                       return (
                         <div
                           key={achievement.id}
-                          className="card p-3 flex flex-col items-center text-center"
+                          className="card p-4 flex flex-col items-center text-center"
                         >
-                          <span className="text-2xl mb-1.5" role="img" aria-label={display.label}>
+                          <span className="text-3xl mb-2" role="img" aria-label={display.label}>
                             {display.icon}
                           </span>
                           <p className="text-[12px] font-semibold text-foreground">

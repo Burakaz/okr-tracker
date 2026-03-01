@@ -80,7 +80,7 @@ function SidebarContent({ user, orgLogo, onNavClick }: SidebarProps) {
   return (
     <aside className="sidebar-container w-52" aria-label="Seitenleiste">
       {/* Logo / Org Header */}
-      <div className="px-4 py-3">
+      <div className="px-4 py-5">
         <div className="flex items-center gap-3">
           {orgLogo ? (
             <img

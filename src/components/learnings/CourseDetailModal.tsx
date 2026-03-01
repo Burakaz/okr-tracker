@@ -129,7 +129,7 @@ export function CourseDetailModal({
           <>
             {/* Gradient header */}
             <div
-              className={`relative h-[60px] bg-gradient-to-r ${categoryGradients[course.category]} rounded-t-[0.75rem]`}
+              className={`relative h-[60px] bg-gradient-to-r ${categoryGradients[course.category]} rounded-t-[1rem]`}
             >
               {/* Category badge */}
               <span className="absolute top-3 left-4 badge bg-white/20 text-white text-[10px] backdrop-blur-sm flex items-center gap-1">
@@ -149,7 +149,7 @@ export function CourseDetailModal({
             </div>
 
             {/* Title */}
-            <div className="px-5 pt-3 pb-2">
+            <div className="px-6 pt-4 pb-2">
               <h2
                 id="course-detail-title"
                 className="text-lg font-semibold text-foreground"
@@ -159,7 +159,7 @@ export function CourseDetailModal({
             </div>
 
             {/* Body */}
-            <div className="px-5 pb-5 space-y-4">
+            <div className="px-6 pb-6 space-y-5">
               {/* 1. Description */}
               {course.description && (
                 <p className="text-[13px] text-foreground leading-relaxed">
@@ -226,7 +226,7 @@ export function CourseDetailModal({
             </div>
 
             {/* Footer */}
-            <div className="flex items-center justify-end gap-3 px-5 py-3 border-t border-cream-300/50">
+            <div className="flex items-center justify-end gap-3 px-6 py-4 border-t border-cream-300/50">
               {isEnrolled ? (
                 <button
                   className="btn-ghost text-red-500 text-[13px]"

@@ -52,7 +52,7 @@ export function OrgGeneralTab() {
   }
 
   return (
-    <div className="space-y-4">
+    <div className="space-y-6">
       {/* Org Name */}
       <div>
         <label className="text-[11px] font-semibold text-muted uppercase tracking-wider block mb-1.5">
@@ -87,11 +87,11 @@ export function OrgGeneralTab() {
           Logo
         </label>
         <div className="flex items-center gap-4">
-          <div className="w-12 h-12 bg-cream-200 rounded-lg flex items-center justify-center border border-cream-300">
+          <div className="w-16 h-16 bg-cream-200 rounded-xl flex items-center justify-center border border-cream-300">
             {org?.logo_url ? (
-              <img src={org.logo_url} alt={org.name} className="w-full h-full object-cover rounded-lg" />
+              <img src={org.logo_url} alt={org.name} className="w-full h-full object-cover rounded-xl" />
             ) : (
-              <Building2 className="h-6 w-6 text-muted" />
+              <Building2 className="h-8 w-8 text-muted" />
             )}
           </div>
           <p className="text-[12px] text-muted">

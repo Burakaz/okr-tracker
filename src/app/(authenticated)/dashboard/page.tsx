@@ -118,18 +118,18 @@ function DashboardContent() {
   }
 
   // SVG Progress Ring
-  const ringSize = 60;
-  const strokeWidth = 5;
+  const ringSize = 80;
+  const strokeWidth = 6;
   const radius = (ringSize - strokeWidth) / 2;
   const circumference = 2 * Math.PI * radius;
   const strokeDashoffset = circumference - (avgProgress / 100) * circumference;
 
   return (
     <div className="h-full overflow-y-auto">
-      <div className="px-4 sm:px-6 py-4 sm:py-6 space-y-3 sm:space-y-4">
+      <div className="px-4 sm:px-6 py-6 sm:py-8 space-y-5 sm:space-y-6">
         {/* Quarter Hero */}
-        <div className="card p-4">
-          <div className="flex items-center gap-4">
+        <div className="card p-6">
+          <div className="flex items-center gap-6">
             {/* Progress Ring */}
             <div className="flex-shrink-0 relative">
               <svg width={ringSize} height={ringSize} className="-rotate-90">
@@ -247,14 +247,14 @@ function DashboardContent() {
 
         {/* No OKRs state */}
         {activeOKRs.length === 0 && (
-          <div className="card p-5 text-center">
-            <div className="w-10 h-10 rounded-xl bg-cream-200 flex items-center justify-center mx-auto mb-3">
-              <Target className="w-5 h-5 text-muted" />
+          <div className="card p-8 text-center">
+            <div className="w-14 h-14 rounded-2xl bg-cream-200 flex items-center justify-center mx-auto mb-4">
+              <Target className="w-7 h-7 text-muted" />
             </div>
-            <p className="text-[13px] font-medium text-foreground mb-1">
+            <p className="text-[14px] font-medium text-foreground mb-1">
               Noch keine Ziele für {currentQuarter}
             </p>
-            <p className="text-[12px] text-muted mb-3">
+            <p className="text-[12px] text-muted mb-4">
               Erstelle dein erstes OKR und starte durch.
             </p>
             <Link href="/okrs" className="btn-primary text-[13px] gap-1.5">
@@ -364,7 +364,7 @@ function FocusOKRCard({ okr }: { okr: OKR }) {
   const Icon = categoryIcons[okr.category] || Target;
 
   return (
-    <Link href="/okrs" className="card p-3 card-hover block">
+    <Link href="/okrs" className="card p-4 card-hover block">
       <div className="flex items-start gap-3">
         <div className="flex-shrink-0 mt-0.5">
           <Star className="h-4 w-4 text-amber-400 fill-amber-400" />
@@ -426,9 +426,9 @@ function QuickStatCard({
   value: number | string;
 }) {
   return (
-    <div className="card p-3">
-      <div className="mb-1">{icon}</div>
-      <p className="text-xl font-bold text-foreground">{value}</p>
+    <div className="card p-4">
+      <div className="mb-1.5">{icon}</div>
+      <p className="text-2xl font-bold text-foreground">{value}</p>
       <p className="text-[11px] text-muted">{label}</p>
     </div>
   );

@@ -87,8 +87,8 @@ export default function TeamPage() {
   return (
     <div className="h-full flex flex-col">
       {/* Header */}
-      <div className="px-4 sm:px-6 pt-3 sm:pt-4 pb-3 border-b border-cream-300/50">
-        <div className="flex items-center justify-between mb-3">
+      <div className="px-4 sm:px-6 pt-4 sm:pt-6 pb-4 border-b border-cream-300/50">
+        <div className="flex items-center justify-between mb-4">
           <div>
             <h1 className="text-lg font-semibold text-foreground">Team & Organisation</h1>
             <p className="text-[12px] text-muted">
@@ -99,10 +99,10 @@ export default function TeamPage() {
         </div>
 
         {/* Top-level tabs: Team / Organisation */}
-        <div className="flex items-center gap-1 mb-3">
+        <div className="flex items-center gap-1 mb-4">
           <button
             onClick={() => setTopTab("team")}
-            className={`flex items-center gap-1.5 px-3 py-1.5 text-[13px] font-medium rounded-lg transition-colors ${
+            className={`flex items-center gap-1.5 px-4 py-2 text-[13px] font-medium rounded-lg transition-colors ${
               topTab === "team"
                 ? "bg-foreground text-white"
                 : "text-muted hover:bg-cream-200"
@@ -114,7 +114,7 @@ export default function TeamPage() {
           {isAdmin && (
             <button
               onClick={() => setTopTab("org")}
-              className={`flex items-center gap-1.5 px-3 py-1.5 text-[13px] font-medium rounded-lg transition-colors ${
+              className={`flex items-center gap-1.5 px-4 py-2 text-[13px] font-medium rounded-lg transition-colors ${
                 topTab === "org"
                   ? "bg-foreground text-white"
                   : "text-muted hover:bg-cream-200"

@@ -253,7 +253,7 @@ export function OKRForm({
       >
         <form onSubmit={handleSubmit}>
           {/* Header */}
-          <div className="flex items-center justify-between p-5 border-b border-cream-300/50">
+          <div className="flex items-center justify-between p-6 border-b border-cream-300/50">
             <div className="flex items-center gap-3">
               <h2 id="okr-form-title" className="text-lg font-semibold text-foreground">
                 {isEditing ? "OKR bearbeiten" : step === 1 ? "Was willst du erreichen?" : "Wie misst du den Erfolg?"}
@@ -288,7 +288,7 @@ export function OKRForm({
 
           {/* ==================== STEP 1 ==================== */}
           {step === 1 && (
-            <div className="p-5 space-y-4">
+            <div className="p-6 space-y-5">
               {/* Title */}
               <div>
                 <label htmlFor="okr-title" className="text-[11px] font-semibold text-muted uppercase tracking-wider block mb-1.5">
@@ -380,7 +380,7 @@ export function OKRForm({
 
           {/* ==================== STEP 2 ==================== */}
           {step === 2 && (
-            <div className="p-5 space-y-4">
+            <div className="p-6 space-y-5">
               {/* Show the OKR title at the top */}
               {!isEditing && (
                 <div className="bg-cream-50 rounded-lg px-4 py-3 border border-cream-300/50">
@@ -684,13 +684,13 @@ export function OKRForm({
 
           {/* Validation Error */}
           {formError && (
-            <div className="mx-5 mb-0 p-3 bg-red-50 border border-red-200 rounded-lg">
+            <div className="mx-6 mb-0 p-3 bg-red-50 border border-red-200 rounded-lg">
               <p className="text-[13px] text-red-600">{formError}</p>
             </div>
           )}
 
           {/* Footer */}
-          <div className="flex items-center justify-between p-5 border-t border-cream-300/50">
+          <div className="flex items-center justify-between p-6 border-t border-cream-300/50">
             {/* Left side */}
             <div>
               {step === 2 && !isEditing && (
