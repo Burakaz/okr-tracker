@@ -67,10 +67,12 @@ export function OKRAccordionItem({
       } ${okr.is_focus ? "border-l-4 border-l-accent-green" : ""}`}
     >
       {/* Collapsed row */}
-      <button
-        type="button"
+      <div
+        role="button"
+        tabIndex={0}
         onClick={onToggle}
-        className="w-full flex items-center gap-3 px-4 py-3 text-left hover:bg-cream-50 transition-colors"
+        onKeyDown={(e) => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); onToggle(); } }}
+        className="w-full flex items-center gap-3 px-4 py-3 text-left hover:bg-cream-50 transition-colors cursor-pointer"
         aria-expanded={isExpanded}
         aria-controls={`okr-detail-${okr.id}`}
       >
@@ -148,7 +150,7 @@ export function OKRAccordionItem({
           }`}
           aria-hidden="true"
         />
-      </button>
+      </div>
 
       {/* Expanded content */}
       {isExpanded && (
