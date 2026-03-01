@@ -96,8 +96,8 @@ export async function updateSession(request: NextRequest) {
   }
 
   // Redirect authenticated users away from auth pages and root
-  const isSignoutRoute = request.nextUrl.pathname === "/auth/signout";
-  if (user && !isSignoutRoute && (request.nextUrl.pathname.startsWith("/auth") || request.nextUrl.pathname === "/")) {
+  const isAuthBypassRoute = request.nextUrl.pathname === "/auth/signout" || request.nextUrl.pathname === "/auth/demo";
+  if (user && !isAuthBypassRoute && (request.nextUrl.pathname.startsWith("/auth") || request.nextUrl.pathname === "/")) {
     const url = request.nextUrl.clone();
     url.pathname = "/dashboard";
     return NextResponse.redirect(url);
