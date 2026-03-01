@@ -22,7 +22,7 @@ const supabase = createClient(
   env.SUPABASE_SERVICE_ROLE_KEY
 );
 
-const DEMO_EMAIL = "demo@admkrs.com";
+const DEMO_EMAIL = process.argv[2] || "demo@admkrs.com";
 
 async function main() {
   // 1. Find demo user

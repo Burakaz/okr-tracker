@@ -45,7 +45,8 @@ export default function CareerPage() {
   return (
     <div className="h-full flex flex-col">
       {/* Header */}
-      <div className="h-14 flex items-center justify-between px-6 border-b border-cream-300/50">
+      <div className="border-b border-cream-300/50">
+       <div className="h-14 flex items-center justify-between px-6 max-w-5xl mx-auto">
         <div>
           <h1 className="text-[15px] font-semibold text-foreground">Career</h1>
           <p className="text-[11px] text-muted">
@@ -56,11 +57,12 @@ export default function CareerPage() {
           <Settings className="h-3.5 w-3.5" />
           Einstellungen
         </Link>
+       </div>
       </div>
 
       {/* Content */}
-      <div className="flex-1 overflow-y-auto p-6">
-        <div className="max-w-4xl mx-auto space-y-6">
+      <div className="flex-1 overflow-y-auto">
+       <div className="p-6 max-w-5xl mx-auto space-y-6">
           {/* Top cards row: Current Position + Next Step */}
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             {/* Current Position */}

@@ -278,6 +278,66 @@ body {
   box-shadow: 0 8px 24px rgba(0, 0, 0, 0.08);
 }
 
+/* KR Slider — Check-in mode range input overlaid on progress bar */
+.kr-slider {
+  -webkit-appearance: none;
+  appearance: none;
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: transparent;
+  margin: 0;
+  padding: 0;
+  cursor: pointer;
+  z-index: 10;
+}
+
+.kr-slider::-webkit-slider-runnable-track {
+  height: 100%;
+  background: transparent;
+}
+
+.kr-slider::-moz-range-track {
+  height: 100%;
+  background: transparent;
+  border: none;
+}
+
+.kr-slider::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  width: 16px;
+  height: 16px;
+  border-radius: 50%;
+  background: white;
+  border: 2.5px solid var(--foreground);
+  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.18);
+  cursor: grab;
+  margin-top: -5px;
+  transition: transform 0.1s ease;
+}
+
+.kr-slider::-moz-range-thumb {
+  width: 16px;
+  height: 16px;
+  border-radius: 50%;
+  background: white;
+  border: 2.5px solid var(--foreground);
+  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.18);
+  cursor: grab;
+}
+
+.kr-slider:active::-webkit-slider-thumb {
+  transform: scale(1.2);
+  cursor: grabbing;
+}
+
+.kr-slider:active::-moz-range-thumb {
+  transform: scale(1.2);
+  cursor: grabbing;
+}
+
 /* Sidebar Styles - Neues Design mit abgerundeter Box */
 .sidebar-container {
   background-color: var(--sidebar-bg);

@@ -1,11 +1,11 @@
 "use client";
 
+import { useState } from "react";
 import {
   ChevronDown,
   ClipboardCheck,
-  History,
-  Copy,
   Pencil,
+  Copy,
   Archive,
   Trash2,
   Clock,
@@ -16,15 +16,15 @@ import {
   Target,
   BookOpen,
   Briefcase,
+  Check,
+  History,
 } from "lucide-react";
 import { ProgressBar } from "@/components/ui/ProgressBar";
-import { KRInlineEdit } from "@/components/okr/KRInlineEdit";
-import { InlineCheckin } from "@/components/okr/InlineCheckin";
 import {
   isCheckinOverdue,
   getCheckinDaysRemaining,
 } from "@/lib/okr-logic";
-import type { OKR, OKRStatus, OKRCategory } from "@/types";
+import type { OKR, OKRStatus, OKRCategory, KeyResult } from "@/types";
 
 interface OKRAccordionItemProps {
   okr: OKR;
@@ -88,6 +88,27 @@ function StatusIndicatorIcon({ status }: { status: OKRStatus }) {
   }
 }
 
+const confidenceOptions = [
+  { value: 5, emoji: "🟢", label: "Sehr gut" },
+  { value: 4, emoji: "😊", label: "Gut" },
+  { value: 3, emoji: "😐", label: "Risiko" },
+  { value: 2, emoji: "😟", label: "Kritisch" },
+] as const;
+
+function getKRProgress(kr: KeyResult, value: number) {
+  const range = kr.target_value - kr.start_value;
+  if (range === 0) return 0;
+  return Math.min(100, Math.max(0, ((value - kr.start_value) / range) * 100));
+}
+
+function getSliderStep(kr: KeyResult) {
+  const range = kr.target_value - kr.start_value;
+  if (range <= 10) return 0.1;
+  if (range <= 100) return 1;
+  if (range <= 1000) return 5;
+  return Math.round(range / 100);
+}
+
 // ===== Component =====
 
 export function OKRAccordionItem({
@@ -100,8 +121,11 @@ export function OKRAccordionItem({
   onDuplicate,
   onDelete,
   onQuickCheckin,
-  onUpdateKR,
 }: OKRAccordionItemProps) {
+  const [checkinMode, setCheckinMode] = useState(false);
+  const [krValues, setKrValues] = useState<Record<string, number>>({});
+  const [selectedConfidence, setSelectedConfidence] = useState<number | null>(null);
+
   const score = (okr.progress / 100).toFixed(2);
   const statusColor = getStatusColor(okr.status);
   const cat = categoryConfig[okr.category];
@@ -110,13 +134,41 @@ export function OKRAccordionItem({
   const daysRemaining = getCheckinDaysRemaining(okr.next_checkin_at);
   const CatIcon = cat.icon;
 
+  const enterCheckinMode = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    const initial: Record<string, number> = {};
+    okr.key_results?.forEach((kr) => {
+      initial[kr.id] = kr.current_value;
+    });
+    setKrValues(initial);
+    setSelectedConfidence(null);
+    setCheckinMode(true);
+  };
+
+  const cancelCheckin = () => {
+    setCheckinMode(false);
+    setKrValues({});
+    setSelectedConfidence(null);
+  };
+
+  const saveCheckin = () => {
+    if (selectedConfidence === null) return;
+    const updates = Object.entries(krValues)
+      .filter(([id]) => {
+        const kr = okr.key_results?.find((k) => k.id === id);
+        return kr && krValues[id] !== kr.current_value;
+      })
+      .map(([id, current_value]) => ({ id, current_value }));
+
+    onQuickCheckin?.(okr, {
+      confidence: selectedConfidence,
+      key_result_updates: updates.length > 0 ? updates : undefined,
+    });
+    cancelCheckin();
+  };
+
   return (
-    <div
-      className={`card overflow-hidden transition-shadow ${
-        isExpanded ? "ring-1 ring-cream-300" : ""
-      }`}
-    >
-      {/* ===== Always Visible Card ===== */}
+    <div className="card">
       <div className="p-4 sm:p-5">
         {/* Row 1: Title + Chevron */}
         <div
@@ -137,7 +189,7 @@ export function OKRAccordionItem({
             {okr.title}
           </h3>
           <ChevronDown
-            className={`h-4 w-4 text-cream-300 flex-shrink-0 mt-0.5 transition-transform duration-200 group-hover:text-muted ${
+            className={`h-4 w-4 text-cream-400 flex-shrink-0 mt-0.5 transition-transform duration-200 group-hover:text-muted ${
               isExpanded ? "rotate-180" : ""
             }`}
             aria-hidden="true"
@@ -186,104 +238,154 @@ export function OKRAccordionItem({
           </div>
         </div>
 
-        {/* Row 3: Key Results */}
+        {/* Row 3: Key Results — static or with sliders in check-in mode */}
         {okr.key_results && okr.key_results.length > 0 && (
           <div className="mt-4 space-y-2.5">
-            {okr.key_results.map((kr) => (
-              <div key={kr.id} className="flex items-center gap-3">
-                <span className="text-[13px] text-foreground truncate w-[40%] sm:w-[45%] flex-shrink-0">
-                  {kr.title}
-                </span>
-                <ProgressBar
-                  value={kr.progress}
-                  size="xs"
-                  color={statusColor}
-                  className="flex-1 min-w-0"
-                />
-                <span className="text-[12px] text-muted tabular-nums whitespace-nowrap flex-shrink-0">
-                  {kr.current_value} / {kr.target_value}
-                  {kr.unit ? ` ${kr.unit}` : ""}
-                </span>
-              </div>
-            ))}
+            {okr.key_results.map((kr) => {
+              const currentVal = checkinMode
+                ? (krValues[kr.id] ?? kr.current_value)
+                : kr.current_value;
+              const progress = checkinMode
+                ? getKRProgress(kr, currentVal)
+                : kr.progress;
+
+              return (
+                <div key={kr.id} className="flex items-center gap-3">
+                  <span className="text-[13px] text-foreground truncate w-[40%] sm:w-[45%] flex-shrink-0">
+                    {kr.title}
+                  </span>
+                  <div className="flex-1 relative min-w-0">
+                    <ProgressBar
+                      value={progress}
+                      size="xs"
+                      color={statusColor}
+                      className="w-full"
+                    />
+                    {checkinMode && (
+                      <input
+                        type="range"
+                        min={kr.start_value}
+                        max={kr.target_value}
+                        step={getSliderStep(kr)}
+                        value={currentVal}
+                        onChange={(e) =>
+                          setKrValues((prev) => ({
+                            ...prev,
+                            [kr.id]: Number(e.target.value),
+                          }))
+                        }
+                        className="kr-slider"
+                        aria-label={`${kr.title} anpassen`}
+                      />
+                    )}
+                  </div>
+                  <span
+                    className={`text-[12px] tabular-nums whitespace-nowrap flex-shrink-0 ${
+                      checkinMode ? "text-foreground font-medium" : "text-muted"
+                    }`}
+                  >
+                    {currentVal} / {kr.target_value}
+                    {kr.unit ? ` ${kr.unit}` : ""}
+                  </span>
+                </div>
+              );
+            })}
           </div>
         )}
 
-        {/* Row 4: Footer — Check-in Button + Timer */}
-        <div className="flex items-center justify-between mt-4 pt-3 border-t border-cream-200">
-          <button
-            type="button"
-            onClick={(e) => {
-              e.stopPropagation();
-              onCheckin(okr);
-            }}
-            className="inline-flex items-center gap-1.5 text-[12px] font-medium bg-foreground text-white px-3 py-1.5 rounded-lg hover:bg-foreground/90 transition-colors"
-            aria-label={`Check-in für "${okr.title}"`}
-          >
-            <ClipboardCheck className="h-3.5 w-3.5" aria-hidden="true" />
-            Check-in
-          </button>
+        {/* Check-in mode: Confidence selector */}
+        {checkinMode && (
+          <div className="mt-4 pt-3 border-t border-cream-200">
+            <p className="text-[11px] font-semibold text-muted uppercase tracking-wider mb-2">
+              Wie zuversichtlich bist du?
+            </p>
+            <div className="flex flex-wrap items-center gap-2">
+              {confidenceOptions.map((opt) => (
+                <button
+                  key={opt.value}
+                  type="button"
+                  onClick={() => setSelectedConfidence(opt.value)}
+                  className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-[12px] font-medium transition-all ${
+                    selectedConfidence === opt.value
+                      ? "bg-foreground text-white"
+                      : "bg-cream-100 text-muted hover:bg-cream-200"
+                  }`}
+                  aria-pressed={selectedConfidence === opt.value}
+                >
+                  <span aria-hidden="true">{opt.emoji}</span>
+                  <span>{opt.label}</span>
+                </button>
+              ))}
+            </div>
+          </div>
+        )}
 
-          {daysRemaining !== null && (
-            <span
-              className={`flex items-center gap-1.5 text-[12px] ${
-                overdue ? "text-red-500 font-medium" : "text-muted"
-              }`}
-            >
-              <Clock className="h-3.5 w-3.5" aria-hidden="true" />
-              {overdue
-                ? `${Math.abs(daysRemaining)} Tage überfällig`
-                : `In ${daysRemaining} Tagen`}
-            </span>
+        {/* Footer */}
+        <div className="flex items-center justify-between mt-4 pt-3 border-t border-cream-200">
+          {checkinMode ? (
+            <>
+              <button
+                type="button"
+                onClick={cancelCheckin}
+                className="text-[12px] text-muted hover:text-foreground transition-colors"
+              >
+                Abbrechen
+              </button>
+              <button
+                type="button"
+                onClick={saveCheckin}
+                disabled={selectedConfidence === null}
+                className="btn-success text-[12px] py-1.5 px-4 gap-1.5"
+              >
+                <Check className="h-3.5 w-3.5" aria-hidden="true" />
+                Speichern
+              </button>
+            </>
+          ) : (
+            <>
+              <button
+                type="button"
+                onClick={enterCheckinMode}
+                className="inline-flex items-center gap-1.5 text-[12px] font-medium bg-foreground text-white px-3 py-1.5 rounded-lg hover:bg-foreground/90 transition-colors"
+                aria-label={`Check-in für "${okr.title}"`}
+              >
+                <ClipboardCheck className="h-3.5 w-3.5" aria-hidden="true" />
+                Check-in
+              </button>
+
+              {daysRemaining !== null && (
+                <span
+                  className={`flex items-center gap-1.5 text-[12px] ${
+                    overdue ? "text-red-500 font-medium" : "text-muted"
+                  }`}
+                >
+                  <Clock className="h-3.5 w-3.5" aria-hidden="true" />
+                  {overdue
+                    ? `${Math.abs(daysRemaining)} Tage überfällig`
+                    : `In ${daysRemaining} Tagen`}
+                </span>
+              )}
+            </>
           )}
         </div>
       </div>
 
-      {/* ===== Expanded Content ===== */}
-      {isExpanded && (
+      {/* ===== Expanded: Additional Info + Actions (seamless, same background) ===== */}
+      {isExpanded && !checkinMode && (
         <div
           id={`okr-detail-${okr.id}`}
-          className="border-t border-cream-200 bg-cream-50/50 px-4 sm:px-5 py-4 space-y-4"
+          className="px-4 sm:px-5 pb-4 space-y-3"
         >
           {/* Why it matters */}
           {okr.why_it_matters && (
             <div>
-              <h4 className="text-[11px] font-semibold text-muted uppercase tracking-wider mb-1.5">
+              <h4 className="text-[11px] font-semibold text-muted uppercase tracking-wider mb-1">
                 Warum wichtig?
               </h4>
-              <p className="text-[13px] text-foreground leading-relaxed bg-white rounded-lg p-3">
+              <p className="text-[13px] text-muted leading-relaxed">
                 {okr.why_it_matters}
               </p>
             </div>
-          )}
-
-          {/* Editable Key Results */}
-          {okr.key_results && okr.key_results.length > 0 && (
-            <div>
-              <h4 className="text-[11px] font-semibold text-muted uppercase tracking-wider mb-2 flex items-center gap-1.5">
-                <Target className="h-3.5 w-3.5" aria-hidden="true" />
-                Key Results bearbeiten
-              </h4>
-              <div className="space-y-2">
-                {okr.key_results.map((kr) => (
-                  <KRInlineEdit
-                    key={kr.id}
-                    kr={kr}
-                    onUpdate={(krId, newValue) => {
-                      onUpdateKR?.(okr.id, krId, newValue);
-                    }}
-                  />
-                ))}
-              </div>
-            </div>
-          )}
-
-          {/* Quick Check-in */}
-          {onQuickCheckin && (
-            <InlineCheckin
-              okr={okr}
-              onSubmit={(data) => onQuickCheckin(okr, data)}
-            />
           )}
 
           {/* Action Buttons */}
