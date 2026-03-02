@@ -10,8 +10,9 @@ import {
   Loader2,
   BookOpen,
   CheckCircle2,
+  Sparkles,
 } from "lucide-react";
-import { useOKRs, useCurrentUser, useEnrollments } from "@/lib/queries";
+import { useOKRs, useCurrentUser, useEnrollments, useMotivation } from "@/lib/queries";
 import {
   getCurrentQuarter,
   isCheckinOverdue,
@@ -96,6 +97,16 @@ function DashboardContent() {
     [enrollments]
   );
 
+  // AI Motivation
+  const firstName = user?.name?.split(" ")[0] || "du";
+  const { data: motivationData, isLoading: isLoadingMotivation } = useMotivation({
+    name: firstName,
+    progress: avgProgress,
+    okrCount: activeOKRs.length,
+    overdueCount: overdueOKRs.length,
+    daysRemaining,
+  });
+
   if (isLoadingUser || isLoadingOKRs) {
     return (
       <div className="h-full flex items-center justify-center">
@@ -103,6 +114,15 @@ function DashboardContent() {
       </div>
     );
   }
+
+  // Time-of-day greeting
+  const hour = new Date().getHours();
+  const greeting =
+    hour < 12 ? "Guten Morgen" : hour < 17 ? "Hallo" : "Guten Abend";
+
+  // Motivational emoji based on progress
+  const motivEmoji =
+    avgProgress >= 70 ? "🔥" : avgProgress >= 40 ? "💪" : overdueOKRs.length > 0 ? "⏰" : "🚀";
 
   // SVG Progress Ring
   const ringSize = 80;
@@ -114,6 +134,43 @@ function DashboardContent() {
   return (
     <div className="h-full overflow-y-auto">
       <div className="px-4 sm:px-6 py-6 sm:py-8 space-y-5 sm:space-y-6 max-w-5xl mx-auto">
+        {/* Motivational Greeting */}
+        <div className="relative overflow-hidden rounded-2xl bg-gradient-to-br from-orange-50 via-amber-50/80 to-yellow-50/60 border border-orange-100/60 p-5 sm:p-6">
+          <div className="relative z-10">
+            <h1 className="text-xl sm:text-2xl font-bold text-foreground">
+              {greeting}, {firstName}! {motivEmoji}
+            </h1>
+            {activeOKRs.length > 0 ? (
+              <div className="mt-2.5 flex items-start gap-2">
+                {isLoadingMotivation ? (
+                  <p className="text-[13px] text-muted/70 animate-pulse">
+                    Dein KI-Coach denkt nach...
+                  </p>
+                ) : motivationData?.message ? (
+                  <>
+                    <Sparkles className="h-3.5 w-3.5 text-amber-500 mt-0.5 flex-shrink-0" />
+                    <p className="text-[13px] text-muted leading-relaxed">
+                      {motivationData.message}
+                    </p>
+                  </>
+                ) : (
+                  <p className="text-[13px] text-muted">
+                    Du hast {activeOKRs.length} aktive Ziele mit {avgProgress}% Fortschritt.
+                    {daysRemaining > 0 && ` Noch ${daysRemaining} Tage im Quartal.`}
+                  </p>
+                )}
+              </div>
+            ) : (
+              <p className="text-[13px] text-muted mt-2">
+                Starte ins Quartal und setze dir ambitionierte Ziele.
+              </p>
+            )}
+          </div>
+          {/* Decorative background circles */}
+          <div className="absolute -top-8 -right-8 w-32 h-32 rounded-full bg-orange-200/20 blur-xl" />
+          <div className="absolute -bottom-6 -left-6 w-24 h-24 rounded-full bg-amber-200/20 blur-lg" />
+        </div>
+
         {/* Quarter Hero */}
         <div className="card p-6">
           <div className="flex items-center gap-6">
@@ -151,9 +208,9 @@ function DashboardContent() {
 
             {/* Quarter Info */}
             <div className="flex-1 min-w-0">
-              <h1 className="text-xl font-bold text-foreground">
+              <h2 className="text-xl font-bold text-foreground">
                 {currentQuarter}
-              </h1>
+              </h2>
               <p className="text-sm text-muted mt-0.5">
                 {daysRemaining} Tage verbleibend
               </p>

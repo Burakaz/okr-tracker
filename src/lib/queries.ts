@@ -596,6 +596,33 @@ export function useSuggestKRs() {
   });
 }
 
+// ===== AI Motivation =====
+export function useMotivation(stats: {
+  name: string;
+  progress: number;
+  okrCount: number;
+  overdueCount: number;
+  daysRemaining: number;
+}) {
+  return useQuery<{ message: string }>({
+    queryKey: ["motivation", stats.progress, stats.okrCount, stats.overdueCount],
+    queryFn: async () => {
+      const params = new URLSearchParams({
+        name: stats.name,
+        progress: String(stats.progress),
+        okrCount: String(stats.okrCount),
+        overdueCount: String(stats.overdueCount),
+        daysRemaining: String(stats.daysRemaining),
+      });
+      const res = await fetch(`/api/ai/motivate?${params}`);
+      if (!res.ok) throw new Error("Fehler beim Laden der Motivation");
+      return res.json();
+    },
+    staleTime: 30 * 60 * 1000, // Cache 30 min — no need for frequent AI calls
+    enabled: stats.okrCount > 0,
+  });
+}
+
 // ===== Prefetch =====
 export function usePrefetchData(quarter?: string) {
   const queryClient = useQueryClient();
