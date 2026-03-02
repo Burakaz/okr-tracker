@@ -2,6 +2,10 @@
 @tailwind components;
 @tailwind utilities;
 
+.font-playfair {
+  font-family: var(--font-playfair), serif;
+}
+
 /* Skip-to-content Link für Tastaturnavigation */
 .skip-to-content {
   position: absolute;

@@ -135,40 +135,35 @@ function DashboardContent() {
     <div className="h-full overflow-y-auto">
       <div className="px-4 sm:px-6 py-6 sm:py-8 space-y-5 sm:space-y-6 max-w-5xl mx-auto">
         {/* Motivational Greeting */}
-        <div className="relative overflow-hidden rounded-2xl bg-gradient-to-br from-orange-50 via-amber-50/80 to-yellow-50/60 border border-orange-100/60 p-5 sm:p-6">
-          <div className="relative z-10">
-            <h1 className="text-xl sm:text-2xl font-bold text-foreground">
-              {greeting}, {firstName}! {motivEmoji}
-            </h1>
-            {activeOKRs.length > 0 ? (
-              <div className="mt-2.5 flex items-start gap-2">
-                {isLoadingMotivation ? (
-                  <p className="text-[13px] text-muted/70 animate-pulse">
-                    Dein KI-Coach denkt nach...
+        <div className="py-2">
+          <h1 className="text-xl sm:text-2xl text-foreground">
+            {greeting}, <span className="font-playfair italic">{firstName}</span>! {motivEmoji}
+          </h1>
+          {activeOKRs.length > 0 ? (
+            <div className="mt-2 flex items-start gap-2">
+              {isLoadingMotivation ? (
+                <p className="text-[13px] text-muted/70 animate-pulse">
+                  Dein KI-Coach denkt nach...
+                </p>
+              ) : motivationData?.message ? (
+                <>
+                  <Sparkles className="h-3.5 w-3.5 text-amber-500 mt-0.5 flex-shrink-0" />
+                  <p className="text-[13px] text-muted leading-relaxed">
+                    {motivationData.message}
                   </p>
-                ) : motivationData?.message ? (
-                  <>
-                    <Sparkles className="h-3.5 w-3.5 text-amber-500 mt-0.5 flex-shrink-0" />
-                    <p className="text-[13px] text-muted leading-relaxed">
-                      {motivationData.message}
-                    </p>
-                  </>
-                ) : (
-                  <p className="text-[13px] text-muted">
-                    Du hast {activeOKRs.length} aktive Ziele mit {avgProgress}% Fortschritt.
-                    {daysRemaining > 0 && ` Noch ${daysRemaining} Tage im Quartal.`}
-                  </p>
-                )}
-              </div>
-            ) : (
-              <p className="text-[13px] text-muted mt-2">
-                Starte ins Quartal und setze dir ambitionierte Ziele.
-              </p>
-            )}
-          </div>
-          {/* Decorative background circles */}
-          <div className="absolute -top-8 -right-8 w-32 h-32 rounded-full bg-orange-200/20 blur-xl" />
-          <div className="absolute -bottom-6 -left-6 w-24 h-24 rounded-full bg-amber-200/20 blur-lg" />
+                </>
+              ) : (
+                <p className="text-[13px] text-muted">
+                  Du hast {activeOKRs.length} aktive Ziele mit {avgProgress}% Fortschritt.
+                  {daysRemaining > 0 && ` Noch ${daysRemaining} Tage im Quartal.`}
+                </p>
+              )}
+            </div>
+          ) : (
+            <p className="text-[13px] text-muted mt-2">
+              Starte ins Quartal und setze dir ambitionierte Ziele.
+            </p>
+          )}
         </div>
 
         {/* Quarter Hero */}

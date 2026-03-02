@@ -14,6 +14,7 @@ import {
   LogOut,
   User as UserIcon,
   X,
+  TrendingUp,
 } from "lucide-react";
 import type { User } from "@/types";
 
@@ -43,6 +44,7 @@ const navItems = [
   { href: "/dashboard", icon: LayoutDashboard, label: "Mein Quartal" },
   { href: "/okrs", icon: Target, label: "Ziele" },
   { href: "/learnings", icon: BookOpen, label: "Lernen" },
+  { href: "/career", icon: TrendingUp, label: "Karriere" },
   { href: "/review", icon: Trophy, label: "Rückblick" },
 ];
 

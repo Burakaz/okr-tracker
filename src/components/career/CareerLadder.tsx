@@ -11,110 +11,45 @@ import {
   Crown,
   Star,
   Check,
+  Bot,
+  ClipboardList,
+  Sparkles,
 } from "lucide-react";
+import type { CareerPathLevel } from "@/lib/career-paths";
 
-interface CareerLevelItem {
-  id: string;
-  name: string;
-  description: string;
-  requirements: string[];
-  icon: React.ReactNode;
-}
-
-const CAREER_LEVELS: CareerLevelItem[] = [
-  {
-    id: "trainee",
-    name: "Trainee",
-    description: "Einstieg ins Unternehmen mit strukturiertem Onboarding-Programm.",
-    requirements: [
-      "Grundlagenwissen aufbauen",
-      "Onboarding abschliessen",
-      "Erste OKRs definieren",
-    ],
-    icon: <GraduationCap className="h-4 w-4" />,
-  },
-  {
-    id: "junior",
-    name: "Junior",
-    description: "Selbststandige Arbeit an definierten Aufgaben unter Anleitung.",
-    requirements: [
-      "2 OKRs mit Score >= 0.7",
-      "Grundlegende Fachkenntnisse nachweisen",
-      "Eigenstandige Aufgabenbearbeitung",
-    ],
-    icon: <User className="h-4 w-4" />,
-  },
-  {
-    id: "midlevel",
-    name: "Midlevel",
-    description: "Erfahrene Fachkraft mit eigenverantwortlicher Projektarbeit.",
-    requirements: [
-      "3 OKRs mit Score >= 0.7",
-      "Projektverantwortung ubernehmen",
-      "Mentoring von Junioren",
-      "Fachliche Expertise vertiefen",
-    ],
-    icon: <Briefcase className="h-4 w-4" />,
-  },
-  {
-    id: "senior",
-    name: "Senior",
-    description: "Strategische Verantwortung und Fuhrung in Fachthemen.",
-    requirements: [
-      "4 OKRs mit Score >= 0.7",
-      "Strategische Projekte leiten",
-      "Team-Mentoring",
-      "Fachliche Fuhrung ubernehmen",
-    ],
-    icon: <Award className="h-4 w-4" />,
-  },
-  {
-    id: "lead",
-    name: "Lead",
-    description: "Teamfuhrung und strategische Verantwortung fur einen Bereich.",
-    requirements: [
-      "4 OKRs mit Score >= 0.7",
-      "Teamfuhrung nachweisen",
-      "Bereichsstrategie entwickeln",
-      "Budget-Verantwortung",
-      "Cross-funktionale Zusammenarbeit",
-    ],
-    icon: <Star className="h-4 w-4" />,
-  },
-  {
-    id: "head",
-    name: "Head",
-    description: "Abteilungsleitung mit Gesamtverantwortung fur Strategie und Ergebnisse.",
-    requirements: [
-      "4 OKRs mit Score >= 0.7",
-      "Abteilungsstrategie definieren",
-      "Fuhrungsteam aufbauen",
-      "Unternehmensweite Initiativen steuern",
-      "P&L-Verantwortung",
-    ],
-    icon: <Crown className="h-4 w-4" />,
-  },
-];
+const LEVEL_ICONS: Record<string, React.ReactNode> = {
+  trainee: <GraduationCap className="h-4 w-4" />,
+  junior: <User className="h-4 w-4" />,
+  midlevel: <Briefcase className="h-4 w-4" />,
+  senior: <Award className="h-4 w-4" />,
+  lead: <Star className="h-4 w-4" />,
+  head: <Crown className="h-4 w-4" />,
+};
 
 interface CareerLadderProps {
+  levels: CareerPathLevel[];
   currentLevelId?: string | null;
 }
 
-export function CareerLadder({ currentLevelId }: CareerLadderProps) {
+export function CareerLadder({ levels, currentLevelId }: CareerLadderProps) {
   const [expandedId, setExpandedId] = useState<string | null>(null);
+  const [activeTab, setActiveTab] = useState<
+    "requirements" | "responsibilities" | "ai"
+  >("requirements");
 
-  // Determine the current level index based on ID or default to a placeholder
+  // Determine the current level index
   const currentIndex = currentLevelId
-    ? CAREER_LEVELS.findIndex((l) => l.id === currentLevelId)
-    : 1; // Default to "Junior" for placeholder
+    ? levels.findIndex((l) => l.id === currentLevelId)
+    : 0; // Default to first level
 
   const toggleExpand = (id: string) => {
     setExpandedId((prev) => (prev === id ? null : id));
+    setActiveTab("requirements");
   };
 
   return (
     <div className="space-y-2">
-      {CAREER_LEVELS.map((level, index) => {
+      {levels.map((level, index) => {
         const isCurrentLevel = index === currentIndex;
         const isCompleted = index < currentIndex;
         const isFuture = index > currentIndex;
@@ -144,7 +79,7 @@ export function CareerLadder({ currentLevelId }: CareerLadderProps) {
                   {isCompleted ? (
                     <Check className="h-4 w-4" />
                   ) : (
-                    level.icon
+                    LEVEL_ICONS[level.id] || <Briefcase className="h-4 w-4" />
                   )}
                 </div>
 
@@ -157,6 +92,9 @@ export function CareerLadder({ currentLevelId }: CareerLadderProps) {
                       }`}
                     >
                       {level.name}
+                    </span>
+                    <span className="text-[11px] text-muted">
+                      {level.experience}
                     </span>
                     {isCurrentLevel && (
                       <span className="badge badge-green">Aktuell</span>
@@ -181,33 +119,81 @@ export function CareerLadder({ currentLevelId }: CareerLadderProps) {
               </div>
             </button>
 
-            {/* Expanded requirements */}
+            {/* Expanded details with tabs */}
             {isExpanded && (
               <div className="ml-12 mt-2 mb-2 p-3 bg-cream-50 rounded-lg border border-cream-300/50">
-                <p className="text-[11px] font-semibold text-muted uppercase tracking-wider mb-2">
-                  Anforderungen
-                </p>
+                {/* Tabs */}
+                <div className="flex gap-1 mb-3">
+                  <button
+                    onClick={() => setActiveTab("requirements")}
+                    className={`flex items-center gap-1.5 px-3 py-1.5 rounded-md text-[11px] font-medium transition-colors ${
+                      activeTab === "requirements"
+                        ? "bg-accent-green text-white"
+                        : "bg-cream-200 text-muted hover:bg-cream-300"
+                    }`}
+                  >
+                    <ClipboardList className="h-3 w-3" />
+                    Anforderungen
+                  </button>
+                  <button
+                    onClick={() => setActiveTab("responsibilities")}
+                    className={`flex items-center gap-1.5 px-3 py-1.5 rounded-md text-[11px] font-medium transition-colors ${
+                      activeTab === "responsibilities"
+                        ? "bg-accent-green text-white"
+                        : "bg-cream-200 text-muted hover:bg-cream-300"
+                    }`}
+                  >
+                    <Briefcase className="h-3 w-3" />
+                    Verantwortung
+                  </button>
+                  <button
+                    onClick={() => setActiveTab("ai")}
+                    className={`flex items-center gap-1.5 px-3 py-1.5 rounded-md text-[11px] font-medium transition-colors ${
+                      activeTab === "ai"
+                        ? "bg-accent-green text-white"
+                        : "bg-cream-200 text-muted hover:bg-cream-300"
+                    }`}
+                  >
+                    <Sparkles className="h-3 w-3" />
+                    KI-Integration
+                  </button>
+                </div>
+
+                {/* Tab content */}
                 <ul className="space-y-1.5">
-                  {level.requirements.map((req, reqIdx) => (
+                  {(activeTab === "requirements"
+                    ? level.requirements
+                    : activeTab === "responsibilities"
+                      ? level.responsibilities
+                      : level.aiIntegration
+                  ).map((item, itemIdx) => (
                     <li
-                      key={reqIdx}
+                      key={itemIdx}
                       className="flex items-start gap-2 text-[12px]"
                     >
                       <div
                         className={`w-4 h-4 rounded flex items-center justify-center flex-shrink-0 mt-0.5 ${
                           isCompleted
                             ? "bg-accent-green text-white"
-                            : "bg-cream-200 text-muted"
+                            : activeTab === "ai"
+                              ? "bg-purple-100 text-purple-500"
+                              : "bg-cream-200 text-muted"
                         }`}
                       >
-                        {isCompleted && <Check className="h-3 w-3" />}
+                        {isCompleted ? (
+                          <Check className="h-3 w-3" />
+                        ) : activeTab === "ai" ? (
+                          <Bot className="h-3 w-3" />
+                        ) : null}
                       </div>
                       <span
                         className={
-                          isCompleted ? "text-muted line-through" : "text-foreground"
+                          isCompleted
+                            ? "text-muted line-through"
+                            : "text-foreground"
                         }
                       >
-                        {req}
+                        {item}
                       </span>
                     </li>
                   ))}
@@ -216,7 +202,7 @@ export function CareerLadder({ currentLevelId }: CareerLadderProps) {
             )}
 
             {/* Connector line between levels */}
-            {index < CAREER_LEVELS.length - 1 && (
+            {index < levels.length - 1 && (
               <div className="flex justify-start ml-[22px] my-0.5">
                 <div
                   className={`w-0.5 h-3 rounded-full ${

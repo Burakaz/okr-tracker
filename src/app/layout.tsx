@@ -1,10 +1,16 @@
 import type { Metadata } from "next";
-import { Inter } from "next/font/google";
+import { Inter, Playfair_Display } from "next/font/google";
 import { Toaster } from "sonner";
 import { QueryProvider } from "@/providers/QueryProvider";
 import "./globals.css";
 
 const inter = Inter({ subsets: ["latin"] });
+const playfair = Playfair_Display({
+  subsets: ["latin"],
+  variable: "--font-playfair",
+  weight: ["400", "700"],
+  style: ["normal", "italic"],
+});
 
 export const metadata: Metadata = {
   title: "ADMKRS OKR Tracker",
@@ -30,7 +36,7 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="de" suppressHydrationWarning>
-      <body className={`${inter.className} antialiased min-h-screen bg-background`} suppressHydrationWarning>
+      <body className={`${inter.className} ${playfair.variable} antialiased min-h-screen bg-background`} suppressHydrationWarning>
         <QueryProvider>
           <a href="#main-content" className="skip-to-content">
             Zum Hauptinhalt springen
