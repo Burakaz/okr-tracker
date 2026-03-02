@@ -9,6 +9,7 @@ export interface CareerPathLevel {
   requirements: string[];
   responsibilities: string[];
   aiIntegration: string[];
+  skills?: string[];
 }
 
 export interface CareerPath {

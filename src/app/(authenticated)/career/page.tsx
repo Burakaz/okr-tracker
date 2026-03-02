@@ -1,53 +1,24 @@
 "use client";
 
-import { useState } from "react";
 import Link from "next/link";
 import {
   Settings,
   TrendingUp,
   Award,
-  ArrowRight,
   Loader2,
-  BarChart3,
-  Lightbulb,
-  Palette,
-  FolderKanban,
-  Clapperboard,
-  Film,
-  Handshake,
-  ChevronDown,
-  MapPin,
+  Check,
+  Target,
+  CheckCircle2,
+  Clock,
 } from "lucide-react";
 import { useCurrentUser, useCareerProgress } from "@/lib/queries";
 import { CareerLadder } from "@/components/career/CareerLadder";
-import { ProgressOverview } from "@/components/career/ProgressOverview";
+import { ProgressBar } from "@/components/ui/ProgressBar";
 import {
   CAREER_PATHS,
   getCareerPath,
   getNextLevel,
-  type CareerPath,
 } from "@/lib/career-paths";
-
-// Map icon string names to Lucide components
-const ICON_MAP: Record<string, React.ReactNode> = {
-  BarChart3: <BarChart3 className="h-5 w-5" />,
-  Lightbulb: <Lightbulb className="h-5 w-5" />,
-  Palette: <Palette className="h-5 w-5" />,
-  FolderKanban: <FolderKanban className="h-5 w-5" />,
-  Clapperboard: <Clapperboard className="h-5 w-5" />,
-  Film: <Film className="h-5 w-5" />,
-  Handshake: <Handshake className="h-5 w-5" />,
-};
-
-const ICON_MAP_SM: Record<string, React.ReactNode> = {
-  BarChart3: <BarChart3 className="h-4 w-4" />,
-  Lightbulb: <Lightbulb className="h-4 w-4" />,
-  Palette: <Palette className="h-4 w-4" />,
-  FolderKanban: <FolderKanban className="h-4 w-4" />,
-  Clapperboard: <Clapperboard className="h-4 w-4" />,
-  Film: <Film className="h-4 w-4" />,
-  Handshake: <Handshake className="h-4 w-4" />,
-};
 
 export default function CareerPage() {
   const { data: userData, isLoading: isLoadingUser } = useCurrentUser();
@@ -56,20 +27,27 @@ export default function CareerPage() {
   const user = userData?.user ?? null;
   const progress = careerData?.progress ?? null;
 
-  // Career path selection state
-  const [selectedPathId, setSelectedPathId] = useState<string>(
-    CAREER_PATHS[0].id
-  );
-  const [currentLevelId, setCurrentLevelId] = useState<string>("trainee");
-  const [showPathSelector, setShowPathSelector] = useState(false);
+  // Career path & level from user profile / backend (fallback to defaults)
+  const userPathId = user?.craft_focus || CAREER_PATHS[0].id;
+  const selectedPath = getCareerPath(userPathId) || CAREER_PATHS[0];
 
-  const selectedPath = getCareerPath(selectedPathId);
-  const currentLevel = selectedPath?.levels.find(
+  // Current level from backend progress or user profile
+  const currentLevelId = progress?.current_level_id || "junior";
+  const currentLevel = selectedPath.levels.find(
     (l) => l.id === currentLevelId
   );
-  const nextLevel = selectedPath
-    ? getNextLevel(selectedPathId, currentLevelId)
-    : undefined;
+  const nextLevel = getNextLevel(selectedPath.id, currentLevelId);
+
+  // Progress calculations
+  const nextLevelReqCount = nextLevel?.requirements.length ?? 0;
+  const qualifyingOkrs = progress?.qualifying_okr_count ?? 1;
+  const requiredOkrs = 4;
+  const fulfilledReqs = 0; // Placeholder — comes from backend
+  const openReqs = nextLevelReqCount - fulfilledReqs;
+  const progressPercent =
+    nextLevelReqCount > 0
+      ? Math.round((fulfilledReqs / nextLevelReqCount) * 100)
+      : 0;
 
   const isLoading = isLoadingUser || isLoadingCareer;
 
@@ -104,179 +82,125 @@ export default function CareerPage() {
       {/* Content */}
       <div className="flex-1 overflow-y-auto">
         <div className="p-6 max-w-5xl mx-auto space-y-6">
-          {/* Career Path Selector */}
-          <div className="card p-5">
-            <div className="flex items-center justify-between mb-3">
-              <div className="flex items-center gap-2">
-                <MapPin className="h-4 w-4 text-accent-green" />
-                <h2 className="text-[13px] font-semibold text-foreground">
-                  Dein Karrierepfad
-                </h2>
-              </div>
-            </div>
-
-            {/* Selected path display / dropdown trigger */}
-            <button
-              onClick={() => setShowPathSelector(!showPathSelector)}
-              className="w-full flex items-center gap-3 p-3 rounded-lg bg-cream-50 border border-cream-300/50 hover:border-accent-green/30 transition-colors text-left"
-            >
-              <div className="w-10 h-10 rounded-full bg-accent-greenLight flex items-center justify-center text-accent-green flex-shrink-0">
-                {selectedPath && ICON_MAP[selectedPath.icon]}
-              </div>
-              <div className="flex-1 min-w-0">
-                <p className="text-[13px] font-semibold text-foreground">
-                  {selectedPath?.name}
-                </p>
-                <p className="text-[11px] text-muted truncate">
-                  {selectedPath?.description}
-                </p>
-              </div>
-              <ChevronDown
-                className={`h-4 w-4 text-muted transition-transform ${showPathSelector ? "rotate-180" : ""}`}
-              />
-            </button>
-
-            {/* Path options grid */}
-            {showPathSelector && (
-              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-2 mt-3">
-                {CAREER_PATHS.map((path) => (
-                  <button
-                    key={path.id}
-                    onClick={() => {
-                      setSelectedPathId(path.id);
-                      setCurrentLevelId("trainee");
-                      setShowPathSelector(false);
-                    }}
-                    className={`flex items-center gap-3 p-3 rounded-lg border text-left transition-all ${
-                      selectedPathId === path.id
-                        ? "border-accent-green bg-accent-greenLight/30"
-                        : "border-cream-300/50 hover:border-accent-green/30 bg-white"
-                    }`}
-                  >
-                    <div
-                      className={`w-8 h-8 rounded-full flex items-center justify-center flex-shrink-0 ${
-                        selectedPathId === path.id
-                          ? "bg-accent-green text-white"
-                          : "bg-cream-200 text-muted"
-                      }`}
-                    >
-                      {ICON_MAP_SM[path.icon]}
-                    </div>
-                    <div className="min-w-0">
-                      <p className="text-[12px] font-semibold text-foreground truncate">
-                        {path.shortName}
-                      </p>
-                    </div>
-                  </button>
-                ))}
-              </div>
-            )}
-
-            {/* Current level selector */}
-            {selectedPath && (
-              <div className="mt-4">
-                <p className="text-[11px] text-muted uppercase tracking-wider mb-2">
-                  Deine aktuelle Stufe
-                </p>
-                <div className="flex flex-wrap gap-1.5">
-                  {selectedPath.levels.map((level) => (
-                    <button
-                      key={level.id}
-                      onClick={() => setCurrentLevelId(level.id)}
-                      className={`px-3 py-1.5 rounded-md text-[11px] font-medium transition-colors ${
-                        currentLevelId === level.id
-                          ? "bg-accent-green text-white"
-                          : "bg-cream-100 text-muted hover:bg-cream-200"
-                      }`}
-                    >
-                      {level.name}
-                    </button>
-                  ))}
-                </div>
-              </div>
-            )}
-          </div>
-
-          {/* Top cards row: Current Position + Next Step */}
+          {/* Level Overview — Two columns */}
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            {/* Current Position */}
+            {/* Bestätigtes Level */}
             <div className="card p-5">
-              <div className="flex items-center gap-3 mb-3">
+              <p className="text-[10px] font-semibold text-muted uppercase tracking-wider mb-3">
+                Bestätigtes Level
+              </p>
+              <div className="flex items-center gap-3">
                 <div className="w-10 h-10 rounded-full bg-accent-greenLight flex items-center justify-center">
                   <Award className="h-5 w-5 text-accent-green" />
                 </div>
-                <div>
-                  <p className="text-[11px] text-muted uppercase tracking-wider">
-                    Aktuelle Position
+                <div className="flex-1 min-w-0">
+                  <p className="text-[15px] font-semibold text-foreground">
+                    {currentLevel?.name ?? "Nicht festgelegt"}{" "}
+                    {selectedPath.shortName}
                   </p>
-                  <p className="text-[17px] font-semibold text-foreground">
-                    {currentLevel?.name ?? "Nicht festgelegt"}
+                  <p className="text-[11px] text-muted">
+                    {selectedPath.shortName}
+                    {user?.department ? ` · ${user.department}` : ""}
                   </p>
                 </div>
+                {currentLevel && (
+                  <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full bg-accent-greenLight text-accent-green text-[11px] font-semibold">
+                    <Check className="h-3 w-3" />
+                    {currentLevel.id.charAt(0).toUpperCase() +
+                      currentLevel.id.slice(1)}
+                  </span>
+                )}
               </div>
-              <p className="text-[12px] text-muted">
-                {selectedPath?.shortName}
-                {user?.department ? ` · ${user.department}` : ""}
-              </p>
-              {currentLevel && (
-                <p className="text-[11px] text-muted mt-1">
-                  {currentLevel.experience} Berufserfahrung
-                </p>
-              )}
             </div>
 
-            {/* Next Step */}
+            {/* Nächster Schritt */}
             <div className="card p-5">
-              <div className="flex items-center gap-3 mb-3">
+              <p className="text-[10px] font-semibold text-muted uppercase tracking-wider mb-3">
+                Nächster Schritt
+              </p>
+              <div className="flex items-center gap-3">
                 <div className="w-10 h-10 rounded-full bg-cream-200 flex items-center justify-center">
                   <TrendingUp className="h-5 w-5 text-muted" />
                 </div>
-                <div>
-                  <p className="text-[11px] text-muted uppercase tracking-wider">
-                    Nächster Schritt
+                <div className="flex-1 min-w-0">
+                  <p className="text-[15px] font-semibold text-foreground">
+                    {nextLevel?.name ?? "Höchste Stufe erreicht"}{" "}
+                    {nextLevel ? selectedPath.shortName : ""}
                   </p>
-                  <p className="text-[17px] font-semibold text-foreground">
-                    {nextLevel?.name ?? "Höchste Stufe erreicht"}
-                  </p>
-                </div>
-              </div>
-              {nextLevel ? (
-                <>
-                  <div className="flex items-center gap-1.5 text-[12px] text-muted">
-                    <span>
+                  {nextLevel && (
+                    <p className="text-[11px] text-muted">
                       {nextLevel.requirements.length} Anforderungen ·{" "}
                       {nextLevel.experience}
-                    </span>
-                  </div>
-                  <div className="flex items-center gap-1.5 text-[12px] text-accent-green mt-1.5 cursor-pointer hover:underline">
-                    <span>Anforderungen ansehen</span>
-                    <ArrowRight className="h-3 w-3" />
-                  </div>
-                </>
-              ) : (
-                <p className="text-[12px] text-muted">
-                  Gratulation! Du hast die höchste Stufe in diesem Pfad
-                  erreicht.
-                </p>
-              )}
+                    </p>
+                  )}
+                </div>
+                {nextLevel && (
+                  <span className="inline-flex items-center px-2.5 py-1 rounded-full bg-cream-200 text-foreground text-[11px] font-semibold">
+                    {nextLevel.id.charAt(0).toUpperCase() +
+                      nextLevel.id.slice(1)}
+                  </span>
+                )}
+              </div>
             </div>
           </div>
 
-          {/* Progress Overview */}
-          <ProgressOverview progress={progress} isLoading={isLoadingCareer} />
+          {/* Progress to next level */}
+          <div className="card p-5">
+            <div className="flex items-center justify-between mb-3">
+              <h2 className="text-[13px] font-semibold text-foreground">
+                Fortschritt zum nächsten Level
+              </h2>
+              <span className="text-[13px] font-semibold text-foreground">
+                {progressPercent}%
+              </span>
+            </div>
+            <ProgressBar value={progressPercent} size="md" />
+
+            <p className="text-[12px] text-muted mt-3">
+              {fulfilledReqs} von {nextLevelReqCount} Anforderungen erfüllt ·{" "}
+              {openReqs} noch offen
+            </p>
+
+            {/* OKR qualification */}
+            <div className="mt-4 pt-4 border-t border-cream-200/60">
+              <div className="flex items-center gap-2 mb-2">
+                <Target className="h-3.5 w-3.5 text-muted" />
+                <span className="text-[12px] text-muted">
+                  {qualifyingOkrs} von {requiredOkrs} OKRs mit Score ≥ 0.7
+                </span>
+              </div>
+              <div className="flex items-center gap-1.5">
+                {Array.from({ length: requiredOkrs }).map((_, i) => (
+                  <div
+                    key={i}
+                    className={`flex-1 h-7 rounded-md flex items-center justify-center text-[10px] font-medium ${
+                      i < qualifyingOkrs
+                        ? "bg-accent-green text-white"
+                        : "bg-cream-200 text-muted"
+                    }`}
+                  >
+                    {i < qualifyingOkrs ? (
+                      <CheckCircle2 className="h-3.5 w-3.5" />
+                    ) : (
+                      <Clock className="h-3.5 w-3.5" />
+                    )}
+                  </div>
+                ))}
+              </div>
+            </div>
+          </div>
 
           {/* Career Path Ladder */}
-          {selectedPath && (
-            <div>
-              <h2 className="text-[15px] font-semibold text-foreground mb-4">
-                {selectedPath.shortName} — Karrierepfad
-              </h2>
-              <CareerLadder
-                levels={selectedPath.levels}
-                currentLevelId={currentLevelId}
-              />
-            </div>
-          )}
+          <div>
+            <p className="text-[10px] font-semibold text-muted uppercase tracking-wider mb-3">
+              Karrierepfad
+            </p>
+            <CareerLadder
+              levels={selectedPath.levels}
+              currentLevelId={currentLevelId}
+              pathName={selectedPath.shortName}
+            />
+          </div>
         </div>
       </div>
     </div>

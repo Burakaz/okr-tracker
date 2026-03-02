@@ -135,8 +135,8 @@ function DashboardContent() {
     <div className="h-full overflow-y-auto">
       <div className="px-4 sm:px-6 py-6 sm:py-8 space-y-5 sm:space-y-6 max-w-5xl mx-auto">
         {/* Motivational Greeting */}
-        <div className="py-2">
-          <h1 className="text-xl sm:text-2xl text-foreground">
+        <div className="py-2 pl-6">
+          <h1 className="text-2xl sm:text-3xl text-foreground">
             {greeting}, <span className="font-playfair italic">{firstName}</span>! {motivEmoji}
           </h1>
           {activeOKRs.length > 0 ? (
