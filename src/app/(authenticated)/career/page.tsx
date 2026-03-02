@@ -11,7 +11,7 @@ import {
   CheckCircle2,
   Clock,
 } from "lucide-react";
-import { useCurrentUser, useCareerProgress } from "@/lib/queries";
+import { useCurrentUser, useCareerProgress, useRequirementCompletions } from "@/lib/queries";
 import { CareerLadder } from "@/components/career/CareerLadder";
 import { ProgressBar } from "@/components/ui/ProgressBar";
 import {
@@ -23,9 +23,11 @@ import {
 export default function CareerPage() {
   const { data: userData, isLoading: isLoadingUser } = useCurrentUser();
   const { data: careerData, isLoading: isLoadingCareer } = useCareerProgress();
+  const { data: completionsData } = useRequirementCompletions();
 
   const user = userData?.user ?? null;
   const progress = careerData?.progress ?? null;
+  const completions = completionsData?.completions ?? [];
 
   // Career path & level from user profile / backend (fallback to defaults)
   const userPathId = user?.craft_focus || CAREER_PATHS[0].id;
@@ -38,11 +40,18 @@ export default function CareerPage() {
   );
   const nextLevel = getNextLevel(selectedPath.id, currentLevelId);
 
-  // Progress calculations
+  // Progress calculations — use real completion data
   const nextLevelReqCount = nextLevel?.requirements.length ?? 0;
   const qualifyingOkrs = progress?.qualifying_okr_count ?? 1;
   const requiredOkrs = 4;
-  const fulfilledReqs = 0; // Placeholder — comes from backend
+  const fulfilledReqs = nextLevel
+    ? completions.filter(
+        (c) =>
+          c.career_path_id === selectedPath.id &&
+          c.level_id === nextLevel.id &&
+          c.status === "completed"
+      ).length
+    : 0;
   const openReqs = nextLevelReqCount - fulfilledReqs;
   const progressPercent =
     nextLevelReqCount > 0
@@ -198,6 +207,7 @@ export default function CareerPage() {
             <CareerLadder
               levels={selectedPath.levels}
               currentLevelId={currentLevelId}
+              pathId={selectedPath.id}
               pathName={selectedPath.shortName}
             />
           </div>

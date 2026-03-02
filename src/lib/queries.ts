@@ -84,6 +84,63 @@ export function useCareerProgress() {
   });
 }
 
+// ===== Requirement Completions =====
+
+export interface RequirementCompletion {
+  id: string;
+  user_id: string;
+  organization_id: string;
+  career_path_id: string;
+  level_id: string;
+  requirement_index: number;
+  status: "not_started" | "in_progress" | "completed";
+  notes: string | null;
+  completed_at: string | null;
+  created_at: string;
+  updated_at: string;
+}
+
+export function useRequirementCompletions() {
+  return useQuery<{ completions: RequirementCompletion[] }>({
+    queryKey: ["requirementCompletions"],
+    queryFn: async () => {
+      const res = await fetch("/api/career/requirements");
+      if (!res.ok)
+        throw new Error("Fehler beim Laden der Anforderungen");
+      return res.json();
+    },
+    staleTime: 2 * 60 * 1000,
+  });
+}
+
+export function useUpdateRequirement() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: async (data: {
+      career_path_id: string;
+      level_id: string;
+      requirement_index: number;
+      status: "not_started" | "in_progress" | "completed";
+      notes?: string | null;
+    }) => {
+      const res = await fetch("/api/career/requirements", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(data),
+      });
+      if (!res.ok) {
+        const error = await res.json();
+        throw new Error(error.error || "Fehler beim Speichern");
+      }
+      return res.json();
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["requirementCompletions"] });
+      queryClient.invalidateQueries({ queryKey: ["careerProgress"] });
+    },
+  });
+}
+
 // ===== Mutations =====
 export function useCreateOKR() {
   const queryClient = useQueryClient();

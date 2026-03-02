@@ -71,11 +71,11 @@ const performanceMarketing: CareerPath = {
     {
       id: "junior",
       name: "Junior",
-      experience: "0-2 Jahre",
+      experience: "1-3 Jahre",
       description:
         "Eigenständige Kampagnenarbeit mit ersten Kundenberührungspunkten.",
       requirements: [
-        "0-2 Jahre Berufserfahrung im digitalen Marketing",
+        "1-3 Jahre Berufserfahrung im digitalen Marketing",
         "Grundkenntnisse in Performance Marketing auf Meta, Google und/oder TikTok",
         "Verständnis von Customer Journey, Conversion-Optimierung und Attribution",
         "Erste Erfahrungen mit Kampagnenplanung und -umsetzung",
@@ -97,11 +97,11 @@ const performanceMarketing: CareerPath = {
     {
       id: "midlevel",
       name: "Midlevel",
-      experience: "2-4 Jahre",
+      experience: "3-5 Jahre",
       description:
         "Eigenverantwortliche Kampagnensteuerung mit wachsender Kundenverantwortung.",
       requirements: [
-        "2-4 Jahre Berufserfahrung im Performance Marketing",
+        "3-5 Jahre Berufserfahrung im Performance Marketing",
         "Vertiefte Kenntnisse in mind. 2 Plattformen (Meta, Google, TikTok)",
         "Erfahrung mit A/B-Testing, CRO und Attribution",
         "Verwaltung mittlerer Werbebudgets",
@@ -123,11 +123,11 @@ const performanceMarketing: CareerPath = {
     {
       id: "senior",
       name: "Senior",
-      experience: "4-6 Jahre",
+      experience: "5-7 Jahre",
       description:
         "Expertenwissen mit strategischer Beratung und Teamführung.",
       requirements: [
-        "4-6 Jahre Berufserfahrung im Performance Marketing",
+        "5-7 Jahre Berufserfahrung im Performance Marketing",
         "Expertenwissen in allen relevanten Plattformen (Meta, Google, TikTok)",
         "Tiefgreifendes Verständnis von Marketing-Technologien und Attribution",
         "Erfahrung in der Entwicklung umfassender Marketingstrategien",
@@ -149,10 +149,10 @@ const performanceMarketing: CareerPath = {
     {
       id: "lead",
       name: "Lead",
-      experience: "6-8 Jahre",
+      experience: "7-9 Jahre",
       description: "Teamleitung mit strategischer Verantwortung für den Bereich.",
       requirements: [
-        "6-8 Jahre Berufserfahrung im Performance Marketing",
+        "7-9 Jahre Berufserfahrung im Performance Marketing",
         "Umfassende Expertise in allen relevanten Kanälen und Technologien",
         "Nachgewiesene Erfolge in der Strategieentwicklung",
         "Starke Führungsqualitäten und Teammanagement-Erfahrung",
@@ -174,11 +174,11 @@ const performanceMarketing: CareerPath = {
     {
       id: "head",
       name: "Head / Director",
-      experience: "8+ Jahre",
+      experience: "9+ Jahre",
       description:
         "Gesamtverantwortung für die Performance Marketing Abteilung.",
       requirements: [
-        "8+ Jahre Berufserfahrung, davon mehrere in Führungspositionen",
+        "9+ Jahre Berufserfahrung, davon mehrere in Führungspositionen",
         "Strategische Vision und tiefes Marktverständnis",
         "Umfassende Erfahrung im Management von Teams und Budgets",
         "Exzellente Netzwerkfähigkeiten und Branchenkenntnis",
@@ -236,11 +236,11 @@ const creativeStrategist: CareerPath = {
     {
       id: "junior",
       name: "Junior",
-      experience: "0-2 Jahre",
+      experience: "1-3 Jahre",
       description:
         "Erste eigenständige Konzepte und Kreativstrategie-Beiträge.",
       requirements: [
-        "0-2 Jahre Berufserfahrung im Bereich Kreation oder Strategie",
+        "1-3 Jahre Berufserfahrung im Bereich Kreation oder Strategie",
         "Grundkenntnisse in Konzeptentwicklung und Storytelling",
         "Verständnis von Markenidentität und Zielgruppenansprache",
         "Aktives Verständnis aktueller Social-Media-Trends",
@@ -259,11 +259,11 @@ const creativeStrategist: CareerPath = {
     {
       id: "midlevel",
       name: "Midlevel",
-      experience: "2-4 Jahre",
+      experience: "3-5 Jahre",
       description:
         "Eigenverantwortliche Kreativkonzeption mit Kundenverantwortung.",
       requirements: [
-        "2-4 Jahre Berufserfahrung in Creative Strategy",
+        "3-5 Jahre Berufserfahrung in Creative Strategy",
         "Vertiefte Kenntnisse in Konzeptentwicklung und Content-Strategie",
         "Erfahrung mit verschiedenen Kreativformaten für Performance-Marketing",
         "Tiefes Verständnis aktueller Social-Media-Trends",
@@ -283,11 +283,11 @@ const creativeStrategist: CareerPath = {
     {
       id: "senior",
       name: "Senior",
-      experience: "4-6 Jahre",
+      experience: "5-7 Jahre",
       description:
         "Strategische Kreativführung mit Kundenberatung auf hohem Niveau.",
       requirements: [
-        "4-6 Jahre Berufserfahrung in Creative Strategy oder Content-Entwicklung",
+        "5-7 Jahre Berufserfahrung in Creative Strategy oder Content-Entwicklung",
         "Expertenwissen in Konzeptentwicklung, Storytelling und Markenführung",
         "Tiefgreifendes Verständnis von Zielgruppenpsychologie",
         "Führende Expertise in Social-Media-Trends",
@@ -308,11 +308,11 @@ const creativeStrategist: CareerPath = {
     {
       id: "lead",
       name: "Lead",
-      experience: "6-8 Jahre",
+      experience: "7-9 Jahre",
       description:
         "Leitung des Creative Strategy Teams mit abteilungsübergreifender Wirkung.",
       requirements: [
-        "6-8 Jahre Berufserfahrung in Creative Strategy",
+        "7-9 Jahre Berufserfahrung in Creative Strategy",
         "Umfassende Expertise in Kreativkonzeption und Strategieentwicklung",
         "Starke Führungsqualitäten und Teammanagement-Erfahrung",
         "Visionäres Verständnis für Social-Media-Trends",
@@ -333,11 +333,11 @@ const creativeStrategist: CareerPath = {
     {
       id: "head",
       name: "Head / Creative Director",
-      experience: "8+ Jahre",
+      experience: "9+ Jahre",
       description:
         "Gesamtverantwortung für die kreative Ausrichtung der Agentur.",
       requirements: [
-        "8+ Jahre Berufserfahrung, davon mehrere in Führungspositionen",
+        "9+ Jahre Berufserfahrung, davon mehrere in Führungspositionen",
         "Strategische Vision und tiefes Verständnis der Kreativ- und Medienlandschaft",
         "Umfassende Erfahrung im Management von kreativen Teams",
         "Nachgewiesene Erfolge in preisgekrönter Kreativkonzeption",
@@ -393,10 +393,10 @@ const grafikdesigner: CareerPath = {
     {
       id: "junior",
       name: "Junior",
-      experience: "0-2 Jahre",
+      experience: "1-3 Jahre",
       description: "Eigenständige Designerstellung für verschiedene Kanäle.",
       requirements: [
-        "0-2 Jahre Berufserfahrung im Grafikdesign",
+        "1-3 Jahre Berufserfahrung im Grafikdesign",
         "Gute Kenntnisse der Adobe Creative Suite (Photoshop, Illustrator, InDesign)",
         "Grundkenntnisse in UI/UX-Design, Branding und Social Media Design",
         "Verständnis für Performance-Marketing-Anforderungen an Designs",
@@ -415,11 +415,11 @@ const grafikdesigner: CareerPath = {
     {
       id: "midlevel",
       name: "Midlevel",
-      experience: "2-4 Jahre",
+      experience: "3-5 Jahre",
       description:
         "Eigenverantwortliche Gestaltung komplexer Designprojekte.",
       requirements: [
-        "2-4 Jahre Berufserfahrung im Grafikdesign",
+        "3-5 Jahre Berufserfahrung im Grafikdesign",
         "Vertiefte Kenntnisse in UI/UX-Design, Branding und Social Media Design",
         "Erfahrung mit Designs für Performance Marketing",
         "Fähigkeit, komplexe Designprojekte eigenständig umzusetzen",
@@ -440,11 +440,11 @@ const grafikdesigner: CareerPath = {
     {
       id: "senior",
       name: "Senior",
-      experience: "4-6 Jahre",
+      experience: "5-7 Jahre",
       description:
         "Designexperte mit Projektleitung und strategischer Beratung.",
       requirements: [
-        "4-6 Jahre Berufserfahrung im Grafikdesign",
+        "5-7 Jahre Berufserfahrung im Grafikdesign",
         "Expertenwissen in UI/UX-Design, Branding und Social Media Design",
         "Erfahrung in der Leitung von Designprojekten",
         "Nachgewiesene Erfolge in der Entwicklung erfolgreicher Designs",
@@ -465,10 +465,10 @@ const grafikdesigner: CareerPath = {
     {
       id: "lead",
       name: "Lead",
-      experience: "6-8 Jahre",
+      experience: "7-9 Jahre",
       description: "Leitung des Designteams mit strategischer Verantwortung.",
       requirements: [
-        "6-8 Jahre Berufserfahrung im Grafikdesign",
+        "7-9 Jahre Berufserfahrung im Grafikdesign",
         "Umfassende Expertise in allen relevanten Designbereichen",
         "Starke Führungsqualitäten und Teammanagement-Erfahrung",
         "Tiefes Verständnis der Designanforderungen für D2C und FMCG Brands",
@@ -489,10 +489,10 @@ const grafikdesigner: CareerPath = {
     {
       id: "head",
       name: "Head / Design Director",
-      experience: "8+ Jahre",
+      experience: "9+ Jahre",
       description: "Gesamtverantwortung für die Designabteilung.",
       requirements: [
-        "8+ Jahre Berufserfahrung, davon mehrere in Führungspositionen",
+        "9+ Jahre Berufserfahrung, davon mehrere in Führungspositionen",
         "Strategische Vision und tiefes Verständnis der Designlandschaft",
         "Umfassende Erfahrung im Management von Designteams",
         "Nachgewiesene Erfolge in preisgekröntem Design",
@@ -548,10 +548,10 @@ const projektmanager: CareerPath = {
     {
       id: "junior",
       name: "Junior",
-      experience: "0-2 Jahre",
+      experience: "1-3 Jahre",
       description: "Eigenständige Koordination kleinerer Projekte.",
       requirements: [
-        "0-2 Jahre Berufserfahrung im Projektmanagement",
+        "1-3 Jahre Berufserfahrung im Projektmanagement",
         "Grundkenntnisse in PM-Methoden und -Tools",
         "Verständnis von Agenturprozessen und Kundenanforderungen",
         "Sicherer Umgang mit ClickUp",
@@ -570,11 +570,11 @@ const projektmanager: CareerPath = {
     {
       id: "midlevel",
       name: "Midlevel",
-      experience: "2-4 Jahre",
+      experience: "3-5 Jahre",
       description:
         "Eigenverantwortliche Leitung mittlerer Projekte mit Budgetkontrolle.",
       requirements: [
-        "2-4 Jahre Berufserfahrung im Projektmanagement",
+        "3-5 Jahre Berufserfahrung im Projektmanagement",
         "Vertiefte Kenntnisse in PM-Methoden und -Tools",
         "Erfahrung mit der Leitung mittlerer Projekte",
         "Erfahrung in Ressourcenplanung und Budgetkontrolle",
@@ -595,11 +595,11 @@ const projektmanager: CareerPath = {
     {
       id: "senior",
       name: "Senior",
-      experience: "4-6 Jahre",
+      experience: "5-7 Jahre",
       description:
         "Leitung komplexer Projekte mit strategischer Kundenberatung.",
       requirements: [
-        "4-6 Jahre Berufserfahrung im Projektmanagement",
+        "5-7 Jahre Berufserfahrung im Projektmanagement",
         "Expertenwissen in PM-Methoden und -Tools",
         "Erfahrung in der Leitung komplexer Projekte und Kampagnen",
         "Nachgewiesene Erfolge in der Prozessoptimierung",
@@ -620,10 +620,10 @@ const projektmanager: CareerPath = {
     {
       id: "lead",
       name: "Lead",
-      experience: "6-8 Jahre",
+      experience: "7-9 Jahre",
       description: "Leitung des PM-Teams mit übergreifender Prozessverantwortung.",
       requirements: [
-        "6-8 Jahre Berufserfahrung im Projektmanagement",
+        "7-9 Jahre Berufserfahrung im Projektmanagement",
         "Umfassende Expertise in PM-Methoden und -Tools",
         "Nachgewiesene Erfolge in der Leitung komplexer Projekte und Teams",
         "Starke Führungsqualitäten",
@@ -644,11 +644,11 @@ const projektmanager: CareerPath = {
     {
       id: "head",
       name: "Head / Director",
-      experience: "8+ Jahre",
+      experience: "9+ Jahre",
       description:
         "Gesamtverantwortung für die Projektmanagement-Abteilung.",
       requirements: [
-        "8+ Jahre Berufserfahrung, davon mehrere in Führungspositionen",
+        "9+ Jahre Berufserfahrung, davon mehrere in Führungspositionen",
         "Strategische Vision und tiefes Verständnis der Agenturlandschaft",
         "Umfassende Erfahrung im Management von Teams und Budgets",
         "Nachgewiesene Erfolge in der Geschäftsentwicklung",
@@ -704,11 +704,11 @@ const motionDesigner: CareerPath = {
     {
       id: "junior",
       name: "Junior",
-      experience: "0-2 Jahre",
+      experience: "1-3 Jahre",
       description:
         "Eigenständige Erstellung von 2D-Animationen für verschiedene Kanäle.",
       requirements: [
-        "0-2 Jahre Berufserfahrung im Motion Design",
+        "1-3 Jahre Berufserfahrung im Motion Design",
         "Gute Kenntnisse in Adobe After Effects",
         "Grundkenntnisse in 2D-Animation und After Effects 3D",
         "Verständnis für Performance-Marketing-Anforderungen",
@@ -727,11 +727,11 @@ const motionDesigner: CareerPath = {
     {
       id: "midlevel",
       name: "Midlevel",
-      experience: "2-4 Jahre",
+      experience: "3-5 Jahre",
       description:
         "Eigenverantwortliche Gestaltung komplexer Motion Design-Projekte.",
       requirements: [
-        "2-4 Jahre Berufserfahrung im Motion Design",
+        "3-5 Jahre Berufserfahrung im Motion Design",
         "Vertiefte Kenntnisse in 2D-Animation und After Effects 3D",
         "Erfahrung mit Animationen für Performance Marketing",
         "Fähigkeit, komplexe Motion Design-Projekte eigenständig umzusetzen",
@@ -752,11 +752,11 @@ const motionDesigner: CareerPath = {
     {
       id: "senior",
       name: "Senior",
-      experience: "4-6 Jahre",
+      experience: "5-7 Jahre",
       description:
         "Motion Design-Experte mit Projektleitung und strategischer Beratung.",
       requirements: [
-        "4-6 Jahre Berufserfahrung im Motion Design",
+        "5-7 Jahre Berufserfahrung im Motion Design",
         "Expertenwissen in 2D-Animation und fortgeschrittene After Effects 3D-Kenntnisse",
         "Erfahrung in der Leitung von Motion Design-Projekten",
         "Nachgewiesene Erfolge in der Entwicklung erfolgreicher Animationen",
@@ -777,10 +777,10 @@ const motionDesigner: CareerPath = {
     {
       id: "lead",
       name: "Lead",
-      experience: "6-8 Jahre",
+      experience: "7-9 Jahre",
       description: "Leitung des Motion Design-Teams.",
       requirements: [
-        "6-8 Jahre Berufserfahrung im Motion Design",
+        "7-9 Jahre Berufserfahrung im Motion Design",
         "Umfassende Expertise in 2D-Animation und After Effects 3D",
         "Starke Führungsqualitäten und Teammanagement-Erfahrung",
         "Tiefes Verständnis der Motion Design-Anforderungen für D2C und FMCG",
@@ -801,10 +801,10 @@ const motionDesigner: CareerPath = {
     {
       id: "head",
       name: "Head / Motion Design Director",
-      experience: "8+ Jahre",
+      experience: "9+ Jahre",
       description: "Gesamtverantwortung für die Motion Design-Abteilung.",
       requirements: [
-        "8+ Jahre Berufserfahrung, davon mehrere in Führungspositionen",
+        "9+ Jahre Berufserfahrung, davon mehrere in Führungspositionen",
         "Strategische Vision und tiefes Verständnis der Motion Design-Landschaft",
         "Umfassende Erfahrung im Management von Motion Design-Teams",
         "Nachgewiesene Erfolge in preisgekrönten Animationen",
@@ -860,11 +860,11 @@ const videoEditor: CareerPath = {
     {
       id: "junior",
       name: "Junior",
-      experience: "0-2 Jahre",
+      experience: "1-3 Jahre",
       description:
         "Eigenständige Videobearbeitung für verschiedene Kanäle.",
       requirements: [
-        "0-2 Jahre Berufserfahrung im Video-Editing",
+        "1-3 Jahre Berufserfahrung im Video-Editing",
         "Gute Kenntnisse in Adobe Premiere Pro und After Effects",
         "Grundkenntnisse in Anzeigen, Social Media Content und Erklärvideos",
         "Erste Erfahrungen mit Kurzform-Inhalten",
@@ -883,11 +883,11 @@ const videoEditor: CareerPath = {
     {
       id: "midlevel",
       name: "Midlevel",
-      experience: "2-4 Jahre",
+      experience: "3-5 Jahre",
       description:
         "Eigenverantwortliche Gestaltung komplexer Videoprojekte.",
       requirements: [
-        "2-4 Jahre Berufserfahrung im Video-Editing",
+        "3-5 Jahre Berufserfahrung im Video-Editing",
         "Vertiefte Kenntnisse in Anzeigen, Social Media Content und Erklärvideos",
         "Gutes Verständnis von Storytelling und Timing",
         "Fähigkeit, komplexe Video-Projekte eigenständig umzusetzen",
@@ -908,11 +908,11 @@ const videoEditor: CareerPath = {
     {
       id: "senior",
       name: "Senior",
-      experience: "4-6 Jahre",
+      experience: "5-7 Jahre",
       description:
         "Video-Experte mit Projektleitung und strategischer Beratung.",
       requirements: [
-        "4-6 Jahre Berufserfahrung im Video-Editing",
+        "5-7 Jahre Berufserfahrung im Video-Editing",
         "Expertenwissen in allen relevanten Videoformaten",
         "Erfahrung in der Leitung von Video-Projekten",
         "Nachgewiesene Erfolge in der Entwicklung erfolgreicher Videos",
@@ -933,10 +933,10 @@ const videoEditor: CareerPath = {
     {
       id: "lead",
       name: "Lead",
-      experience: "6-8 Jahre",
+      experience: "7-9 Jahre",
       description: "Leitung des Video-Teams.",
       requirements: [
-        "6-8 Jahre Berufserfahrung im Video-Editing",
+        "7-9 Jahre Berufserfahrung im Video-Editing",
         "Umfassende Expertise in allen relevanten Video-Formaten",
         "Starke Führungsqualitäten und Teammanagement-Erfahrung",
         "Tiefes Verständnis der Video-Anforderungen für D2C und FMCG",
@@ -957,10 +957,10 @@ const videoEditor: CareerPath = {
     {
       id: "head",
       name: "Head / Video Director",
-      experience: "8+ Jahre",
+      experience: "9+ Jahre",
       description: "Gesamtverantwortung für die Video-Abteilung.",
       requirements: [
-        "8+ Jahre Berufserfahrung, davon mehrere in Führungspositionen",
+        "9+ Jahre Berufserfahrung, davon mehrere in Führungspositionen",
         "Strategische Vision und tiefes Verständnis der Video-Landschaft",
         "Umfassende Erfahrung im Management von Video-Teams",
         "Nachgewiesene Erfolge in preisgekrönten Videos",
