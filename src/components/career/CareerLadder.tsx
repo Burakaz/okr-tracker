@@ -6,11 +6,9 @@ import {
   Check,
   Clock,
   CheckCircle2,
-  Circle,
-  Minus,
-  MessageSquare,
-  Save,
   X,
+  ArrowUpRight,
+  Save,
 } from "lucide-react";
 import { ProgressBar } from "@/components/ui/ProgressBar";
 import {
@@ -29,12 +27,6 @@ interface CareerLadderProps {
 
 type ReqStatus = "not_started" | "in_progress" | "completed";
 
-const NEXT_STATUS: Record<ReqStatus, ReqStatus> = {
-  not_started: "in_progress",
-  in_progress: "completed",
-  completed: "not_started",
-};
-
 export function CareerLadder({
   levels,
   currentLevelId,
@@ -42,7 +34,7 @@ export function CareerLadder({
   pathName,
 }: CareerLadderProps) {
   const [expandedId, setExpandedId] = useState<string | null>(null);
-  const [editingNote, setEditingNote] = useState<string | null>(null); // "levelId-reqIdx"
+  const [editingNote, setEditingNote] = useState<string | null>(null);
   const [noteText, setNoteText] = useState("");
 
   const { data: completionsData } = useRequirementCompletions();
@@ -59,7 +51,6 @@ export function CareerLadder({
     setEditingNote(null);
   };
 
-  // Get completion status for a specific requirement
   const getCompletion = useCallback(
     (levelId: string, reqIdx: number): RequirementCompletion | undefined => {
       return completions.find(
@@ -79,7 +70,6 @@ export function CareerLadder({
     [getCompletion]
   );
 
-  // Count fulfilled requirements for a level
   const countFulfilled = useCallback(
     (levelId: string, reqCount: number) => {
       let fulfilled = 0;
@@ -94,24 +84,48 @@ export function CareerLadder({
     [getReqStatus]
   );
 
-  // Toggle requirement status
-  const handleToggleStatus = (levelId: string, reqIdx: number) => {
-    const current = getReqStatus(levelId, reqIdx);
-    const next = NEXT_STATUS[current];
+  // Set status directly (not cycling)
+  const handleSetStatus = (
+    levelId: string,
+    reqIdx: number,
+    newStatus: ReqStatus
+  ) => {
     const existingNotes = getCompletion(levelId, reqIdx)?.notes ?? null;
+    const current = getReqStatus(levelId, reqIdx);
+    const isNewlyActivated =
+      current === "not_started" && newStatus !== "not_started";
+
+    // If switching TO not_started, clear notes
+    if (newStatus === "not_started") {
+      updateRequirement.mutate({
+        career_path_id: pathId,
+        level_id: levelId,
+        requirement_index: reqIdx,
+        status: newStatus,
+        notes: null,
+      });
+      setEditingNote(null);
+      return;
+    }
+
     updateRequirement.mutate({
       career_path_id: pathId,
       level_id: levelId,
       requirement_index: reqIdx,
-      status: next,
+      status: newStatus,
       notes: existingNotes,
     });
+
+    // Open note editor when first activating a requirement
+    if (isNewlyActivated) {
+      const key = `${levelId}-${reqIdx}`;
+      setEditingNote(key);
+      setNoteText("");
+    }
   };
 
-  // Save note
   const handleSaveNote = (levelId: string, reqIdx: number) => {
     const current = getReqStatus(levelId, reqIdx);
-    // If not started and adding a note, set to in_progress
     const status = current === "not_started" ? "in_progress" : current;
     updateRequirement.mutate({
       career_path_id: pathId,
@@ -207,11 +221,10 @@ export function CareerLadder({
                     </span>
                   )}
                 </div>
-                {/* Inline progress summary */}
                 {(fulfilled > 0 || inProgress > 0) && (
                   <p className="text-[11px] text-muted mt-0.5">
-                    {fulfilled}/{reqCount} erledigt
-                    {inProgress > 0 && ` · ${inProgress} in Arbeit`}
+                    {fulfilled}/{reqCount} erfüllt
+                    {inProgress > 0 && ` · ${inProgress} aufbauend`}
                   </p>
                 )}
               </div>
@@ -219,13 +232,7 @@ export function CareerLadder({
               {/* Progress + Chevron */}
               <div className="flex items-center gap-3 flex-shrink-0">
                 {(fulfilled > 0 || isCurrentLevel || isCompleted) && (
-                  <span
-                    className={`text-[12px] font-semibold ${
-                      levelProgress === 100
-                        ? "text-foreground"
-                        : "text-foreground"
-                    }`}
-                  >
+                  <span className="text-[12px] font-semibold text-foreground">
                     {levelProgress}%
                   </span>
                 )}
@@ -237,232 +244,304 @@ export function CareerLadder({
               </div>
             </button>
 
-            {/* Expanded Content */}
+            {/* ===== Expanded Content — White Card ===== */}
             {isExpanded && (
-              <div className="ml-10 mr-2 mt-1 mb-2 space-y-4">
-                {/* Progress Bar */}
-                <div className="px-1">
-                  <div className="flex items-center justify-between mb-1">
-                    <span className="text-[10px] text-muted">
-                      {fulfilled} von {reqCount} Anforderungen
-                    </span>
-                    <span className="text-[10px] font-semibold text-foreground">
-                      {levelProgress}%
-                    </span>
-                  </div>
-                  <ProgressBar value={levelProgress} size="sm" />
-                </div>
-
-                {/* OKR Erfolge */}
-                <div className="p-3 bg-cream-50 rounded-lg border border-cream-200/60">
-                  <p className="text-[10px] font-semibold text-muted uppercase tracking-wider mb-2">
-                    OKR-Erfolge
-                  </p>
-                  <div className="flex items-center gap-1.5">
-                    {Array.from({ length: 4 }).map((_, i) => (
-                      <div
-                        key={i}
-                        className={`flex-1 h-6 rounded flex items-center justify-center text-[10px] font-medium ${
-                          isCompleted || (isCurrentLevel && i < 2)
-                            ? "bg-foreground text-white"
-                            : "bg-cream-200 text-muted"
-                        }`}
-                      >
-                        {isCompleted || (isCurrentLevel && i < 2) ? (
-                          <CheckCircle2 className="h-3.5 w-3.5" />
-                        ) : (
-                          <Clock className="h-3.5 w-3.5" />
-                        )}
+              <div className="mt-2 mb-3 ml-5 mr-1">
+                <div className="bg-white rounded-xl border border-cream-200/80 shadow-sm overflow-hidden">
+                  {/* Top bar — progress summary */}
+                  <div className="px-5 pt-4 pb-3 border-b border-cream-100">
+                    <div className="flex items-center justify-between mb-2">
+                      <h3 className="text-[12px] font-semibold text-foreground">
+                        Fortschritt — {level.name}
+                      </h3>
+                      <span className="text-[12px] font-semibold text-foreground">
+                        {fulfilled}/{reqCount} erfüllt
+                      </span>
+                    </div>
+                    <ProgressBar value={levelProgress} size="sm" />
+                    <div className="flex items-center gap-4 mt-2.5">
+                      <div className="flex items-center gap-1.5">
+                        <div className="w-2.5 h-2.5 rounded-full bg-foreground" />
+                        <span className="text-[10px] text-muted">
+                          {fulfilled} Erfüllt
+                        </span>
                       </div>
-                    ))}
+                      <div className="flex items-center gap-1.5">
+                        <div className="w-2.5 h-2.5 rounded-full bg-amber-400" />
+                        <span className="text-[10px] text-muted">
+                          {inProgress} Aufbauend
+                        </span>
+                      </div>
+                      <div className="flex items-center gap-1.5">
+                        <div className="w-2.5 h-2.5 rounded-full bg-cream-200" />
+                        <span className="text-[10px] text-muted">
+                          {reqCount - fulfilled - inProgress} Offen
+                        </span>
+                      </div>
+                    </div>
                   </div>
-                  <p className="text-[10px] text-muted mt-1.5">
-                    {isCompleted ? 4 : isCurrentLevel ? 2 : 0} von 4 OKRs mit
-                    Score ≥ 0.7
-                  </p>
-                </div>
 
-                {/* Anforderungen — Interactive */}
-                <div>
-                  <p className="text-[10px] font-semibold text-muted uppercase tracking-wider mb-2 px-1">
-                    Anforderungen
-                  </p>
-                  <div className="space-y-0.5">
-                    {level.requirements.map((req, idx) => {
-                      const status = getReqStatus(level.id, idx);
-                      const completion = getCompletion(level.id, idx);
-                      const noteKey = `${level.id}-${idx}`;
-                      const isEditingThis = editingNote === noteKey;
+                  {/* OKR Qualification */}
+                  <div className="px-5 py-3 border-b border-cream-100 bg-cream-50/40">
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-center gap-2">
+                        <Clock className="h-3.5 w-3.5 text-muted" />
+                        <span className="text-[11px] text-muted">
+                          OKR-Qualifikation
+                        </span>
+                      </div>
+                      <span className="text-[11px] font-medium text-foreground">
+                        {isCompleted ? 4 : isCurrentLevel ? 2 : 0}/4 mit Score
+                        ≥ 0.7
+                      </span>
+                    </div>
+                    <div className="flex items-center gap-1 mt-2">
+                      {Array.from({ length: 4 }).map((_, i) => (
+                        <div
+                          key={i}
+                          className={`flex-1 h-1.5 rounded-full ${
+                            isCompleted || (isCurrentLevel && i < 2)
+                              ? "bg-foreground"
+                              : "bg-cream-200"
+                          }`}
+                        />
+                      ))}
+                    </div>
+                  </div>
 
-                      return (
-                        <div key={idx} className="group">
-                          <div className="flex items-start gap-2.5 px-2 py-2 rounded-md hover:bg-cream-50/80 transition-colors">
-                            {/* Clickable status toggle */}
-                            <button
-                              onClick={(e) => {
-                                e.stopPropagation();
-                                handleToggleStatus(level.id, idx);
-                              }}
-                              className="flex-shrink-0 mt-0.5 focus:outline-none"
-                              title={
-                                status === "not_started"
-                                  ? "Als in Arbeit markieren"
-                                  : status === "in_progress"
-                                    ? "Als erledigt markieren"
-                                    : "Zurücksetzen"
-                              }
-                            >
-                              <div
-                                className={`w-5 h-5 rounded-full flex items-center justify-center transition-colors ${
-                                  status === "completed"
-                                    ? "bg-accent-green text-white hover:bg-accent-green/80"
-                                    : status === "in_progress"
-                                      ? "bg-amber-400 text-white hover:bg-amber-500"
-                                      : "bg-cream-200 text-muted hover:bg-cream-300"
-                                }`}
-                              >
-                                {status === "completed" ? (
-                                  <Check className="h-3 w-3" />
-                                ) : status === "in_progress" ? (
-                                  <Minus className="h-3 w-3" />
-                                ) : (
-                                  <Circle className="h-2.5 w-2.5" />
-                                )}
-                              </div>
-                            </button>
+                  {/* ===== Requirements — Interactive ===== */}
+                  <div className="px-5 py-4">
+                    <p className="text-[10px] font-semibold text-muted uppercase tracking-wider mb-3">
+                      Anforderungen
+                    </p>
+                    <div className="space-y-3">
+                      {level.requirements.map((req, idx) => {
+                        const status = getReqStatus(level.id, idx);
+                        const completion = getCompletion(level.id, idx);
+                        const noteKey = `${level.id}-${idx}`;
+                        const isEditingThis = editingNote === noteKey;
 
-                            {/* Requirement text + note button */}
-                            <div className="flex-1 min-w-0">
-                              <span
+                        return (
+                          <div
+                            key={idx}
+                            className={`rounded-lg border transition-colors ${
+                              status === "completed"
+                                ? "border-cream-200 bg-cream-50/50"
+                                : status === "in_progress"
+                                  ? "border-amber-200/60 bg-amber-50/20"
+                                  : "border-cream-200/60 bg-white"
+                            }`}
+                          >
+                            {/* Requirement text */}
+                            <div className="px-4 pt-3 pb-2">
+                              <p
                                 className={`text-[12px] leading-relaxed ${
                                   status === "completed"
-                                    ? "text-muted line-through"
+                                    ? "text-muted"
                                     : "text-foreground"
                                 }`}
                               >
                                 {req}
-                              </span>
-
-                              {/* Existing note display */}
-                              {completion?.notes && !isEditingThis && (
-                                <div
-                                  className="mt-1 px-2 py-1.5 bg-cream-100 rounded text-[11px] text-muted leading-relaxed cursor-pointer hover:bg-cream-200 transition-colors"
-                                  onClick={(e) => {
-                                    e.stopPropagation();
-                                    startEditNote(level.id, idx);
-                                  }}
-                                >
-                                  <MessageSquare className="h-3 w-3 inline mr-1 -mt-0.5" />
-                                  {completion.notes}
-                                </div>
-                              )}
+                              </p>
                             </div>
 
-                            {/* Note action button */}
-                            {!isEditingThis && (
-                              <button
-                                onClick={(e) => {
-                                  e.stopPropagation();
-                                  startEditNote(level.id, idx);
-                                }}
-                                className="flex-shrink-0 mt-0.5 opacity-0 group-hover:opacity-100 transition-opacity"
-                                title="Notiz hinzufügen"
-                              >
-                                <MessageSquare className="h-3.5 w-3.5 text-muted hover:text-foreground" />
-                              </button>
-                            )}
-                          </div>
-
-                          {/* Note editor */}
-                          {isEditingThis && (
-                            <div className="ml-8 mr-2 mb-1 mt-0.5">
-                              <textarea
-                                value={noteText}
-                                onChange={(e) => setNoteText(e.target.value)}
-                                placeholder="Notiz hinzufügen..."
-                                className="w-full px-3 py-2 text-[12px] bg-white border border-cream-300 rounded-lg focus:outline-none focus:ring-1 focus:ring-cream-400 resize-none"
-                                rows={2}
-                                autoFocus
-                                onClick={(e) => e.stopPropagation()}
-                              />
-                              <div className="flex items-center gap-1.5 mt-1.5">
+                            {/* Status selector — 3 buttons */}
+                            <div className="px-4 pb-3">
+                              <div className="flex items-center gap-1.5">
+                                {/* Nicht erfüllt */}
                                 <button
                                   onClick={(e) => {
                                     e.stopPropagation();
-                                    handleSaveNote(level.id, idx);
+                                    handleSetStatus(
+                                      level.id,
+                                      idx,
+                                      "not_started"
+                                    );
                                   }}
-                                  className="inline-flex items-center gap-1 px-2.5 py-1 bg-foreground text-white rounded text-[11px] font-medium hover:bg-foreground/80 transition-colors"
-                                >
-                                  <Save className="h-3 w-3" />
-                                  Speichern
-                                </button>
-                                <button
-                                  onClick={(e) => {
-                                    e.stopPropagation();
-                                    setEditingNote(null);
-                                    setNoteText("");
-                                  }}
-                                  className="inline-flex items-center gap-1 px-2.5 py-1 bg-cream-200 text-muted rounded text-[11px] font-medium hover:bg-cream-300 transition-colors"
+                                  className={`flex-1 flex items-center justify-center gap-1.5 px-2.5 py-1.5 rounded-md text-[11px] font-medium transition-all ${
+                                    status === "not_started"
+                                      ? "bg-cream-200 text-foreground ring-1 ring-cream-300"
+                                      : "bg-cream-50 text-muted hover:bg-cream-100"
+                                  }`}
                                 >
                                   <X className="h-3 w-3" />
-                                  Abbrechen
+                                  <span className="hidden sm:inline">
+                                    Nicht erfüllt
+                                  </span>
+                                  <span className="sm:hidden">Offen</span>
+                                </button>
+
+                                {/* Aufbauend */}
+                                <button
+                                  onClick={(e) => {
+                                    e.stopPropagation();
+                                    handleSetStatus(
+                                      level.id,
+                                      idx,
+                                      "in_progress"
+                                    );
+                                  }}
+                                  className={`flex-1 flex items-center justify-center gap-1.5 px-2.5 py-1.5 rounded-md text-[11px] font-medium transition-all ${
+                                    status === "in_progress"
+                                      ? "bg-amber-100 text-amber-800 ring-1 ring-amber-300"
+                                      : "bg-cream-50 text-muted hover:bg-cream-100"
+                                  }`}
+                                >
+                                  <ArrowUpRight className="h-3 w-3" />
+                                  Aufbauend
+                                </button>
+
+                                {/* Erfüllt */}
+                                <button
+                                  onClick={(e) => {
+                                    e.stopPropagation();
+                                    handleSetStatus(
+                                      level.id,
+                                      idx,
+                                      "completed"
+                                    );
+                                  }}
+                                  className={`flex-1 flex items-center justify-center gap-1.5 px-2.5 py-1.5 rounded-md text-[11px] font-medium transition-all ${
+                                    status === "completed"
+                                      ? "bg-emerald-100 text-emerald-800 ring-1 ring-emerald-300"
+                                      : "bg-cream-50 text-muted hover:bg-cream-100"
+                                  }`}
+                                >
+                                  <CheckCircle2 className="h-3 w-3" />
+                                  Erfüllt
                                 </button>
                               </div>
                             </div>
-                          )}
-                        </div>
-                      );
-                    })}
-                  </div>
-                </div>
 
-                {/* Skills / KI-Integration */}
-                {level.aiIntegration.length > 0 && (
-                  <div>
-                    <p className="text-[10px] font-semibold text-muted uppercase tracking-wider mb-2 px-1">
-                      Skills
+                            {/* Justification / Notes — visible when not "not_started" */}
+                            {status !== "not_started" && (
+                              <div className="px-4 pb-3 border-t border-cream-100/80">
+                                {isEditingThis ? (
+                                  <div className="pt-2.5">
+                                    <label className="text-[10px] font-semibold text-muted uppercase tracking-wider">
+                                      Begründung / Nachweis
+                                    </label>
+                                    <textarea
+                                      value={noteText}
+                                      onChange={(e) =>
+                                        setNoteText(e.target.value)
+                                      }
+                                      placeholder="Wie belegst du diese Kompetenz? (z.B. Projekte, Zertifikate, Feedback...)"
+                                      className="w-full mt-1.5 px-3 py-2 text-[12px] bg-white border border-cream-200 rounded-lg focus:outline-none focus:ring-1 focus:ring-cream-400 resize-none leading-relaxed"
+                                      rows={2}
+                                      autoFocus
+                                      onClick={(e) => e.stopPropagation()}
+                                    />
+                                    <div className="flex items-center gap-1.5 mt-2">
+                                      <button
+                                        onClick={(e) => {
+                                          e.stopPropagation();
+                                          handleSaveNote(level.id, idx);
+                                        }}
+                                        className="inline-flex items-center gap-1 px-3 py-1.5 bg-foreground text-white rounded-md text-[11px] font-medium hover:bg-foreground/80 transition-colors"
+                                      >
+                                        <Save className="h-3 w-3" />
+                                        Speichern
+                                      </button>
+                                      <button
+                                        onClick={(e) => {
+                                          e.stopPropagation();
+                                          setEditingNote(null);
+                                          setNoteText("");
+                                        }}
+                                        className="inline-flex items-center gap-1 px-3 py-1.5 bg-cream-100 text-muted rounded-md text-[11px] font-medium hover:bg-cream-200 transition-colors"
+                                      >
+                                        Abbrechen
+                                      </button>
+                                    </div>
+                                  </div>
+                                ) : (
+                                  <div
+                                    className="pt-2.5 cursor-pointer group/note"
+                                    onClick={(e) => {
+                                      e.stopPropagation();
+                                      startEditNote(level.id, idx);
+                                    }}
+                                  >
+                                    {completion?.notes ? (
+                                      <div className="flex items-start gap-2">
+                                        <div className="flex-1 min-w-0">
+                                          <p className="text-[10px] font-semibold text-muted uppercase tracking-wider mb-1">
+                                            Begründung
+                                          </p>
+                                          <p className="text-[12px] text-foreground/70 leading-relaxed group-hover/note:text-foreground transition-colors">
+                                            {completion.notes}
+                                          </p>
+                                        </div>
+                                        <span className="text-[10px] text-muted opacity-0 group-hover/note:opacity-100 transition-opacity mt-3 flex-shrink-0">
+                                          Bearbeiten
+                                        </span>
+                                      </div>
+                                    ) : (
+                                      <p className="text-[11px] text-muted/60 italic group-hover/note:text-muted transition-colors">
+                                        + Begründung hinzufügen — Wie belegst du
+                                        diese Kompetenz?
+                                      </p>
+                                    )}
+                                  </div>
+                                )}
+                              </div>
+                            )}
+                          </div>
+                        );
+                      })}
+                    </div>
+                  </div>
+
+                  {/* Skills */}
+                  {(level.aiIntegration.length > 0 ||
+                    (level.skills && level.skills.length > 0)) && (
+                    <div className="px-5 py-3 border-t border-cream-100">
+                      <p className="text-[10px] font-semibold text-muted uppercase tracking-wider mb-2">
+                        Skills & Kompetenzen
+                      </p>
+                      <div className="flex flex-wrap gap-1.5">
+                        {level.aiIntegration.map((item, idx) => (
+                          <span
+                            key={idx}
+                            className="inline-flex px-2.5 py-1 rounded-full bg-cream-100 text-[11px] text-foreground/70 font-medium"
+                          >
+                            {item.length > 55
+                              ? item.substring(0, 55) + "…"
+                              : item}
+                          </span>
+                        ))}
+                        {level.skills?.map((skill, idx) => (
+                          <span
+                            key={`s-${idx}`}
+                            className="inline-flex px-2.5 py-1 rounded-full bg-cream-100 text-[11px] text-foreground/70 font-medium"
+                          >
+                            {skill}
+                          </span>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+
+                  {/* Verantwortungsbereiche */}
+                  <div className="px-5 py-3 border-t border-cream-100">
+                    <p className="text-[10px] font-semibold text-muted uppercase tracking-wider mb-2">
+                      Verantwortungsbereiche
                     </p>
-                    <div className="flex flex-wrap gap-1.5 px-1">
-                      {level.aiIntegration.map((item, idx) => (
-                        <span
+                    <div className="space-y-1">
+                      {level.responsibilities.map((resp, idx) => (
+                        <div
                           key={idx}
-                          className="inline-flex px-2.5 py-1 rounded-full bg-cream-200/80 text-[11px] text-foreground font-medium"
+                          className="flex items-start gap-2 text-[12px] text-foreground/70 leading-relaxed"
                         >
-                          {item.length > 55
-                            ? item.substring(0, 55) + "…"
-                            : item}
-                        </span>
-                      ))}
-                      {level.skills?.map((skill, idx) => (
-                        <span
-                          key={`s-${idx}`}
-                          className="inline-flex px-2.5 py-1 rounded-full bg-purple-100 text-[11px] text-purple-700 font-medium"
-                        >
-                          {skill}
-                        </span>
+                          <span className="text-cream-400 mt-1 flex-shrink-0 text-[8px]">
+                            ●
+                          </span>
+                          {resp}
+                        </div>
                       ))}
                     </div>
                   </div>
-                )}
-
-                {/* Verantwortungsbereiche */}
-                <div>
-                  <p className="text-[10px] font-semibold text-muted uppercase tracking-wider mb-2 px-1">
-                    Verantwortungsbereiche
-                  </p>
-                  <ul className="space-y-1 px-1">
-                    {level.responsibilities.map((resp, idx) => (
-                      <li
-                        key={idx}
-                        className="flex items-start gap-2 text-[12px] text-foreground leading-relaxed"
-                      >
-                        <span className="text-muted mt-1.5 flex-shrink-0">
-                          •
-                        </span>
-                        {resp}
-                      </li>
-                    ))}
-                  </ul>
                 </div>
               </div>
             )}
