@@ -40,11 +40,16 @@ export default function CareerPage() {
   );
   const nextLevel = getNextLevel(selectedPath.id, currentLevelId);
 
-  // Progress calculations — use real completion data
-  const nextLevelReqCount = nextLevel?.requirements.length ?? 0;
+  // Progress calculations — count ALL items (requirements + skills + responsibilities)
+  const nextLevelTotalItems = nextLevel
+    ? nextLevel.requirements.length +
+      nextLevel.aiIntegration.length +
+      (nextLevel.skills?.length ?? 0) +
+      nextLevel.responsibilities.length
+    : 0;
   const qualifyingOkrs = progress?.qualifying_okr_count ?? 1;
   const requiredOkrs = 4;
-  const fulfilledReqs = nextLevel
+  const fulfilledItems = nextLevel
     ? completions.filter(
         (c) =>
           c.career_path_id === selectedPath.id &&
@@ -52,10 +57,10 @@ export default function CareerPage() {
           c.status === "completed"
       ).length
     : 0;
-  const openReqs = nextLevelReqCount - fulfilledReqs;
+  const openItems = nextLevelTotalItems - fulfilledItems;
   const progressPercent =
-    nextLevelReqCount > 0
-      ? Math.round((fulfilledReqs / nextLevelReqCount) * 100)
+    nextLevelTotalItems > 0
+      ? Math.round((fulfilledItems / nextLevelTotalItems) * 100)
       : 0;
 
   const isLoading = isLoadingUser || isLoadingCareer;
@@ -138,8 +143,11 @@ export default function CareerPage() {
                   </p>
                   {nextLevel && (
                     <p className="text-[11px] text-muted">
-                      {nextLevel.requirements.length} Anforderungen ·{" "}
-                      {nextLevel.experience}
+                      {nextLevel.requirements.length +
+                        nextLevel.aiIntegration.length +
+                        (nextLevel.skills?.length ?? 0) +
+                        nextLevel.responsibilities.length}{" "}
+                      Kriterien · {nextLevel.experience}
                     </p>
                   )}
                 </div>
@@ -166,8 +174,8 @@ export default function CareerPage() {
             <ProgressBar value={progressPercent} size="md" />
 
             <p className="text-[12px] text-muted mt-3">
-              {fulfilledReqs} von {nextLevelReqCount} Anforderungen erfüllt ·{" "}
-              {openReqs} noch offen
+              {fulfilledItems} von {nextLevelTotalItems} Kriterien erfüllt ·{" "}
+              {openItems} noch offen
             </p>
 
             {/* OKR qualification */}

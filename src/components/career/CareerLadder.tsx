@@ -5,7 +5,6 @@ import {
   ChevronDown,
   Check,
   Clock,
-  CheckCircle2,
   X,
   ArrowUpRight,
   Save,
@@ -26,6 +25,81 @@ interface CareerLadderProps {
 }
 
 type ReqStatus = "not_started" | "in_progress" | "completed";
+
+// Index offsets to separate item types in the same DB table
+const SKILL_OFFSET = 1000;
+const RESP_OFFSET = 2000;
+
+/** Combine aiIntegration + skills into one list */
+function getAllSkills(level: CareerPathLevel): string[] {
+  const items = [...level.aiIntegration];
+  if (level.skills) items.push(...level.skills);
+  return items;
+}
+
+/* ─── Compact 3-circle status selector ──────────────────────────────── */
+
+function StatusCircles({
+  status,
+  onSet,
+}: {
+  status: ReqStatus;
+  onSet: (s: ReqStatus) => void;
+}) {
+  return (
+    <div className="flex items-center gap-[3px] flex-shrink-0">
+      {/* Not started — X */}
+      <button
+        onClick={(e) => {
+          e.stopPropagation();
+          onSet("not_started");
+        }}
+        className={`w-[18px] h-[18px] rounded-full flex items-center justify-center transition-all ${
+          status === "not_started"
+            ? "bg-cream-300 text-foreground/50 ring-1 ring-cream-400/40"
+            : "bg-cream-100 text-cream-300 hover:bg-cream-200 hover:text-cream-400"
+        }`}
+        title="Nicht erfüllt"
+      >
+        <X className="h-2.5 w-2.5" strokeWidth={2.5} />
+      </button>
+
+      {/* In progress — Arrow */}
+      <button
+        onClick={(e) => {
+          e.stopPropagation();
+          onSet("in_progress");
+        }}
+        className={`w-[18px] h-[18px] rounded-full flex items-center justify-center transition-all ${
+          status === "in_progress"
+            ? "bg-amber-400 text-white ring-1 ring-amber-500/30"
+            : "bg-cream-100 text-cream-300 hover:bg-amber-100 hover:text-amber-500"
+        }`}
+        title="Aufbauend"
+      >
+        <ArrowUpRight className="h-2.5 w-2.5" strokeWidth={2.5} />
+      </button>
+
+      {/* Completed — Check */}
+      <button
+        onClick={(e) => {
+          e.stopPropagation();
+          onSet("completed");
+        }}
+        className={`w-[18px] h-[18px] rounded-full flex items-center justify-center transition-all ${
+          status === "completed"
+            ? "bg-emerald-500 text-white ring-1 ring-emerald-600/30"
+            : "bg-cream-100 text-cream-300 hover:bg-emerald-100 hover:text-emerald-500"
+        }`}
+        title="Erfüllt"
+      >
+        <Check className="h-2.5 w-2.5" strokeWidth={2.5} />
+      </button>
+    </div>
+  );
+}
+
+/* ═══════════════════════════════════════════════════════════════════════ */
 
 export function CareerLadder({
   levels,
@@ -63,39 +137,62 @@ export function CareerLadder({
     [completions, pathId]
   );
 
-  const getReqStatus = useCallback(
+  const getStatus = useCallback(
     (levelId: string, reqIdx: number): ReqStatus => {
       return getCompletion(levelId, reqIdx)?.status ?? "not_started";
     },
     [getCompletion]
   );
 
-  const countFulfilled = useCallback(
-    (levelId: string, reqCount: number) => {
+  /** Count fulfilled / inProgress across ALL item types for a level */
+  const countAll = useCallback(
+    (level: CareerPathLevel) => {
       let fulfilled = 0;
       let inProgress = 0;
-      for (let i = 0; i < reqCount; i++) {
-        const status = getReqStatus(levelId, i);
-        if (status === "completed") fulfilled++;
-        if (status === "in_progress") inProgress++;
+      let total = 0;
+
+      // Requirements (indices 0..N-1)
+      for (let i = 0; i < level.requirements.length; i++) {
+        total++;
+        const s = getStatus(level.id, i);
+        if (s === "completed") fulfilled++;
+        else if (s === "in_progress") inProgress++;
       }
-      return { fulfilled, inProgress };
+
+      // Skills (indices SKILL_OFFSET+0..)
+      const skills = getAllSkills(level);
+      for (let i = 0; i < skills.length; i++) {
+        total++;
+        const s = getStatus(level.id, SKILL_OFFSET + i);
+        if (s === "completed") fulfilled++;
+        else if (s === "in_progress") inProgress++;
+      }
+
+      // Responsibilities (indices RESP_OFFSET+0..)
+      for (let i = 0; i < level.responsibilities.length; i++) {
+        total++;
+        const s = getStatus(level.id, RESP_OFFSET + i);
+        if (s === "completed") fulfilled++;
+        else if (s === "in_progress") inProgress++;
+      }
+
+      return { fulfilled, inProgress, total };
     },
-    [getReqStatus]
+    [getStatus]
   );
 
-  // Set status directly (not cycling)
+  /* ─── Status / Note handlers ──────────────────────────────────────── */
+
   const handleSetStatus = (
     levelId: string,
     reqIdx: number,
     newStatus: ReqStatus
   ) => {
     const existingNotes = getCompletion(levelId, reqIdx)?.notes ?? null;
-    const current = getReqStatus(levelId, reqIdx);
+    const current = getStatus(levelId, reqIdx);
     const isNewlyActivated =
       current === "not_started" && newStatus !== "not_started";
 
-    // If switching TO not_started, clear notes
     if (newStatus === "not_started") {
       updateRequirement.mutate({
         career_path_id: pathId,
@@ -116,16 +213,14 @@ export function CareerLadder({
       notes: existingNotes,
     });
 
-    // Open note editor when first activating a requirement
     if (isNewlyActivated) {
-      const key = `${levelId}-${reqIdx}`;
-      setEditingNote(key);
+      setEditingNote(`${levelId}-${reqIdx}`);
       setNoteText("");
     }
   };
 
   const handleSaveNote = (levelId: string, reqIdx: number) => {
-    const current = getReqStatus(levelId, reqIdx);
+    const current = getStatus(levelId, reqIdx);
     const status = current === "not_started" ? "in_progress" : current;
     updateRequirement.mutate({
       career_path_id: pathId,
@@ -139,11 +234,116 @@ export function CareerLadder({
   };
 
   const startEditNote = (levelId: string, reqIdx: number) => {
-    const key = `${levelId}-${reqIdx}`;
     const existing = getCompletion(levelId, reqIdx)?.notes ?? "";
-    setEditingNote(key);
+    setEditingNote(`${levelId}-${reqIdx}`);
     setNoteText(existing);
   };
+
+  /* ─── Reusable interactive item row ───────────────────────────────── */
+
+  const renderItemRow = (
+    levelId: string,
+    reqIdx: number,
+    text: string,
+    isLast: boolean
+  ) => {
+    const status = getStatus(levelId, reqIdx);
+    const completion = getCompletion(levelId, reqIdx);
+    const noteKey = `${levelId}-${reqIdx}`;
+    const isEditingThis = editingNote === noteKey;
+
+    return (
+      <div
+        key={reqIdx}
+        className={!isLast ? "border-b border-cream-100/60" : ""}
+      >
+        <div className="flex items-start gap-2.5 py-[7px] px-1">
+          <div className="mt-[2px]">
+            <StatusCircles
+              status={status}
+              onSet={(s) => handleSetStatus(levelId, reqIdx, s)}
+            />
+          </div>
+          <div className="flex-1 min-w-0">
+            <p
+              className={`text-[12px] leading-relaxed ${
+                status === "completed"
+                  ? "text-muted line-through decoration-cream-300"
+                  : status === "in_progress"
+                    ? "text-foreground"
+                    : "text-foreground/70"
+              }`}
+            >
+              {text}
+            </p>
+
+            {/* Note / Justification */}
+            {status !== "not_started" && (
+              <div className="mt-1">
+                {isEditingThis ? (
+                  <div>
+                    <textarea
+                      value={noteText}
+                      onChange={(e) => setNoteText(e.target.value)}
+                      placeholder="Wie belegst du diese Kompetenz?"
+                      className="w-full px-2.5 py-1.5 text-[11px] bg-cream-50 border border-cream-200 rounded-md focus:outline-none focus:ring-1 focus:ring-cream-400 resize-none leading-relaxed"
+                      rows={2}
+                      autoFocus
+                      onClick={(e) => e.stopPropagation()}
+                    />
+                    <div className="flex items-center gap-1.5 mt-1.5">
+                      <button
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          handleSaveNote(levelId, reqIdx);
+                        }}
+                        className="inline-flex items-center gap-1 px-2.5 py-1 bg-foreground text-white rounded-md text-[10px] font-medium hover:bg-foreground/80 transition-colors"
+                      >
+                        <Save className="h-2.5 w-2.5" />
+                        Speichern
+                      </button>
+                      <button
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          setEditingNote(null);
+                          setNoteText("");
+                        }}
+                        className="inline-flex items-center gap-1 px-2.5 py-1 bg-cream-100 text-muted rounded-md text-[10px] font-medium hover:bg-cream-200 transition-colors"
+                      >
+                        Abbrechen
+                      </button>
+                    </div>
+                  </div>
+                ) : completion?.notes ? (
+                  <p
+                    className="text-[11px] text-muted leading-relaxed cursor-pointer hover:text-foreground/70 transition-colors"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      startEditNote(levelId, reqIdx);
+                    }}
+                  >
+                    {completion.notes}
+                  </p>
+                ) : (
+                  <p
+                    className="text-[10px] text-muted/40 italic cursor-pointer hover:text-muted/60 transition-colors"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      startEditNote(levelId, reqIdx);
+                    }}
+                  >
+                    + Begründung hinzufügen
+                  </p>
+                )}
+              </div>
+            )}
+          </div>
+        </div>
+      </div>
+    );
+  };
+
+  /* ═══════════════════════════════════════════════════════════════════ */
 
   return (
     <div className="space-y-1.5">
@@ -154,14 +354,15 @@ export function CareerLadder({
         const isFuture = index > currentIndex;
         const isExpanded = expandedId === level.id;
 
-        const reqCount = level.requirements.length;
-        const { fulfilled, inProgress } = countFulfilled(level.id, reqCount);
+        const { fulfilled, inProgress, total } = countAll(level);
         const levelProgress =
-          reqCount > 0 ? Math.round((fulfilled / reqCount) * 100) : 0;
+          total > 0 ? Math.round((fulfilled / total) * 100) : 0;
+
+        const skills = getAllSkills(level);
 
         return (
           <div key={level.id}>
-            {/* Level Row */}
+            {/* ─── Level Row (collapsed) ─── */}
             <button
               onClick={() => toggleExpand(level.id)}
               className={`w-full text-left px-4 py-3 rounded-lg transition-all flex items-center gap-3 ${
@@ -175,14 +376,14 @@ export function CareerLadder({
               {/* Number / Check circle */}
               <div
                 className={`w-7 h-7 rounded-full flex items-center justify-center flex-shrink-0 text-[11px] font-bold ${
-                  isCompleted || (fulfilled === reqCount && reqCount > 0)
+                  isCompleted || (fulfilled === total && total > 0)
                     ? "bg-foreground text-white"
                     : isCurrentLevel
                       ? "bg-foreground text-white"
                       : "bg-cream-200 text-muted"
                 }`}
               >
-                {isCompleted || (fulfilled === reqCount && reqCount > 0) ? (
+                {isCompleted || (fulfilled === total && total > 0) ? (
                   <Check className="h-3.5 w-3.5" />
                 ) : (
                   index + 1
@@ -223,7 +424,7 @@ export function CareerLadder({
                 </div>
                 {(fulfilled > 0 || inProgress > 0) && (
                   <p className="text-[11px] text-muted mt-0.5">
-                    {fulfilled}/{reqCount} erfüllt
+                    {fulfilled}/{total} erfüllt
                     {inProgress > 0 && ` · ${inProgress} aufbauend`}
                   </p>
                 )}
@@ -244,18 +445,18 @@ export function CareerLadder({
               </div>
             </button>
 
-            {/* ===== Expanded Content — White Card ===== */}
+            {/* ═══ Expanded Content — White Card ═══ */}
             {isExpanded && (
               <div className="mt-2 mb-3 ml-5 mr-1">
                 <div className="bg-white rounded-xl border border-cream-200/80 shadow-sm overflow-hidden">
-                  {/* Top bar — progress summary */}
+                  {/* ─── Progress summary ─── */}
                   <div className="px-5 pt-4 pb-3 border-b border-cream-100">
                     <div className="flex items-center justify-between mb-2">
                       <h3 className="text-[12px] font-semibold text-foreground">
                         Fortschritt — {level.name}
                       </h3>
                       <span className="text-[12px] font-semibold text-foreground">
-                        {fulfilled}/{reqCount} erfüllt
+                        {fulfilled}/{total} erfüllt
                       </span>
                     </div>
                     <ProgressBar value={levelProgress} size="sm" />
@@ -275,14 +476,14 @@ export function CareerLadder({
                       <div className="flex items-center gap-1.5">
                         <div className="w-2.5 h-2.5 rounded-full bg-cream-200" />
                         <span className="text-[10px] text-muted">
-                          {reqCount - fulfilled - inProgress} Offen
+                          {total - fulfilled - inProgress} Offen
                         </span>
                       </div>
                     </div>
                   </div>
 
-                  {/* OKR Qualification */}
-                  <div className="px-5 py-3 border-b border-cream-100 bg-cream-50/40">
+                  {/* ─── OKR Qualification ─── */}
+                  <div className="px-5 py-2.5 border-b border-cream-100 bg-cream-50/40">
                     <div className="flex items-center justify-between">
                       <div className="flex items-center gap-2">
                         <Clock className="h-3.5 w-3.5 text-muted" />
@@ -295,7 +496,7 @@ export function CareerLadder({
                         ≥ 0.7
                       </span>
                     </div>
-                    <div className="flex items-center gap-1 mt-2">
+                    <div className="flex items-center gap-1 mt-1.5">
                       {Array.from({ length: 4 }).map((_, i) => (
                         <div
                           key={i}
@@ -309,238 +510,51 @@ export function CareerLadder({
                     </div>
                   </div>
 
-                  {/* ===== Requirements — Interactive ===== */}
-                  <div className="px-5 py-4">
-                    <p className="text-[10px] font-semibold text-muted uppercase tracking-wider mb-3">
+                  {/* ─── Anforderungen ─── */}
+                  <div className="px-4 pt-3 pb-2">
+                    <p className="text-[10px] font-semibold text-muted uppercase tracking-wider mb-1 px-1">
                       Anforderungen
                     </p>
-                    <div className="space-y-3">
-                      {level.requirements.map((req, idx) => {
-                        const status = getReqStatus(level.id, idx);
-                        const completion = getCompletion(level.id, idx);
-                        const noteKey = `${level.id}-${idx}`;
-                        const isEditingThis = editingNote === noteKey;
-
-                        return (
-                          <div
-                            key={idx}
-                            className={`rounded-lg border transition-colors ${
-                              status === "completed"
-                                ? "border-cream-200 bg-cream-50/50"
-                                : status === "in_progress"
-                                  ? "border-amber-200/60 bg-amber-50/20"
-                                  : "border-cream-200/60 bg-white"
-                            }`}
-                          >
-                            {/* Requirement text */}
-                            <div className="px-4 pt-3 pb-2">
-                              <p
-                                className={`text-[12px] leading-relaxed ${
-                                  status === "completed"
-                                    ? "text-muted"
-                                    : "text-foreground"
-                                }`}
-                              >
-                                {req}
-                              </p>
-                            </div>
-
-                            {/* Status selector — 3 buttons */}
-                            <div className="px-4 pb-3">
-                              <div className="flex items-center gap-1.5">
-                                {/* Nicht erfüllt */}
-                                <button
-                                  onClick={(e) => {
-                                    e.stopPropagation();
-                                    handleSetStatus(
-                                      level.id,
-                                      idx,
-                                      "not_started"
-                                    );
-                                  }}
-                                  className={`flex-1 flex items-center justify-center gap-1.5 px-2.5 py-1.5 rounded-md text-[11px] font-medium transition-all ${
-                                    status === "not_started"
-                                      ? "bg-cream-200 text-foreground ring-1 ring-cream-300"
-                                      : "bg-cream-50 text-muted hover:bg-cream-100"
-                                  }`}
-                                >
-                                  <X className="h-3 w-3" />
-                                  <span className="hidden sm:inline">
-                                    Nicht erfüllt
-                                  </span>
-                                  <span className="sm:hidden">Offen</span>
-                                </button>
-
-                                {/* Aufbauend */}
-                                <button
-                                  onClick={(e) => {
-                                    e.stopPropagation();
-                                    handleSetStatus(
-                                      level.id,
-                                      idx,
-                                      "in_progress"
-                                    );
-                                  }}
-                                  className={`flex-1 flex items-center justify-center gap-1.5 px-2.5 py-1.5 rounded-md text-[11px] font-medium transition-all ${
-                                    status === "in_progress"
-                                      ? "bg-amber-100 text-amber-800 ring-1 ring-amber-300"
-                                      : "bg-cream-50 text-muted hover:bg-cream-100"
-                                  }`}
-                                >
-                                  <ArrowUpRight className="h-3 w-3" />
-                                  Aufbauend
-                                </button>
-
-                                {/* Erfüllt */}
-                                <button
-                                  onClick={(e) => {
-                                    e.stopPropagation();
-                                    handleSetStatus(
-                                      level.id,
-                                      idx,
-                                      "completed"
-                                    );
-                                  }}
-                                  className={`flex-1 flex items-center justify-center gap-1.5 px-2.5 py-1.5 rounded-md text-[11px] font-medium transition-all ${
-                                    status === "completed"
-                                      ? "bg-emerald-100 text-emerald-800 ring-1 ring-emerald-300"
-                                      : "bg-cream-50 text-muted hover:bg-cream-100"
-                                  }`}
-                                >
-                                  <CheckCircle2 className="h-3 w-3" />
-                                  Erfüllt
-                                </button>
-                              </div>
-                            </div>
-
-                            {/* Justification / Notes — visible when not "not_started" */}
-                            {status !== "not_started" && (
-                              <div className="px-4 pb-3 border-t border-cream-100/80">
-                                {isEditingThis ? (
-                                  <div className="pt-2.5">
-                                    <label className="text-[10px] font-semibold text-muted uppercase tracking-wider">
-                                      Begründung / Nachweis
-                                    </label>
-                                    <textarea
-                                      value={noteText}
-                                      onChange={(e) =>
-                                        setNoteText(e.target.value)
-                                      }
-                                      placeholder="Wie belegst du diese Kompetenz? (z.B. Projekte, Zertifikate, Feedback...)"
-                                      className="w-full mt-1.5 px-3 py-2 text-[12px] bg-white border border-cream-200 rounded-lg focus:outline-none focus:ring-1 focus:ring-cream-400 resize-none leading-relaxed"
-                                      rows={2}
-                                      autoFocus
-                                      onClick={(e) => e.stopPropagation()}
-                                    />
-                                    <div className="flex items-center gap-1.5 mt-2">
-                                      <button
-                                        onClick={(e) => {
-                                          e.stopPropagation();
-                                          handleSaveNote(level.id, idx);
-                                        }}
-                                        className="inline-flex items-center gap-1 px-3 py-1.5 bg-foreground text-white rounded-md text-[11px] font-medium hover:bg-foreground/80 transition-colors"
-                                      >
-                                        <Save className="h-3 w-3" />
-                                        Speichern
-                                      </button>
-                                      <button
-                                        onClick={(e) => {
-                                          e.stopPropagation();
-                                          setEditingNote(null);
-                                          setNoteText("");
-                                        }}
-                                        className="inline-flex items-center gap-1 px-3 py-1.5 bg-cream-100 text-muted rounded-md text-[11px] font-medium hover:bg-cream-200 transition-colors"
-                                      >
-                                        Abbrechen
-                                      </button>
-                                    </div>
-                                  </div>
-                                ) : (
-                                  <div
-                                    className="pt-2.5 cursor-pointer group/note"
-                                    onClick={(e) => {
-                                      e.stopPropagation();
-                                      startEditNote(level.id, idx);
-                                    }}
-                                  >
-                                    {completion?.notes ? (
-                                      <div className="flex items-start gap-2">
-                                        <div className="flex-1 min-w-0">
-                                          <p className="text-[10px] font-semibold text-muted uppercase tracking-wider mb-1">
-                                            Begründung
-                                          </p>
-                                          <p className="text-[12px] text-foreground/70 leading-relaxed group-hover/note:text-foreground transition-colors">
-                                            {completion.notes}
-                                          </p>
-                                        </div>
-                                        <span className="text-[10px] text-muted opacity-0 group-hover/note:opacity-100 transition-opacity mt-3 flex-shrink-0">
-                                          Bearbeiten
-                                        </span>
-                                      </div>
-                                    ) : (
-                                      <p className="text-[11px] text-muted/60 italic group-hover/note:text-muted transition-colors">
-                                        + Begründung hinzufügen — Wie belegst du
-                                        diese Kompetenz?
-                                      </p>
-                                    )}
-                                  </div>
-                                )}
-                              </div>
-                            )}
-                          </div>
-                        );
-                      })}
-                    </div>
+                    {level.requirements.map((req, idx) =>
+                      renderItemRow(
+                        level.id,
+                        idx,
+                        req,
+                        idx === level.requirements.length - 1
+                      )
+                    )}
                   </div>
 
-                  {/* Skills */}
-                  {(level.aiIntegration.length > 0 ||
-                    (level.skills && level.skills.length > 0)) && (
-                    <div className="px-5 py-3 border-t border-cream-100">
-                      <p className="text-[10px] font-semibold text-muted uppercase tracking-wider mb-2">
-                        Skills & Kompetenzen
+                  {/* ─── Skills & KI-Integration ─── */}
+                  {skills.length > 0 && (
+                    <div className="px-4 pt-3 pb-2 border-t border-cream-100">
+                      <p className="text-[10px] font-semibold text-muted uppercase tracking-wider mb-1 px-1">
+                        Skills & KI-Integration
                       </p>
-                      <div className="flex flex-wrap gap-1.5">
-                        {level.aiIntegration.map((item, idx) => (
-                          <span
-                            key={idx}
-                            className="inline-flex px-2.5 py-1 rounded-full bg-cream-100 text-[11px] text-foreground/70 font-medium"
-                          >
-                            {item.length > 55
-                              ? item.substring(0, 55) + "…"
-                              : item}
-                          </span>
-                        ))}
-                        {level.skills?.map((skill, idx) => (
-                          <span
-                            key={`s-${idx}`}
-                            className="inline-flex px-2.5 py-1 rounded-full bg-cream-100 text-[11px] text-foreground/70 font-medium"
-                          >
-                            {skill}
-                          </span>
-                        ))}
-                      </div>
+                      {skills.map((skill, idx) =>
+                        renderItemRow(
+                          level.id,
+                          SKILL_OFFSET + idx,
+                          skill,
+                          idx === skills.length - 1
+                        )
+                      )}
                     </div>
                   )}
 
-                  {/* Verantwortungsbereiche */}
-                  <div className="px-5 py-3 border-t border-cream-100">
-                    <p className="text-[10px] font-semibold text-muted uppercase tracking-wider mb-2">
+                  {/* ─── Verantwortungsbereiche ─── */}
+                  <div className="px-4 pt-3 pb-2 border-t border-cream-100">
+                    <p className="text-[10px] font-semibold text-muted uppercase tracking-wider mb-1 px-1">
                       Verantwortungsbereiche
                     </p>
-                    <div className="space-y-1">
-                      {level.responsibilities.map((resp, idx) => (
-                        <div
-                          key={idx}
-                          className="flex items-start gap-2 text-[12px] text-foreground/70 leading-relaxed"
-                        >
-                          <span className="text-cream-400 mt-1 flex-shrink-0 text-[8px]">
-                            ●
-                          </span>
-                          {resp}
-                        </div>
-                      ))}
-                    </div>
+                    {level.responsibilities.map((resp, idx) =>
+                      renderItemRow(
+                        level.id,
+                        RESP_OFFSET + idx,
+                        resp,
+                        idx === level.responsibilities.length - 1
+                      )
+                    )}
                   </div>
                 </div>
               </div>
