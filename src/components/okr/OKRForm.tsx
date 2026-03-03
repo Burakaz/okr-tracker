@@ -19,6 +19,7 @@ import type { OKR, OKRCategory, CreateOKRRequest } from "@/types";
 import type { SuggestedKR } from "@/lib/ai/types";
 import { getCurrentQuarter, getNextQuarter } from "@/lib/okr-logic";
 import { useSuggestKPIs } from "@/hooks/useSuggestKPIs";
+import { CourseSelector, type SelectedCourse } from "./CourseSelector";
 
 interface OKRFormProps {
   initialData?: OKR;
@@ -81,14 +82,17 @@ export function OKRForm({
     return [];
   });
 
+  // Course selection state (for learning OKRs)
+  const [selectedCourses, setSelectedCourses] = useState<SelectedCourse[]>([]);
+
   // AI suggestions state
   const suggestMutation = useSuggestKPIs();
   const [acceptedSuggestions, setAcceptedSuggestions] = useState<Set<number>>(new Set());
   const hasSuggestedRef = useRef(false);
 
-  // Auto-trigger AI suggestions when entering step 2 (new OKR only)
+  // Auto-trigger AI suggestions when entering step 2 (new OKR only, not learning)
   useEffect(() => {
-    if (step === 2 && title.length >= 3 && !initialData && !hasSuggestedRef.current) {
+    if (step === 2 && title.length >= 3 && !initialData && !hasSuggestedRef.current && category !== "learning") {
       hasSuggestedRef.current = true;
       suggestMutation.mutate(
         { okr_title: title, category },
@@ -216,10 +220,23 @@ export function OKRForm({
         unit: kr.unit || undefined,
       }));
 
-    const allKRs = [...aiKRs, ...manualKRs];
+    // Collect course-based KRs (for learning category)
+    const courseKRs = selectedCourses.map((c) => ({
+      title: c.title,
+      start_value: 0,
+      target_value: c.moduleCount || 1,
+      unit: "Module",
+      course_id: c.courseId,
+    }));
+
+    const allKRs = [...courseKRs, ...aiKRs, ...manualKRs];
 
     if (allKRs.length === 0) {
-      setFormError("Mindestens 1 Key Result ist erforderlich.");
+      setFormError(
+        category === "learning"
+          ? "Wähle mindestens einen Kurs aus."
+          : "Mindestens 1 Key Result ist erforderlich."
+      );
       return;
     }
 
@@ -244,7 +261,7 @@ export function OKRForm({
   }
 
   // Count total selected KRs
-  const totalKRs = acceptedSuggestions.size + keyResults.filter((kr) => kr.title.trim()).length;
+  const totalKRs = selectedCourses.length + acceptedSuggestions.size + keyResults.filter((kr) => kr.title.trim()).length;
 
   return (
     <div className="modal-overlay" onClick={onCancel} role="dialog" aria-modal="true" aria-labelledby="okr-form-title">
@@ -471,8 +488,16 @@ export function OKRForm({
                 </>
               )}
 
+              {/* Course Selector for Learning OKRs */}
+              {category === "learning" && !isEditing && (
+                <CourseSelector
+                  selected={selectedCourses}
+                  onSelectionChange={setSelectedCourses}
+                />
+              )}
+
               {/* AI Suggestions Section */}
-              {!isEditing && (
+              {!isEditing && category !== "learning" && (
                 <div>
                   <div className="flex items-center justify-between mb-2">
                     <label className="text-[11px] font-semibold text-muted uppercase tracking-wider flex items-center gap-1.5">

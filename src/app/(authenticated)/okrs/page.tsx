@@ -12,7 +12,7 @@ import { QuarterSelector } from "@/components/okr/QuarterSelector";
 import { ScoreDashboard } from "@/components/okr/ScoreDashboard";
 import { OKRAccordionItem } from "@/components/okr/OKRAccordionItem";
 import type { CelebrationLevel } from "@/components/okr/CheckinCelebration";
-import { useOKRs, useCurrentUser } from "@/lib/queries";
+import { useOKRs, useCurrentUser, useEnrollments, useLinkCourse } from "@/lib/queries";
 import { useOKRsRealtime } from "@/hooks/useRealtimeQuery";
 import {
   getCurrentQuarter,
@@ -20,6 +20,7 @@ import {
 } from "@/lib/okr-logic";
 import type {
   OKR,
+  OKRCourseLink,
   CreateOKRRequest,
   CreateCheckinRequest,
   DuplicateOKRRequest,
@@ -51,6 +52,11 @@ function OKRsContent() {
   // React Query
   const { data: okrData, isLoading: isLoadingOKRs } = useOKRs(currentQuarter);
   const { data: userData } = useCurrentUser();
+
+  // Enrollments for CourseLinker
+  const { data: enrollmentsData } = useEnrollments();
+  const enrollments = enrollmentsData?.enrollments ?? [];
+  const linkCourseMutation = useLinkCourse();
 
   // Realtime
   useOKRsRealtime();
@@ -326,6 +332,35 @@ function OKRsContent() {
     }
   };
 
+  const handleLinkCourse = (data: {
+    okrId: string;
+    key_result_id: string;
+    enrollment_id: string;
+    auto_update: boolean;
+  }) => {
+    linkCourseMutation.mutate(data, {
+      onSuccess: () => {
+        toast.success("Kurs verknüpft");
+        invalidateOKRs();
+      },
+      onError: (error) => {
+        toast.error(error.message || "Fehler beim Verknüpfen");
+      },
+    });
+  };
+
+  // Extract course_links from OKR's key_results (loaded via nested select)
+  const getCourseLinksForOKR = (okr: OKR): OKRCourseLink[] => {
+    const links: OKRCourseLink[] = [];
+    okr.key_results?.forEach((kr) => {
+      const krAny = kr as unknown as Record<string, unknown>;
+      if (Array.isArray(krAny.okr_course_links)) {
+        links.push(...(krAny.okr_course_links as OKRCourseLink[]));
+      }
+    });
+    return links;
+  };
+
   const handleToggleExpand = (id: string) => {
     setExpandedId((prev) => (prev === id ? null : id));
   };
@@ -484,6 +519,10 @@ function OKRsContent() {
                   onDuplicate={handleDuplicate}
                   onDelete={handleDelete}
                   onQuickCheckin={handleQuickCheckin}
+                  enrollments={okr.category === "learning" ? enrollments : undefined}
+                  courseLinks={okr.category === "learning" ? getCourseLinksForOKR(okr) : undefined}
+                  onLinkCourse={okr.category === "learning" ? handleLinkCourse : undefined}
+                  isLinkingCourse={linkCourseMutation.isPending}
                 />
               ))}
             </div>

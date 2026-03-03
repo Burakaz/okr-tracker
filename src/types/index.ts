@@ -159,6 +159,7 @@ export interface CreateOKRRequest {
     start_value: number;
     target_value: number;
     unit?: string;
+    course_id?: string;
   }>;
 }
 

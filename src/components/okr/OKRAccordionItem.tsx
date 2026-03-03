@@ -21,11 +21,12 @@ import {
 } from "lucide-react";
 import { ProgressBar } from "@/components/ui/ProgressBar";
 import { CheckinCelebration, type CelebrationLevel } from "@/components/okr/CheckinCelebration";
+import { CourseLinker } from "@/components/okr/CourseLinker";
 import {
   isCheckinOverdue,
   getCheckinDaysRemaining,
 } from "@/lib/okr-logic";
-import type { OKR, OKRStatus, OKRCategory, KeyResult } from "@/types";
+import type { OKR, OKRStatus, OKRCategory, KeyResult, Enrollment, OKRCourseLink } from "@/types";
 
 interface OKRAccordionItemProps {
   okr: OKR;
@@ -43,6 +44,15 @@ interface OKRAccordionItemProps {
       key_result_updates?: Array<{ id: string; current_value: number }>;
     }
   ) => Promise<CelebrationLevel | null>;
+  enrollments?: Enrollment[];
+  courseLinks?: OKRCourseLink[];
+  onLinkCourse?: (data: {
+    okrId: string;
+    key_result_id: string;
+    enrollment_id: string;
+    auto_update: boolean;
+  }) => void;
+  isLinkingCourse?: boolean;
 }
 
 // ===== Helpers =====
@@ -124,6 +134,10 @@ export function OKRAccordionItem({
   onDuplicate,
   onDelete,
   onQuickCheckin,
+  enrollments,
+  courseLinks,
+  onLinkCourse,
+  isLinkingCourse,
 }: OKRAccordionItemProps) {
   const [checkinMode, setCheckinMode] = useState(false);
   const [krValues, setKrValues] = useState<Record<string, number>>({});
@@ -468,6 +482,18 @@ export function OKRAccordionItem({
                 {okr.why_it_matters}
               </p>
             </div>
+          )}
+
+          {/* Course Links (Learning OKRs) */}
+          {okr.category === "learning" && enrollments && onLinkCourse && (
+            <CourseLinker
+              okrId={okr.id}
+              keyResults={okr.key_results || []}
+              enrollments={enrollments}
+              courseLinks={courseLinks}
+              onLinkCourse={onLinkCourse}
+              isLinking={isLinkingCourse}
+            />
           )}
 
           {/* Action Buttons */}

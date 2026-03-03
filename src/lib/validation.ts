@@ -15,6 +15,7 @@ export const createOKRSchema = z.object({
         start_value: z.number().default(0),
         target_value: z.number(),
         unit: z.string().optional(),
+        course_id: z.string().uuid().optional(),
       })
     )
     .min(1, "Mindestens ein Key Result erforderlich")

@@ -46,7 +46,7 @@ export async function GET(request: NextRequest) {
     // Build the count query and data query in parallel
     let query = serviceClient
       .from("okrs")
-      .select("*, key_results(*)", { count: "exact" })
+      .select("*, key_results(*, okr_course_links(*))", { count: "exact" })
       .eq("user_id", user.id);
 
     // By default, only show active OKRs unless archived=true
@@ -344,6 +344,50 @@ export async function POST(request: NextRequest) {
           )
         )
       );
+    }
+
+    // Auto-enroll + auto-link for course-based KRs (Learning OKRs)
+    if (insertedKRs && data.key_results.some((kr) => kr.course_id)) {
+      for (let i = 0; i < data.key_results.length; i++) {
+        const krInput = data.key_results[i];
+        const insertedKR = insertedKRs[i];
+        if (!krInput.course_id || !insertedKR) continue;
+
+        // Find or create enrollment
+        let enrollmentId: string | null = null;
+
+        const { data: existing } = await serviceClient
+          .from("enrollments")
+          .select("id")
+          .eq("user_id", user.id)
+          .eq("course_id", krInput.course_id)
+          .maybeSingle();
+
+        if (existing) {
+          enrollmentId = existing.id;
+        } else {
+          const { data: newEnrollment } = await serviceClient
+            .from("enrollments")
+            .insert({
+              user_id: user.id,
+              course_id: krInput.course_id,
+              organization_id: orgId,
+              status: "in_progress",
+            })
+            .select("id")
+            .single();
+          enrollmentId = newEnrollment?.id ?? null;
+        }
+
+        // Create okr_course_link
+        if (enrollmentId) {
+          await serviceClient.from("okr_course_links").insert({
+            key_result_id: insertedKR.id,
+            enrollment_id: enrollmentId,
+            auto_update: true,
+          });
+        }
+      }
     }
 
     // Audit log (non-blocking)
