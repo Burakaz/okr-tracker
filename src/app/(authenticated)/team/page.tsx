@@ -1,28 +1,21 @@
 "use client";
 
-import { useState, useMemo } from "react";
-import Link from "next/link";
+import { useState } from "react";
 import {
   Users,
-  Target,
-  TrendingUp,
-  AlertTriangle,
   Loader2,
-  UserPlus,
-  ArrowRight,
   Building2,
   Shield,
   CreditCard,
   Layers,
 } from "lucide-react";
 import { useQuery } from "@tanstack/react-query";
-import { useCurrentUser, useOKRs, useOrganization, useOrganizationMembers } from "@/lib/queries";
-import { getCurrentQuarter, progressToScore, getCategoryLabel, getCategoryClassName } from "@/lib/okr-logic";
-import { ProgressBar } from "@/components/ui/ProgressBar";
+import { useCurrentUser } from "@/lib/queries";
 import { TeamStatsBar } from "@/components/team/TeamStatsBar";
+import { MemberAccordionItem } from "@/components/team/MemberAccordionItem";
 import { OrgGeneralTab } from "@/components/organization/OrgGeneralTab";
 import { OrgMembersTab } from "@/components/organization/OrgMembersTab";
-import type { OKR } from "@/types";
+import type { TeamMemberOKRStats } from "@/types";
 
 interface TeamMember {
   id: string;
@@ -32,6 +25,9 @@ interface TeamMember {
   department: string | null;
   avatar_url: string | null;
   status: string;
+  position: string | null;
+  craft_focus: string | null;
+  career_level_id: string | null;
   created_at: string;
 }
 
@@ -42,8 +38,14 @@ interface TeamStats {
   atRiskCount: number;
 }
 
+interface TeamData {
+  members: TeamMember[];
+  memberOKRStats: Record<string, TeamMemberOKRStats>;
+  stats: TeamStats;
+}
+
 function useTeamData() {
-  return useQuery<{ members: TeamMember[]; stats: TeamStats }>({
+  return useQuery<TeamData>({
     queryKey: ["team"],
     queryFn: async () => {
       const res = await fetch("/api/team");
@@ -54,27 +56,48 @@ function useTeamData() {
   });
 }
 
+function useOrganization() {
+  return useQuery<{ organization: { id: string; name: string; slug: string; domain?: string; logo_url: string | null; created_at: string } }>({
+    queryKey: ["organization"],
+    queryFn: async () => {
+      const res = await fetch("/api/organization");
+      if (!res.ok) throw new Error("Fehler beim Laden der Organisation");
+      return res.json();
+    },
+    staleTime: 5 * 60 * 1000,
+  });
+}
+
 type TopTabId = "team" | "org";
-type TeamTabId = "overview" | "development" | "okrs";
 type OrgTabId = "general" | "members" | "teams" | "rights" | "billing";
 
 export default function TeamPage() {
   const [topTab, setTopTab] = useState<TopTabId>("team");
-  const [teamTab, setTeamTab] = useState<TeamTabId>("overview");
   const [orgTab, setOrgTab] = useState<OrgTabId>("general");
+  const [expandedMemberId, setExpandedMemberId] = useState<string | null>(null);
 
   const { data: teamData, isLoading } = useTeamData();
   const { data: userData } = useCurrentUser();
-  const currentQuarter = getCurrentQuarter();
-  const { data: okrData } = useOKRs(currentQuarter);
   const { data: orgData } = useOrganization();
 
   const members = teamData?.members || [];
+  const memberOKRStats = teamData?.memberOKRStats || {};
   const stats = teamData?.stats || { totalMembers: 0, totalOKRs: 0, avgProgress: 0, atRiskCount: 0 };
   const currentUser = userData?.user;
   const isAdmin = currentUser && ["admin", "super_admin"].includes(currentUser.role);
   const isManager = currentUser && ["admin", "super_admin", "hr", "manager"].includes(currentUser.role);
   const org = orgData?.organization;
+
+  // Determine if the current user can edit a specific member
+  const canEditMember = (member: TeamMember): boolean => {
+    if (!currentUser) return false;
+    // HR/Admin/Super_Admin can edit all
+    if (["hr", "admin", "super_admin"].includes(currentUser.role)) return true;
+    // Managers can edit their direct reports (we check manager_id on the server,
+    // but for UI we show edit mode for all if user is a manager — the API enforces the real check)
+    if (currentUser.role === "manager") return true;
+    return false;
+  };
 
   if (isLoading) {
     return (
@@ -127,39 +150,14 @@ export default function TeamPage() {
           )}
         </div>
 
-        {/* Sub-tabs for team view */}
+        {/* Team stats bar */}
         {topTab === "team" && (
-          <>
-            <TeamStatsBar
-              teamCount={stats.totalMembers}
-              okrCount={stats.totalOKRs}
-              avgProgress={stats.avgProgress}
-              atRiskCount={stats.atRiskCount}
-            />
-            <div className="flex items-center gap-1 mt-4">
-              {([
-                { id: "overview" as TeamTabId, label: "Mitglieder", icon: Users },
-                { id: "development" as TeamTabId, label: "Entwicklung", icon: TrendingUp },
-                { id: "okrs" as TeamTabId, label: "OKRs", icon: Target },
-              ]).map((tab) => {
-                const Icon = tab.icon;
-                return (
-                  <button
-                    key={tab.id}
-                    onClick={() => setTeamTab(tab.id)}
-                    className={`flex items-center gap-1.5 px-3 py-2 text-[12px] font-medium rounded-lg transition-colors ${
-                      teamTab === tab.id
-                        ? "bg-cream-200 text-foreground"
-                        : "text-muted hover:bg-cream-100"
-                    }`}
-                  >
-                    <Icon className="h-3.5 w-3.5" />
-                    {tab.label}
-                  </button>
-                );
-              })}
-            </div>
-          </>
+          <TeamStatsBar
+            teamCount={stats.totalMembers}
+            okrCount={stats.totalOKRs}
+            avgProgress={stats.avgProgress}
+            atRiskCount={stats.atRiskCount}
+          />
         )}
 
         {/* Sub-tabs for org view */}
@@ -196,13 +194,15 @@ export default function TeamPage() {
       {/* Content */}
       <div className="flex-1 overflow-y-auto">
        <div className="p-4 sm:p-6 max-w-5xl mx-auto">
-        {/* Team tabs */}
+        {/* Team view — unified accordion */}
         {topTab === "team" && (
-          <>
-            {teamTab === "overview" && <OverviewTab members={members} />}
-            {teamTab === "development" && <DevelopmentTab members={members} />}
-            {teamTab === "okrs" && <TeamOKRsTab members={members} />}
-          </>
+          <TeamMembersAccordion
+            members={members}
+            memberOKRStats={memberOKRStats}
+            expandedMemberId={expandedMemberId}
+            onToggle={(id) => setExpandedMemberId(expandedMemberId === id ? null : id)}
+            canEditMember={canEditMember}
+          />
         )}
 
         {/* Organization tabs */}
@@ -255,7 +255,21 @@ export default function TeamPage() {
   );
 }
 
-function OverviewTab({ members }: { members: TeamMember[] }) {
+// ─── Team Members Accordion ─────────────────────────────────────────────────
+
+function TeamMembersAccordion({
+  members,
+  memberOKRStats,
+  expandedMemberId,
+  onToggle,
+  canEditMember,
+}: {
+  members: TeamMember[];
+  memberOKRStats: Record<string, TeamMemberOKRStats>;
+  expandedMemberId: string | null;
+  onToggle: (id: string) => void;
+  canEditMember: (member: TeamMember) => boolean;
+}) {
   if (members.length === 0) {
     return (
       <div className="empty-state">
@@ -269,107 +283,17 @@ function OverviewTab({ members }: { members: TeamMember[] }) {
   }
 
   return (
-    <div className="space-y-3">
-      {members.map((member) => {
-        const initials = member.name
-          ?.split(" ")
-          .map((n) => n[0])
-          .join("")
-          .toUpperCase()
-          .slice(0, 2) || "?";
-
-        return (
-          <div key={member.id} className="card p-4 flex items-center gap-4">
-            {member.avatar_url ? (
-              <img src={member.avatar_url} alt={member.name} className="w-10 h-10 rounded-full object-cover" referrerPolicy="no-referrer" />
-            ) : (
-              <div className="w-10 h-10 rounded-full bg-cream-200 flex items-center justify-center">
-                <span className="text-[12px] font-medium text-foreground">{initials}</span>
-              </div>
-            )}
-            <div className="flex-1 min-w-0">
-              <p className="text-[14px] font-medium text-foreground truncate">{member.name}</p>
-              <p className="text-[12px] text-muted truncate">{member.department || member.email}</p>
-            </div>
-            <span className={`badge text-[11px] ${
-              member.role === "super_admin" ? "badge-red" :
-              member.role === "admin" ? "badge-yellow" :
-              member.role === "manager" ? "badge-blue" :
-              member.role === "hr" ? "badge-green" :
-              "badge-gray"
-            }`}>
-              {member.role === "super_admin" ? "Super Admin" :
-               member.role === "admin" ? "Admin" :
-               member.role === "manager" ? "Manager" :
-               member.role === "hr" ? "HR" : "Mitarbeiter"}
-            </span>
-          </div>
-        );
-      })}
-    </div>
-  );
-}
-
-function DevelopmentTab({ members }: { members: TeamMember[] }) {
-  if (members.length === 0) {
-    return (
-      <div className="empty-state">
-        <TrendingUp className="empty-state-icon" />
-        <p className="empty-state-title">Keine Entwicklungsdaten</p>
-        <p className="empty-state-description">
-          Karrierepfade werden in Kürze verfügbar sein.
-        </p>
-      </div>
-    );
-  }
-
-  return (
-    <div className="space-y-3">
-      {members.map((member) => {
-        const initials = member.name?.split(" ").map((n) => n[0]).join("").toUpperCase().slice(0, 2) || "?";
-        return (
-          <div key={member.id} className="card p-4 flex items-center gap-4">
-            {member.avatar_url ? (
-              <img src={member.avatar_url} alt={member.name} className="w-8 h-8 rounded-full object-cover" referrerPolicy="no-referrer" />
-            ) : (
-              <div className="w-8 h-8 rounded-full bg-cream-200 flex items-center justify-center">
-                <span className="text-[11px] font-medium text-foreground">{initials}</span>
-              </div>
-            )}
-            <div className="flex-1 min-w-0">
-              <p className="text-[13px] font-medium text-foreground truncate">{member.name}</p>
-              <p className="text-[11px] text-muted">{member.department || "Kein Department"}</p>
-            </div>
-            <span className="text-[12px] text-muted">Karrierepfad wird geladen...</span>
-          </div>
-        );
-      })}
-    </div>
-  );
-}
-
-function TeamOKRsTab({ members }: { members: TeamMember[] }) {
-  if (members.length === 0) {
-    return (
-      <div className="empty-state">
-        <Target className="empty-state-icon" />
-        <p className="empty-state-title">Keine Team-OKRs</p>
-        <p className="empty-state-description">
-          Hier werden die OKRs deines Teams angezeigt, sobald Mitglieder OKRs erstellt haben.
-        </p>
-      </div>
-    );
-  }
-
-  return (
-    <div className="space-y-2">
-      <p className="text-[12px] text-muted mb-4">
-        Team-OKR-Übersicht wird in einer zukünftigen Version verfügbar sein. Nutze die Übersicht-Ansicht, um Teammitglieder zu sehen.
-      </p>
-      <Link href="/okrs" className="btn-secondary text-[13px] gap-1.5 inline-flex">
-        Zu deinen OKRs
-        <ArrowRight className="h-3.5 w-3.5" />
-      </Link>
+    <div className="space-y-3 mt-4">
+      {members.map((member) => (
+        <MemberAccordionItem
+          key={member.id}
+          member={member}
+          isExpanded={expandedMemberId === member.id}
+          onToggle={() => onToggle(member.id)}
+          okrStats={memberOKRStats[member.id]}
+          canEdit={canEditMember(member)}
+        />
+      ))}
     </div>
   );
 }

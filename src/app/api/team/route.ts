@@ -28,7 +28,7 @@ export async function GET() {
     // Get all members in org
     const { data: members, error: membersError } = await serviceClient
       .from("profiles")
-      .select("id, name, email, role, department, avatar_url, status, created_at")
+      .select("id, name, email, role, department, avatar_url, status, position, craft_focus, career_level_id, created_at")
       .eq("organization_id", orgId)
       .eq("status", "active")
       .order("name");
@@ -59,9 +59,26 @@ export async function GET() {
       : 0;
     const atRiskCount = teamOKRs.filter((o: { status: string }) => o.status === "at_risk" || o.status === "off_track").length;
 
+    // Calculate per-member OKR stats for collapsed card quick-stats
+    const memberOKRStats: Record<string, { count: number; avgProgress: number }> = {};
+    for (const okr of teamOKRs) {
+      if (!memberOKRStats[okr.user_id]) {
+        memberOKRStats[okr.user_id] = { count: 0, avgProgress: 0 };
+      }
+      memberOKRStats[okr.user_id].count++;
+    }
+    // Calculate averages
+    for (const userId of Object.keys(memberOKRStats)) {
+      const memberOkrs = teamOKRs.filter((o: { user_id: string }) => o.user_id === userId);
+      memberOKRStats[userId].avgProgress = memberOkrs.length > 0
+        ? Math.round(memberOkrs.reduce((sum: number, o: { progress: number }) => sum + o.progress, 0) / memberOkrs.length)
+        : 0;
+    }
+
     return withRateLimitHeaders(withCorsHeaders(
       NextResponse.json({
         members: members || [],
+        memberOKRStats,
         stats: {
           totalMembers: (members || []).length,
           totalOKRs,

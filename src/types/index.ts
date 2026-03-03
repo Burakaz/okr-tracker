@@ -365,3 +365,28 @@ export interface QuickCheckinRequest {
     current_value: number;
   }>;
 }
+
+// ===== Team Member Detail =====
+export interface TeamMemberDetail {
+  id: string;
+  name: string;
+  email: string;
+  avatar_url: string | null;
+  role: UserRole;
+  department: string | null;
+  status: UserStatus;
+  position: string | null;
+  craft_focus: string | null;
+  career_level_id: string | null;
+  manager_id: string | null;
+  created_at: string;
+  okrs: OKR[];
+  enrollments: Enrollment[];
+  career_progress: UserCareerProgress | null;
+  career_level: CareerLevel | null;
+}
+
+export interface TeamMemberOKRStats {
+  count: number;
+  avgProgress: number;
+}

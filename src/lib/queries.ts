@@ -680,6 +680,51 @@ export function useMotivation(stats: {
   });
 }
 
+// ===== Team Member Detail =====
+export function useTeamMemberDetail(memberId: string) {
+  return useQuery<{ member: import("@/types").TeamMemberDetail }>({
+    queryKey: ["teamMember", memberId],
+    queryFn: async () => {
+      const res = await fetch(`/api/team/members/${memberId}`);
+      if (!res.ok) throw new Error("Fehler beim Laden des Mitgliederprofils");
+      return res.json();
+    },
+    enabled: !!memberId,
+    staleTime: 2 * 60 * 1000,
+  });
+}
+
+export function useUpdateTeamMember() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: async ({
+      memberId,
+      ...data
+    }: {
+      memberId: string;
+      position?: string;
+      craft_focus?: string;
+      career_level_id?: string | null;
+      department?: string;
+    }) => {
+      const res = await fetch(`/api/team/members/${memberId}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(data),
+      });
+      if (!res.ok) {
+        const error = await res.json();
+        throw new Error(error.error || "Fehler beim Aktualisieren");
+      }
+      return res.json();
+    },
+    onSuccess: (_data, variables) => {
+      queryClient.invalidateQueries({ queryKey: ["teamMember", variables.memberId] });
+      queryClient.invalidateQueries({ queryKey: ["team"] });
+    },
+  });
+}
+
 // ===== Prefetch =====
 export function usePrefetchData(quarter?: string) {
   const queryClient = useQueryClient();
