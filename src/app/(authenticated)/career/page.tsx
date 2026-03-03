@@ -99,8 +99,8 @@ export default function CareerPage() {
                 Bestätigtes Level
               </p>
               <div className="flex items-center gap-3">
-                <div className="w-10 h-10 rounded-full bg-accent-greenLight flex items-center justify-center">
-                  <Award className="h-5 w-5 text-accent-green" />
+                <div className="w-10 h-10 rounded-full bg-cream-200 flex items-center justify-center">
+                  <Award className="h-5 w-5 text-foreground" />
                 </div>
                 <div className="flex-1 min-w-0">
                   <p className="text-[15px] font-semibold text-foreground">
@@ -113,7 +113,7 @@ export default function CareerPage() {
                   </p>
                 </div>
                 {currentLevel && (
-                  <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full bg-accent-greenLight text-accent-green text-[11px] font-semibold">
+                  <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full bg-cream-200 text-foreground text-[11px] font-semibold">
                     <Check className="h-3 w-3" />
                     {currentLevel.id.charAt(0).toUpperCase() +
                       currentLevel.id.slice(1)}
@@ -184,7 +184,7 @@ export default function CareerPage() {
                     key={i}
                     className={`flex-1 h-7 rounded-md flex items-center justify-center text-[10px] font-medium ${
                       i < qualifyingOkrs
-                        ? "bg-accent-green text-white"
+                        ? "bg-foreground text-white"
                         : "bg-cream-200 text-muted"
                     }`}
                   >

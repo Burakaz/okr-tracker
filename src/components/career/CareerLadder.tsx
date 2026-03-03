@@ -152,7 +152,7 @@ export function CareerLadder({
               onClick={() => toggleExpand(level.id)}
               className={`w-full text-left px-4 py-3 rounded-lg transition-all flex items-center gap-3 ${
                 isCurrentLevel
-                  ? "bg-accent-greenLight/40 border border-accent-green/20"
+                  ? "bg-cream-100 border border-cream-300/60"
                   : isExpanded
                     ? "bg-cream-100 border border-cream-300/50"
                     : "hover:bg-cream-50 border border-transparent"
@@ -162,9 +162,9 @@ export function CareerLadder({
               <div
                 className={`w-7 h-7 rounded-full flex items-center justify-center flex-shrink-0 text-[11px] font-bold ${
                   isCompleted || (fulfilled === reqCount && reqCount > 0)
-                    ? "bg-accent-green text-white"
+                    ? "bg-foreground text-white"
                     : isCurrentLevel
-                      ? "bg-accent-green text-white"
+                      ? "bg-foreground text-white"
                       : "bg-cream-200 text-muted"
                 }`}
               >
@@ -191,7 +191,7 @@ export function CareerLadder({
                     {level.experience}
                   </span>
                   {isCurrentLevel && (
-                    <span className="inline-flex items-center px-2 py-0.5 rounded-full bg-accent-green text-white text-[10px] font-semibold">
+                    <span className="inline-flex items-center px-2 py-0.5 rounded-full bg-foreground text-white text-[10px] font-semibold">
                       Du
                     </span>
                   )}
@@ -201,7 +201,7 @@ export function CareerLadder({
                     </span>
                   )}
                   {isCompleted && (
-                    <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-accent-greenLight text-accent-green text-[10px] font-semibold">
+                    <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-cream-200 text-foreground text-[10px] font-semibold">
                       <Check className="h-2.5 w-2.5" />
                       {level.id.charAt(0).toUpperCase() + level.id.slice(1)}
                     </span>
@@ -222,7 +222,7 @@ export function CareerLadder({
                   <span
                     className={`text-[12px] font-semibold ${
                       levelProgress === 100
-                        ? "text-accent-green"
+                        ? "text-foreground"
                         : "text-foreground"
                     }`}
                   >
@@ -264,7 +264,7 @@ export function CareerLadder({
                         key={i}
                         className={`flex-1 h-6 rounded flex items-center justify-center text-[10px] font-medium ${
                           isCompleted || (isCurrentLevel && i < 2)
-                            ? "bg-accent-green text-white"
+                            ? "bg-foreground text-white"
                             : "bg-cream-200 text-muted"
                         }`}
                       >
@@ -315,7 +315,7 @@ export function CareerLadder({
                               <div
                                 className={`w-5 h-5 rounded-full flex items-center justify-center transition-colors ${
                                   status === "completed"
-                                    ? "bg-accent-green text-white hover:bg-green-600"
+                                    ? "bg-accent-green text-white hover:bg-accent-green/80"
                                     : status === "in_progress"
                                       ? "bg-amber-400 text-white hover:bg-amber-500"
                                       : "bg-cream-200 text-muted hover:bg-cream-300"
@@ -380,7 +380,7 @@ export function CareerLadder({
                                 value={noteText}
                                 onChange={(e) => setNoteText(e.target.value)}
                                 placeholder="Notiz hinzufügen..."
-                                className="w-full px-3 py-2 text-[12px] bg-white border border-cream-300 rounded-lg focus:outline-none focus:ring-1 focus:ring-accent-green resize-none"
+                                className="w-full px-3 py-2 text-[12px] bg-white border border-cream-300 rounded-lg focus:outline-none focus:ring-1 focus:ring-cream-400 resize-none"
                                 rows={2}
                                 autoFocus
                                 onClick={(e) => e.stopPropagation()}
@@ -391,7 +391,7 @@ export function CareerLadder({
                                     e.stopPropagation();
                                     handleSaveNote(level.id, idx);
                                   }}
-                                  className="inline-flex items-center gap-1 px-2.5 py-1 bg-accent-green text-white rounded text-[11px] font-medium hover:bg-green-600 transition-colors"
+                                  className="inline-flex items-center gap-1 px-2.5 py-1 bg-foreground text-white rounded text-[11px] font-medium hover:bg-foreground/80 transition-colors"
                                 >
                                   <Save className="h-3 w-3" />
                                   Speichern
