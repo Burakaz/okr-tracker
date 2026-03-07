@@ -3,7 +3,23 @@ import { z } from "zod";
 export const createOKRSchema = z.object({
   title: z.string().min(1, "Titel ist erforderlich").max(200),
   why_it_matters: z.string().max(1000).optional(),
-  quarter: z.string().regex(/^Q[1-4] \d{4}$/, "Ungültiges Quartalsformat"),
+  // P2-FIX: Quarter format + range validation (max 1 quarter in the past, max 2 in future)
+  quarter: z.string()
+    .regex(/^Q[1-4] \d{4}$/, "Ungültiges Quartalsformat")
+    .refine((val) => {
+      const match = val.match(/^Q([1-4]) (\d{4})$/);
+      if (!match) return false;
+      const q = parseInt(match[1]);
+      const year = parseInt(match[2]);
+      const now = new Date();
+      const currentQ = Math.floor(now.getMonth() / 3) + 1;
+      const currentYear = now.getFullYear();
+      // Convert to linear quarter number for comparison
+      const inputLinear = year * 4 + q;
+      const currentLinear = currentYear * 4 + currentQ;
+      // Allow 1 quarter back, 2 quarters ahead
+      return inputLinear >= currentLinear - 1 && inputLinear <= currentLinear + 2;
+    }, "Quartal muss innerhalb des erlaubten Bereichs liegen (max. 1 zurück, 2 voraus)"),
   category: z.enum(["performance", "skill", "learning", "career"]),
   scope: z.enum(["personal", "team", "company"]).optional().default("personal"),
   due_date: z.string().optional(),
@@ -28,7 +44,7 @@ export const updateOKRSchema = z.object({
   category: z.enum(["performance", "skill", "learning", "career"]).optional(),
   scope: z.enum(["personal", "team", "company"]).optional(),
   due_date: z.string().optional().nullable(),
-  is_active: z.boolean().optional(),
+  // P0-FIX: is_active removed — archive/restore must use dedicated /archive endpoint
   sort_order: z.number().optional(),
   key_results: z
     .array(
@@ -49,12 +65,13 @@ export const createCheckinSchema = z.object({
   what_helped: z.string().max(2000).optional(),
   what_blocked: z.string().max(2000).optional(),
   next_steps: z.string().max(2000).optional(),
+  // P1-FIX: Require at least 1 KR update to prevent empty checkins inflating count
   key_result_updates: z.array(
     z.object({
       id: z.string().uuid(),
       current_value: z.number(),
     })
-  ),
+  ).min(1, "Mindestens ein Key Result Update erforderlich"),
 });
 
 export const duplicateOKRSchema = z.object({

@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createClient, createServiceClient } from "@/lib/supabase/server";
 import { suggestKRsSchema } from "@/lib/validation";
-import { withCorsHeaders, withRateLimitHeaders } from "@/lib/api-utils";
+import { withCorsHeaders, withRateLimitHeaders, checkAIRateLimit } from "@/lib/api-utils";
 import { logger, generateRequestId } from "@/lib/logger";
 import { z } from "zod";
 
@@ -48,6 +48,10 @@ export async function POST(request: NextRequest) {
         )
       );
     }
+
+    // P1-FIX: Enforce AI rate limit
+    const rateLimitResponse = checkAIRateLimit(user.id);
+    if (rateLimitResponse) return rateLimitResponse;
 
     // Parse and validate request body
     let body: z.infer<typeof suggestKRsSchema>;
@@ -99,7 +103,16 @@ export async function POST(request: NextRequest) {
     // Build prompts
     const systemPrompt = `Du bist ein OKR-Coach. Basierend auf dem OKR-Titel und der Kategorie, schlage 3 messbare Key Results vor. Jedes Key Result hat: title (kurz, präzise), target_value (numerisch), unit (z.B. 'Stück', '%', 'Module'). Antworte als JSON-Array.`;
 
-    const userPrompt = `OKR-Titel: "${body.title}"
+    // P1-FIX: Sanitize user input to prevent prompt injection
+    // Strip control chars, zero-width chars, and non-printable Unicode
+    const sanitizedTitle = body.title
+      .replace(/[\u0000-\u001F\u007F-\u009F]/g, " ")     // Control characters
+      .replace(/[\u200B-\u200F\u2028-\u202F\uFEFF]/g, "") // Zero-width / invisible Unicode
+      .replace(/["\n\r\\`]/g, " ")                         // Prompt-breaking characters
+      .trim()
+      .slice(0, 200);
+
+    const userPrompt = `OKR-Titel: "${sanitizedTitle}"
 Kategorie: ${body.category}
 
 Schlage 3 messbare Key Results vor. Antworte ausschließlich als JSON-Array im folgenden Format:
@@ -227,10 +240,18 @@ Schlage 3 messbare Key Results vor. Antworte ausschließlich als JSON-Array im f
 
     if (body.category === "learning") {
       const serviceClient = await createServiceClient();
+      // P1-FIX: Filter courses by user's organization to prevent data leakage
+      const { data: userProfile } = await serviceClient
+        .from("profiles")
+        .select("organization_id")
+        .eq("id", user.id)
+        .single();
+
       const { data: courses } = await serviceClient
         .from("courses")
         .select("id, title, category, provider")
         .eq("is_published", true)
+        .eq("organization_id", userProfile?.organization_id || "")
         .limit(5);
 
       if (courses && courses.length > 0) {

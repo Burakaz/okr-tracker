@@ -11,7 +11,8 @@ export function QueryProvider({ children }: { children: React.ReactNode }) {
           queries: {
             staleTime: 5 * 60 * 1000, // 5 minutes
             gcTime: 10 * 60 * 1000, // 10 minutes (formerly cacheTime)
-            refetchOnWindowFocus: false,
+            // P2-FIX: Re-enable to prevent stale data after tab switching
+            refetchOnWindowFocus: true,
             retry: 2,
             retryDelay: (attemptIndex) =>
               Math.min(1000 * 2 ** attemptIndex, 10000),

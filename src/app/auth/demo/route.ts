@@ -9,6 +9,12 @@ const DEMO_NAME = "Demo User";
 
 export async function GET(request: Request) {
   const { origin } = new URL(request.url);
+
+  // P0-FIX: Demo mode must be explicitly enabled via environment variable
+  if (process.env.ENABLE_DEMO_MODE !== "true") {
+    return new NextResponse("Not Found", { status: 404 });
+  }
+
   const cookieStore = await cookies();
 
   // Collect cookies that Supabase sets during verifyOtp

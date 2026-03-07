@@ -1,6 +1,7 @@
 import { createServiceClient } from "@/lib/supabase/server";
 import type { AuditAction } from "@/types";
 import { headers } from "next/headers";
+import { logger } from "@/lib/logger";
 
 interface AuditLogParams {
   userId: string;
@@ -40,7 +41,7 @@ export async function createAuditLog({
   });
 
   if (error) {
-    console.error("Failed to create audit log:", error);
+    logger.warn("Failed to create audit log", { error: error.message, action });
   }
 }
 

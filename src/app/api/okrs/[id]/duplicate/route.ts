@@ -62,10 +62,10 @@ export async function POST(
     const data = parsed.data;
     const serviceClient = await createServiceClient();
 
-    // Fetch existing OKR with key results
+    // P2-FIX: Fetch existing OKR with key results AND course links for duplication
     const { data: sourceOkr, error: fetchError } = await serviceClient
       .from("okrs")
-      .select("*, key_results(*)")
+      .select("*, key_results(*, okr_course_links(*))")
       .eq("id", id)
       .eq("user_id", user.id)
       .single();
@@ -181,6 +181,7 @@ export async function POST(
       const krData = sourceOkr.key_results.map(
         (
           kr: {
+            id: string;
             title: string;
             start_value: number;
             target_value: number;
@@ -189,6 +190,7 @@ export async function POST(
             sort_order: number;
             source_url: string | null;
             source_label: string | null;
+            okr_course_links?: Array<{ course_id: string }>;
           },
           index: number
         ) => ({
@@ -230,6 +232,49 @@ export async function POST(
       }
 
       insertedKRs = krs;
+
+      // P2-FIX: Copy course links from source KRs to new KRs
+      if (krs && krs.length > 0) {
+        const courseLinkInserts: Array<{ key_result_id: string; course_id: string }> = [];
+
+        sourceOkr.key_results.forEach(
+          (
+            sourceKr: {
+              id: string;
+              okr_course_links?: Array<{ course_id: string }>;
+            },
+            index: number
+          ) => {
+            if (sourceKr.okr_course_links && sourceKr.okr_course_links.length > 0) {
+              const newKrId = krs[index]?.id;
+              if (newKrId) {
+                for (const link of sourceKr.okr_course_links) {
+                  courseLinkInserts.push({
+                    key_result_id: newKrId,
+                    course_id: link.course_id,
+                  });
+                }
+              }
+            }
+          }
+        );
+
+        if (courseLinkInserts.length > 0) {
+          const { error: linkError } = await serviceClient
+            .from("okr_course_links")
+            .insert(courseLinkInserts);
+
+          if (linkError) {
+            // Non-critical: log warning but don't rollback the entire duplication
+            logger.warn("Duplicate course link insert failed", {
+              requestId,
+              userId: user.id,
+              newOkrId: newOkr.id,
+              error: linkError.message,
+            });
+          }
+        }
+      }
     }
 
     // Audit log (non-blocking)
@@ -239,7 +284,7 @@ export async function POST(
       id,
       newOkr.id,
       data.target_quarter
-    ).catch(() => {});
+    ).catch((err: unknown) => logger.warn("Audit log failed", { error: err instanceof Error ? err.message : String(err) }));
 
     logger.audit("okr.duplicated", {
       requestId,

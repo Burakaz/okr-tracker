@@ -59,20 +59,21 @@ export async function GET() {
       : 0;
     const atRiskCount = teamOKRs.filter((o: { status: string }) => o.status === "at_risk" || o.status === "off_track").length;
 
-    // Calculate per-member OKR stats for collapsed card quick-stats
-    const memberOKRStats: Record<string, { count: number; avgProgress: number }> = {};
+    // P2-FIX: Single-pass reduce instead of O(N²) filter-per-member
+    const memberOKRAccum: Record<string, { count: number; totalProgress: number }> = {};
     for (const okr of teamOKRs) {
-      if (!memberOKRStats[okr.user_id]) {
-        memberOKRStats[okr.user_id] = { count: 0, avgProgress: 0 };
+      if (!memberOKRAccum[okr.user_id]) {
+        memberOKRAccum[okr.user_id] = { count: 0, totalProgress: 0 };
       }
-      memberOKRStats[okr.user_id].count++;
+      memberOKRAccum[okr.user_id].count++;
+      memberOKRAccum[okr.user_id].totalProgress += okr.progress;
     }
-    // Calculate averages
-    for (const userId of Object.keys(memberOKRStats)) {
-      const memberOkrs = teamOKRs.filter((o: { user_id: string }) => o.user_id === userId);
-      memberOKRStats[userId].avgProgress = memberOkrs.length > 0
-        ? Math.round(memberOkrs.reduce((sum: number, o: { progress: number }) => sum + o.progress, 0) / memberOkrs.length)
-        : 0;
+    const memberOKRStats: Record<string, { count: number; avgProgress: number }> = {};
+    for (const [userId, accum] of Object.entries(memberOKRAccum)) {
+      memberOKRStats[userId] = {
+        count: accum.count,
+        avgProgress: Math.round(accum.totalProgress / accum.count),
+      };
     }
 
     return withRateLimitHeaders(withCorsHeaders(

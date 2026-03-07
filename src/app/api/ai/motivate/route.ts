@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
-import { withCorsHeaders, withRateLimitHeaders } from "@/lib/api-utils";
+import { withCorsHeaders, withRateLimitHeaders, checkAIRateLimit } from "@/lib/api-utils";
 import { logger, generateRequestId } from "@/lib/logger";
 
 export const dynamic = "force-dynamic";
@@ -25,13 +25,19 @@ export async function GET(request: NextRequest) {
       );
     }
 
+    // P1-FIX: Enforce AI rate limit
+    const rateLimitResponse = checkAIRateLimit(user.id);
+    if (rateLimitResponse) return rateLimitResponse;
+
     // Parse stats from query params
     const { searchParams } = new URL(request.url);
-    const name = searchParams.get("name") || "du";
-    const progress = parseInt(searchParams.get("progress") || "0", 10);
-    const okrCount = parseInt(searchParams.get("okrCount") || "0", 10);
-    const overdueCount = parseInt(searchParams.get("overdueCount") || "0", 10);
-    const daysRemaining = parseInt(searchParams.get("daysRemaining") || "0", 10);
+    // P1-FIX: Sanitize name to prevent prompt injection via query params
+    const rawName = searchParams.get("name") || "du";
+    const name = rawName.replace(/[^\p{L}\p{N}\s\-_.]/gu, "").trim().slice(0, 50) || "du";
+    const progress = Math.max(0, Math.min(100, parseInt(searchParams.get("progress") || "0", 10)));
+    const okrCount = Math.max(0, Math.min(100, parseInt(searchParams.get("okrCount") || "0", 10)));
+    const overdueCount = Math.max(0, Math.min(100, parseInt(searchParams.get("overdueCount") || "0", 10)));
+    const daysRemaining = Math.max(0, Math.min(365, parseInt(searchParams.get("daysRemaining") || "0", 10)));
 
     // Check for Anthropic API key (preferred for motivational messages)
     const anthropicKey = process.env.ANTHROPIC_API_KEY;

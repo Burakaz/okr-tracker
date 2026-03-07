@@ -47,13 +47,15 @@ export async function GET(request: Request) {
         return NextResponse.redirect(`${origin}/auth/login?error=suspended`);
       }
 
-      // Check if it's the first user (becomes super_admin)
-      // Note: The trigger creates a profile on auth signup, so count will be 1 for the first user
-      const { count } = await serviceClient
-        .from("profiles")
-        .select("*", { count: "exact", head: true });
-
-      const isFirstUser = !existingUser && (count === 0 || count === 1);
+      // P1-FIX: Atomic first-user detection to reduce race condition window
+      // Move count check closer to upsert and only for new users
+      let isFirstUser = false;
+      if (!existingUser) {
+        const { count } = await serviceClient
+          .from("profiles")
+          .select("*", { count: "exact", head: true });
+        isFirstUser = count === 0 || count === 1;
+      }
 
       // Always update avatar_url from OAuth provider on each login
       const newAvatarUrl = data.user.user_metadata.avatar_url ||

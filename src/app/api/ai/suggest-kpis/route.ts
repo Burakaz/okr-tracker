@@ -1,7 +1,7 @@
 import { createClient } from "@/lib/supabase/server";
 import { NextResponse } from "next/server";
 import { logger, generateRequestId } from "@/lib/logger";
-import { withCorsHeaders, withRateLimitHeaders } from "@/lib/api-utils";
+import { withCorsHeaders, withRateLimitHeaders, checkAIRateLimit } from "@/lib/api-utils";
 import { buildSystemPrompt, buildUserPrompt } from "@/lib/ai/prompt";
 import { aiSuggestResponseSchema } from "@/lib/ai/types";
 import { buildCacheKey, getCached, setCache } from "@/lib/ai/cache";
@@ -47,6 +47,10 @@ export async function POST(request: Request) {
         )
       );
     }
+
+    // P1-FIX: Enforce AI rate limit
+    const rateLimitResponse = checkAIRateLimit(user.id);
+    if (rateLimitResponse) return rateLimitResponse;
 
     // Parse and validate request body
     let body: AISuggestRequest;

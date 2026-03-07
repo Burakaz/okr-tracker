@@ -55,10 +55,11 @@ export function OrgGeneralTab() {
     <div className="space-y-6">
       {/* Org Name */}
       <div>
-        <label className="text-[11px] font-semibold text-muted uppercase tracking-wider block mb-1.5">
+        <label htmlFor="org-name" className="text-[11px] font-semibold text-muted uppercase tracking-wider block mb-1.5">
           Organisationsname
         </label>
         <input
+          id="org-name"
           type="text"
           value={name}
           onChange={(e) => setName(e.target.value)}
@@ -69,10 +70,11 @@ export function OrgGeneralTab() {
 
       {/* Domain */}
       <div>
-        <label className="text-[11px] font-semibold text-muted uppercase tracking-wider block mb-1.5">
+        <label htmlFor="org-domain" className="text-[11px] font-semibold text-muted uppercase tracking-wider block mb-1.5">
           Domain
         </label>
         <input
+          id="org-domain"
           type="text"
           value={domain}
           onChange={(e) => setDomain(e.target.value)}

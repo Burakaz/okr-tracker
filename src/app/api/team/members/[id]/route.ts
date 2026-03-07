@@ -55,6 +55,8 @@ export async function GET(
 ) {
   const requestId = generateRequestId();
   const { id: memberId } = await params;
+  const { searchParams } = new URL(request.url);
+  const quarter = searchParams.get("quarter");
 
   try {
     const supabase = await createClient();
@@ -83,6 +85,19 @@ export async function GET(
       ));
     }
 
+    // Build OKR query — filter by quarter if provided, otherwise only active
+    let okrQuery = serviceClient
+      .from("okrs")
+      .select("id, title, category, progress, status, confidence, quarter, is_active, key_results(id, title, current_value, target_value, progress, unit, sort_order)")
+      .eq("user_id", memberId)
+      .order("sort_order", { ascending: true });
+
+    if (quarter) {
+      okrQuery = okrQuery.eq("quarter", quarter);
+    } else {
+      okrQuery = okrQuery.eq("is_active", true);
+    }
+
     // Fetch all data in parallel
     const [profileRes, okrsRes, enrollmentsRes, careerProgressRes] = await Promise.all([
       // Profile with full fields
@@ -92,20 +107,15 @@ export async function GET(
         .eq("id", memberId)
         .single(),
 
-      // Active OKRs with key results
-      serviceClient
-        .from("okrs")
-        .select("id, title, category, progress, status, confidence, quarter, key_results(id, title, current_value, target_value, progress, unit, sort_order)")
-        .eq("user_id", memberId)
-        .eq("is_active", true)
-        .order("sort_order", { ascending: true }),
+      // OKRs (quarter-filtered or active-only)
+      okrQuery,
 
-      // Enrollments with course info
+      // All enrollments with course info (no status filter — detail page needs all)
       serviceClient
         .from("enrollments")
-        .select("id, status, progress, course:courses(id, title, category)")
+        .select("id, status, progress, started_at, completed_at, course:courses(id, title, category)")
         .eq("user_id", memberId)
-        .in("status", ["in_progress", "completed"]),
+        .order("created_at", { ascending: false }),
 
       // Career progress
       serviceClient

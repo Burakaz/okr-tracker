@@ -80,11 +80,13 @@ export async function POST(
     }
     const { organization_id: orgId } = profileData;
 
-    // Verify course exists
+    // P0-FIX: Verify course exists, is published, AND belongs to user's organization
     const { data: course, error: courseError } = await serviceClient
       .from("courses")
       .select("id")
       .eq("id", id)
+      .eq("is_published", true)
+      .eq("organization_id", orgId)
       .single();
 
     if (courseError || !course) {

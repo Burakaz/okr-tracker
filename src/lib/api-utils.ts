@@ -56,6 +56,59 @@ export function handleCorsPreflightResponse(): NextResponse {
 }
 
 /**
+ * P1-FIX: In-memory rate limiter for AI endpoints.
+ * Tracks calls per user with a sliding window.
+ * Limit: 10 calls/user/hour for AI endpoints.
+ */
+const AI_RATE_LIMIT = 10;
+const AI_RATE_WINDOW_MS = 60 * 60 * 1000; // 1 hour
+
+const aiRateLimitMap = new Map<string, number[]>();
+
+// Clean up old entries every 10 minutes to prevent memory leaks
+setInterval(() => {
+  const cutoff = Date.now() - AI_RATE_WINDOW_MS;
+  for (const [key, timestamps] of aiRateLimitMap.entries()) {
+    const filtered = timestamps.filter((t) => t > cutoff);
+    if (filtered.length === 0) {
+      aiRateLimitMap.delete(key);
+    } else {
+      aiRateLimitMap.set(key, filtered);
+    }
+  }
+}, 10 * 60 * 1000).unref();
+
+/**
+ * Checks if a user has exceeded the AI rate limit.
+ * Returns null if allowed, or a 429 NextResponse if rate-limited.
+ */
+export function checkAIRateLimit(userId: string): NextResponse | null {
+  const now = Date.now();
+  const cutoff = now - AI_RATE_WINDOW_MS;
+  const timestamps = (aiRateLimitMap.get(userId) || []).filter((t) => t > cutoff);
+
+  if (timestamps.length >= AI_RATE_LIMIT) {
+    const oldestRelevant = timestamps[0];
+    const resetIn = Math.ceil((oldestRelevant + AI_RATE_WINDOW_MS - now) / 1000);
+    return withRateLimitHeaders(
+      withCorsHeaders(
+        NextResponse.json(
+          { error: `Zu viele AI-Anfragen. Bitte warte ${resetIn} Sekunden.` },
+          { status: 429 }
+        )
+      ),
+      AI_RATE_LIMIT,
+      0,
+      resetIn
+    );
+  }
+
+  timestamps.push(now);
+  aiRateLimitMap.set(userId, timestamps);
+  return null;
+}
+
+/**
  * Ensures the user has a profile with an organization_id.
  * Self-healing: creates profile/org if missing.
  * Returns { organization_id, role } or null on failure.

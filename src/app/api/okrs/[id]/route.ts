@@ -176,6 +176,19 @@ export async function PATCH(
       );
     }
 
+    // P0-FIX: Prevent mutation of archived OKRs — use /archive endpoint to restore
+    if (!existingOkr.is_active) {
+      reqLog.finish(400, { userId: user.id });
+      return withRateLimitHeaders(
+        withCorsHeaders(
+          NextResponse.json(
+            { error: "Archivierte OKRs können nicht bearbeitet werden" },
+            { status: 400 }
+          )
+        )
+      );
+    }
+
     // Calculate field-level diffs for audit
     const changedFields: Record<string, { old: unknown; new: unknown }> = {};
     for (const [key, newValue] of Object.entries(data)) {
@@ -341,7 +354,7 @@ export async function PATCH(
         existingOkr.organization_id,
         id,
         changedFields
-      ).catch(() => {});
+      ).catch((err: unknown) => logger.warn("Audit log failed", { error: err instanceof Error ? err.message : String(err) }));
 
       logger.audit("okr.updated", {
         requestId,
@@ -469,7 +482,7 @@ export async function DELETE(
       existingOkr.organization_id,
       id,
       existingOkr.title
-    ).catch(() => {});
+    ).catch((err: unknown) => logger.warn("Audit log failed", { error: err instanceof Error ? err.message : String(err) }));
 
     logger.audit("okr.deleted", {
       requestId,

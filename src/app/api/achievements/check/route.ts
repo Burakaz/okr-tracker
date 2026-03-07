@@ -127,7 +127,7 @@ export async function POST(request: NextRequest) {
     if (event === "checkin_created") {
       // Check if user has >= 1 check-in
       const { count } = await serviceClient
-        .from("checkins")
+        .from("okr_checkins")
         .select("id", { count: "exact", head: true })
         .eq("user_id", user.id);
 
@@ -168,12 +168,30 @@ export async function POST(request: NextRequest) {
     if (event === "quarter_ended") {
       const currentQuarter = getCurrentQuarter();
 
-      // Fetch all OKRs for the current quarter
+      // P1-FIX: Only allow quarter_ended in the last 7 days of the quarter
+      const quarterRange = getQuarterDateRange(currentQuarter);
+      const quarterEndDate = new Date(quarterRange.end);
+      const now = new Date();
+      const daysUntilEnd = (quarterEndDate.getTime() - now.getTime()) / (1000 * 60 * 60 * 24);
+      if (daysUntilEnd > 7) {
+        reqLog.finish(400, { userId: user.id });
+        return withRateLimitHeaders(
+          withCorsHeaders(
+            NextResponse.json(
+              { error: "Quartalsende-Achievements können erst in den letzten 7 Tagen des Quartals geprüft werden" },
+              { status: 400 }
+            )
+          )
+        );
+      }
+
+      // Fetch all active OKRs for the current quarter
       const { data: okrs } = await serviceClient
         .from("okrs")
         .select("progress")
         .eq("user_id", user.id)
-        .eq("quarter", currentQuarter);
+        .eq("quarter", currentQuarter)
+        .eq("is_active", true);
 
       const okrList = okrs || [];
 

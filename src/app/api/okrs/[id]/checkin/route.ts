@@ -325,7 +325,7 @@ export async function POST(
       okr.organization_id,
       checkin.id,
       okrId
-    ).catch(() => {});
+    ).catch((err: unknown) => logger.warn("Audit log failed", { error: err instanceof Error ? err.message : String(err) }));
 
     logger.audit("checkin.created", {
       requestId,

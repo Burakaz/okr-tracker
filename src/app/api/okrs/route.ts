@@ -353,6 +353,24 @@ export async function POST(request: NextRequest) {
         const insertedKR = insertedKRs[i];
         if (!krInput.course_id || !insertedKR) continue;
 
+        // P0-FIX: Verify course exists, is published, AND belongs to user's org before auto-enrollment
+        const { data: validCourse } = await serviceClient
+          .from("courses")
+          .select("id")
+          .eq("id", krInput.course_id)
+          .eq("is_published", true)
+          .eq("organization_id", orgId)
+          .maybeSingle();
+
+        if (!validCourse) {
+          logger.warn("Auto-enrollment skipped: course not found, unpublished, or wrong org", {
+            requestId,
+            userId: user.id,
+            courseId: krInput.course_id,
+          });
+          continue;
+        }
+
         // Find or create enrollment
         let enrollmentId: string | null = null;
 
@@ -391,7 +409,7 @@ export async function POST(request: NextRequest) {
     }
 
     // Audit log (non-blocking)
-    logOKRCreate(user.id, orgId, newOkr.id, data.title).catch(() => {});
+    logOKRCreate(user.id, orgId, newOkr.id, data.title).catch((err: unknown) => logger.warn("Audit log failed", { error: err instanceof Error ? err.message : String(err) }));
 
     logger.audit("okr.created", {
       requestId,

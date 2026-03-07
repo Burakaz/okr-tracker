@@ -145,14 +145,14 @@ export async function POST(
         existingOkr.organization_id,
         id,
         existingOkr.title
-      ).catch(() => {});
+      ).catch((err: unknown) => logger.warn("Audit log failed", { error: err instanceof Error ? err.message : String(err) }));
     } else {
       logOKRRestore(
         user.id,
         existingOkr.organization_id,
         id,
         existingOkr.title
-      ).catch(() => {});
+      ).catch((err: unknown) => logger.warn("Audit log failed", { error: err instanceof Error ? err.message : String(err) }));
     }
 
     logger.audit(archive ? "okr.archived" : "okr.restored", {

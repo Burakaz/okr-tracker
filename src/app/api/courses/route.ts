@@ -188,7 +188,20 @@ export async function POST(request: NextRequest) {
         )
       );
     }
-    const { organization_id: orgId } = profileData;
+    const { organization_id: orgId, role } = profileData;
+
+    // P1-FIX: Only hr, admin, super_admin can create courses
+    if (!["hr", "admin", "super_admin"].includes(role)) {
+      reqLog.finish(403, { userId: user.id });
+      return withRateLimitHeaders(
+        withCorsHeaders(
+          NextResponse.json(
+            { error: "Keine Berechtigung zum Erstellen von Kursen" },
+            { status: 403 }
+          )
+        )
+      );
+    }
 
     // Insert the course
     const { data: newCourse, error: insertError } = await serviceClient
