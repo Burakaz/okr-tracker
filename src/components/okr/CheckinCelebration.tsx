@@ -90,9 +90,11 @@ function generateConfetti(count: number): ConfettiPiece[] {
 interface CheckinCelebrationProps {
   level: CelebrationLevel;
   onComplete: () => void;
+  /** Actual OKR progress 0-100. Shown in the ring instead of a fake percentage. */
+  progress?: number;
 }
 
-export function CheckinCelebration({ level, onComplete }: CheckinCelebrationProps) {
+export function CheckinCelebration({ level, onComplete, progress }: CheckinCelebrationProps) {
   const [message] = useState(() => getRandomMessage(level));
   const [sparkles] = useState(() =>
     generateSparkles(level === "high" ? 16 : level === "medium" ? 10 : 5)
@@ -117,7 +119,7 @@ export function CheckinCelebration({ level, onComplete }: CheckinCelebrationProp
   }, [level, dismiss]);
 
   const ringColor = level === "high" ? "#22c55e" : level === "medium" ? "#22c55e" : "#f59e0b";
-  const ringProgress = level === "high" ? 0.85 : level === "medium" ? 0.6 : 0.35;
+  const ringProgress = progress != null ? Math.min(progress, 100) / 100 : (level === "high" ? 0.85 : level === "medium" ? 0.6 : 0.35);
   const circumference = 2 * Math.PI * 28;
   const offset = circumference * (1 - ringProgress);
 

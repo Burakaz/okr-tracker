@@ -412,6 +412,7 @@ export function OKRAccordionItem({
           <div className="mt-4">
             <CheckinCelebration
               level={celebrationLevel}
+              progress={okr.progress}
               onComplete={() => setCelebrationLevel(null)}
             />
           </div>
