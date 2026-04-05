@@ -37,17 +37,17 @@ interface KeyResultInput {
   unit: string;
 }
 
-const categories: { value: OKRCategory; label: string; icon: React.ReactNode }[] = [
-  { value: "performance", label: "Performance", icon: <Target className="h-4 w-4" /> },
-  { value: "skill", label: "Skill", icon: <Zap className="h-4 w-4" /> },
-  { value: "learning", label: "Lernen", icon: <BookOpen className="h-4 w-4" /> },
-  { value: "career", label: "Karriere", icon: <Briefcase className="h-4 w-4" /> },
+const categories: { value: OKRCategory; label: string; description: string; icon: React.ReactNode }[] = [
+  { value: "performance", label: "Performance", description: "Leistung & Ergebnisse", icon: <Target className="h-5 w-5" /> },
+  { value: "skill", label: "Kompetenz", description: "Fähigkeiten ausbauen", icon: <Zap className="h-5 w-5" /> },
+  { value: "learning", label: "Lernen", description: "Wissen & Weiterbildung", icon: <BookOpen className="h-5 w-5" /> },
+  { value: "career", label: "Karriere", description: "Berufliche Entwicklung", icon: <Briefcase className="h-5 w-5" /> },
 ];
 
-const scopeOptions: { value: OKRScope; label: string }[] = [
-  { value: "personal", label: "Personal" },
-  { value: "team", label: "Team" },
-  { value: "company", label: "Company" },
+const scopeOptions: { value: OKRScope; label: string; description: string }[] = [
+  { value: "personal", label: "Persönliche Entwicklung", description: "Nur für dich sichtbar" },
+  { value: "team", label: "Team-Ziel", description: "Für dein Team relevant" },
+  { value: "company", label: "Unternehmensziel", description: "Unternehmensweite Priorität" },
 ];
 
 function generateId() {
@@ -352,7 +352,7 @@ export function OKRFormFields({
   const scopeSelector = () => (
     <div>
       <label className="text-[11px] font-semibold text-muted uppercase tracking-wider block mb-1.5">
-        Bereich
+        Zielbereich
       </label>
       <div className={layout === "page" ? "flex flex-col gap-2" : "flex gap-2"}>
         {scopeOptions.map((opt) => (
@@ -643,33 +643,132 @@ export function OKRFormFields({
     return (
       <form onSubmit={handleSubmit} className="flex-1 flex flex-col min-h-0">
         <div className="flex-1 overflow-y-auto">
-          <div className="max-w-5xl mx-auto px-4 sm:px-6 py-6">
-            <div className="grid grid-cols-1 md:grid-cols-5 gap-8">
-              {/* Left column (60%) */}
-              <div className="md:col-span-3 space-y-6">
-                {titleInput(true, true)}
-                {whyItMattersField()}
-                {courseSelectorBlock()}
-                {aiSuggestionsBlock()}
-                {manualKeyResultsBlock()}
-                {validationError}
-              </div>
+          <div className="max-w-[1400px] mx-auto px-4 sm:px-6 py-8">
 
-              {/* Right column (40%) */}
-              <div className="md:col-span-2 space-y-6">
-                <div className="md:sticky md:top-6 space-y-6">
-                  {categorySelector()}
-                  {quarterSelector()}
-                  {scopeSelector()}
+            {/* Step 1: What & Why — full width, prominent */}
+            <div className="max-w-2xl">
+              <label htmlFor="okr-title" className="text-[11px] font-semibold text-muted uppercase tracking-wider block mb-2">
+                Was willst du erreichen? *
+              </label>
+              <input
+                id="okr-title"
+                type="text"
+                value={title}
+                onChange={(e) => setTitle(e.target.value)}
+                placeholder="z.B. Kundenzufriedenheit um 20% steigern"
+                className="input text-xl font-medium py-3"
+                autoFocus
+              />
+            </div>
+
+            <div className="max-w-2xl mt-5">
+              <label htmlFor="okr-why" className="text-[11px] font-semibold text-muted uppercase tracking-wider block mb-2">
+                Warum ist das wichtig?
+              </label>
+              <textarea
+                id="okr-why"
+                value={whyItMatters}
+                onChange={(e) => setWhyItMatters(e.target.value)}
+                placeholder="Kontext und Motivation für dieses OKR..."
+                className="input"
+                rows={2}
+              />
+            </div>
+
+            {/* Step 2: Metadata — horizontal row */}
+            <div className="mt-8 grid grid-cols-1 md:grid-cols-3 gap-6 border-t border-cream-300/30 pt-8">
+
+              {/* Scope */}
+              <div>
+                <label className="text-[11px] font-semibold text-muted uppercase tracking-wider block mb-2">
+                  Zielbereich
+                </label>
+                <div className="space-y-1.5">
+                  {scopeOptions.map((opt) => (
+                    <button
+                      key={opt.value}
+                      type="button"
+                      onClick={() => setScope(opt.value)}
+                      aria-pressed={scope === opt.value}
+                      className={`w-full flex items-center gap-3 px-3.5 py-2.5 rounded-lg text-left transition-all ${
+                        scope === opt.value
+                          ? "bg-foreground text-white"
+                          : "bg-cream-100 text-foreground hover:bg-cream-200"
+                      }`}
+                    >
+                      <div className="flex-1">
+                        <span className="text-[13px] font-medium block">{opt.label}</span>
+                        <span className={`text-[11px] ${scope === opt.value ? "text-white/70" : "text-muted"}`}>
+                          {opt.description}
+                        </span>
+                      </div>
+                    </button>
+                  ))}
                 </div>
               </div>
+
+              {/* Category */}
+              <div>
+                <label className="text-[11px] font-semibold text-muted uppercase tracking-wider block mb-2">
+                  Kategorie
+                </label>
+                <div className="grid grid-cols-2 gap-1.5">
+                  {categories.map((cat) => (
+                    <button
+                      key={cat.value}
+                      type="button"
+                      onClick={() => setCategory(cat.value)}
+                      aria-pressed={category === cat.value}
+                      className={`flex flex-col items-center gap-1 px-3 py-3 rounded-lg text-center transition-all ${
+                        category === cat.value
+                          ? "bg-foreground text-white"
+                          : "bg-cream-100 text-foreground hover:bg-cream-200"
+                      }`}
+                    >
+                      <span className={category === cat.value ? "text-white" : "text-muted"}>{cat.icon}</span>
+                      <span className="text-[12px] font-medium">{cat.label}</span>
+                      <span className={`text-[10px] leading-tight ${category === cat.value ? "text-white/70" : "text-muted"}`}>
+                        {cat.description}
+                      </span>
+                    </button>
+                  ))}
+                </div>
+              </div>
+
+              {/* Quarter */}
+              <div>
+                <label htmlFor="okr-quarter-page" className="text-[11px] font-semibold text-muted uppercase tracking-wider block mb-2">
+                  Quartal
+                </label>
+                <div className="relative">
+                  <select
+                    id="okr-quarter-page"
+                    value={quarter}
+                    onChange={(e) => setQuarter(e.target.value)}
+                    className="input appearance-none pr-8 py-2.5"
+                  >
+                    {quarterOptions.map((qo) => (
+                      <option key={qo} value={qo}>{qo}</option>
+                    ))}
+                  </select>
+                  <ChevronDown className="absolute right-2.5 top-1/2 -translate-y-1/2 h-4 w-4 text-muted pointer-events-none" aria-hidden="true" />
+                </div>
+              </div>
+            </div>
+
+            {/* Step 3: Key Results — full width */}
+            <div className="mt-8 border-t border-cream-300/30 pt-8">
+              {courseSelectorBlock()}
+              {aiSuggestionsBlock()}
+              {manualKeyResultsBlock()}
+              {validationError}
             </div>
           </div>
         </div>
 
         {/* Fixed bottom bar */}
         <div className="border-t border-cream-300/50 bg-background px-4 sm:px-6 py-4">
-          <div className="max-w-5xl mx-auto flex items-center justify-between">
+          <div className="max-w-[1400px] mx-auto flex items-center justify-between">
             <button type="button" onClick={onCancel} className="btn-secondary">
               Abbrechen
             </button>
