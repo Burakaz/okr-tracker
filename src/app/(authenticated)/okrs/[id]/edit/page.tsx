@@ -55,7 +55,7 @@ export default function EditOKRPage() {
           <Link
             href="/okrs"
             className="p-1.5 hover:bg-cream-200 rounded-lg transition-colors"
-            aria-label="Zurueck zu Ziele"
+            aria-label="Zurück zu Ziele"
           >
             <ArrowLeft className="h-5 w-5 text-muted" />
           </Link>
@@ -81,7 +81,7 @@ export default function EditOKRPage() {
         <div className="flex-1 flex flex-col items-center justify-center gap-4">
           <p className="text-[15px] text-muted">OKR nicht gefunden</p>
           <Link href="/okrs" className="btn-secondary text-[13px]">
-            Zurueck zu Ziele
+            Zurück zu Ziele
           </Link>
         </div>
       )}

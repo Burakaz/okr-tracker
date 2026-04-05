@@ -248,7 +248,7 @@ export function OKRFormFields({
     if (allKRs.length === 0) {
       setFormError(
         category === "learning"
-          ? "Waehle mindestens einen Kurs aus."
+          ? "Wähle mindestens einen Kurs aus."
           : "Mindestens 1 Key Result ist erforderlich."
       );
       return;
@@ -383,7 +383,7 @@ export function OKRFormFields({
         id="okr-why"
         value={whyItMatters}
         onChange={(e) => setWhyItMatters(e.target.value)}
-        placeholder="Kontext und Motivation fuer dieses OKR..."
+        placeholder="Kontext und Motivation für dieses OKR..."
         className="input"
         rows={3}
       />
@@ -405,7 +405,7 @@ export function OKRFormFields({
         <div className="flex items-center justify-between mb-2">
           <label className="text-[11px] font-semibold text-muted uppercase tracking-wider flex items-center gap-1.5">
             <Sparkles className="h-3.5 w-3.5 text-accent-green" aria-hidden="true" />
-            KI-Vorschlaege
+            KI-Vorschläge
           </label>
           {suggestMutation.data && !suggestMutation.isPending && (
             <button
@@ -422,13 +422,13 @@ export function OKRFormFields({
         {suggestMutation.isPending && (
           <div className="rounded-lg border border-accent-greenLight bg-accent-greenLight/10 p-4 flex items-center gap-3">
             <Loader2 className="h-4 w-4 animate-spin text-accent-green flex-shrink-0" aria-hidden="true" />
-            <span className="text-[13px] text-muted">KI generiert Vorschlaege...</span>
+            <span className="text-[13px] text-muted">KI generiert Vorschläge...</span>
           </div>
         )}
 
         {suggestMutation.isError && (
           <div className="rounded-lg border border-red-200 bg-red-50 p-4">
-            <p className="text-[13px] text-red-600 mb-2">{suggestMutation.error?.message || "Fehler beim Laden der Vorschlaege"}</p>
+            <p className="text-[13px] text-red-600 mb-2">{suggestMutation.error?.message || "Fehler beim Laden der Vorschläge"}</p>
             <button
               type="button"
               onClick={handleRetrySuggest}
@@ -501,7 +501,7 @@ export function OKRFormFields({
             className="btn-ghost text-[12px] flex items-center gap-1.5 text-accent-green hover:text-accent-greenDark"
           >
             <Sparkles className="h-3.5 w-3.5" aria-hidden="true" />
-            <span>KI-Vorschlaege generieren</span>
+            <span>KI-Vorschläge generieren</span>
           </button>
         )}
       </div>
@@ -578,7 +578,7 @@ export function OKRFormFields({
         className="btn-ghost text-[13px] gap-1.5"
       >
         <Plus className="h-3.5 w-3.5" />
-        Key Result hinzufuegen
+        Key Result hinzufügen
       </button>
 
       {/* In edit mode, show AI suggest button inline */}
@@ -622,7 +622,7 @@ export function OKRFormFields({
             ) : (
               <>
                 <Sparkles className="h-3.5 w-3.5" aria-hidden="true" />
-                <span>KI-Vorschlaege fuer Key Results</span>
+                <span>KI-Vorschläge für Key Results</span>
               </>
             )}
           </button>
@@ -675,7 +675,7 @@ export function OKRFormFields({
             </button>
             <div className="flex items-center gap-3">
               <span className="text-[12px] text-muted">
-                {totalKRs} KR{totalKRs !== 1 ? "s" : ""} ausgewaehlt
+                {totalKRs} KR{totalKRs !== 1 ? "s" : ""} ausgewählt
               </span>
               <button
                 type="submit"
@@ -722,7 +722,7 @@ export function OKRFormFields({
             type="button"
             onClick={onCancel}
             className="p-1.5 hover:bg-cream-200 rounded-lg transition-colors"
-            aria-label="Formular schliessen"
+            aria-label="Formular schließen"
           >
             <X className="h-5 w-5 text-muted" aria-hidden="true" />
           </button>
@@ -743,7 +743,7 @@ export function OKRFormFields({
               onClick={() => setShowDetails(true)}
               className="text-[13px] text-muted hover:text-foreground transition-colors"
             >
-              + Details hinzufuegen
+              + Details hinzufügen
             </button>
           ) : (
             whyItMattersField()
@@ -795,7 +795,7 @@ export function OKRFormFields({
               className="btn-ghost text-[13px] gap-1.5"
             >
               <ArrowLeft className="h-3.5 w-3.5" />
-              Zurueck
+              Zurück
             </button>
           )}
           {(step === 1 || isEditing) && (
@@ -821,7 +821,7 @@ export function OKRFormFields({
             <>
               {!isEditing && (
                 <span className="text-[12px] text-muted">
-                  {totalKRs} KR{totalKRs !== 1 ? "s" : ""} ausgewaehlt
+                  {totalKRs} KR{totalKRs !== 1 ? "s" : ""} ausgewählt
                 </span>
               )}
               <button

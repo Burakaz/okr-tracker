@@ -120,7 +120,7 @@ export function OrgRightsTab() {
           <SettingRow
             icon={<Bell className="h-4 w-4 text-muted" />}
             title="Benachrichtigungen"
-            description="Wer erhaelt Check-in-Erinnerungen und Updates"
+            description="Wer erhält Check-in-Erinnerungen und Updates"
           />
         </div>
       </div>

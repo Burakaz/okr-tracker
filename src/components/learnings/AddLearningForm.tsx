@@ -172,7 +172,7 @@ export function AddLearningForm({
       toast.error(
         error instanceof Error
           ? error.message
-          : "Fehler bei KI-Modul-Vorschlaegen"
+          : "Fehler bei KI-Modul-Vorschlägen"
       );
     }
   }, [
@@ -230,7 +230,7 @@ export function AddLearningForm({
   const canSuggestModules = title.trim().length >= 3;
 
   return (
-    <Modal onClose={onClose} title="Kurs hinzufuegen" titleId="add-learning-title">
+    <Modal onClose={onClose} title="Kurs hinzufügen" titleId="add-learning-title">
         <form onSubmit={handleSubmit}>
           <ModalBody>
             {/* Title */}
@@ -421,7 +421,7 @@ export function AddLearningForm({
                           e.target.value
                         )
                       }
-                      placeholder="Geschaetzte Minuten (optional)"
+                      placeholder="Geschätzte Minuten (optional)"
                       className="input"
                       min={1}
                     />
@@ -435,7 +435,7 @@ export function AddLearningForm({
                   className="btn-ghost text-[13px] gap-1.5"
                 >
                   <Plus className="h-3.5 w-3.5" />
-                  Modul hinzufuegen
+                  Modul hinzufügen
                 </button>
                 <button
                   type="button"
@@ -447,7 +447,7 @@ export function AddLearningForm({
                   title={
                     !canSuggestModules
                       ? "Titel muss mindestens 3 Zeichen haben"
-                      : "KI schlaegt Module vor"
+                      : "KI schlägt Module vor"
                   }
                 >
                   {suggestModulesMutation.isPending ? (

@@ -50,7 +50,7 @@ export default function NewOKRPage() {
           <Link
             href="/okrs"
             className="p-1.5 hover:bg-cream-200 rounded-lg transition-colors"
-            aria-label="Zurueck zu Ziele"
+            aria-label="Zurück zu Ziele"
           >
             <ArrowLeft className="h-5 w-5 text-muted" />
           </Link>

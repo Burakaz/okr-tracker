@@ -17,7 +17,7 @@ export function OrgTeamsTab() {
           <p className="empty-state-description">
             Erstelle ein Team, um OKRs und Mitglieder zu gruppieren.
           </p>
-          <button className="btn-primary mt-4" type="button">
+          <button className="btn-primary mt-4 opacity-50 cursor-not-allowed" type="button" disabled title="Kommt bald">
             Team erstellen
           </button>
         </div>

@@ -193,7 +193,7 @@ function LearningsContent() {
                 className="btn-primary text-[13px] gap-1.5"
               >
                 <Plus className="h-4 w-4" aria-hidden="true" />
-                <span className="hidden sm:inline">Kurs</span> hinzufuegen
+                <span className="hidden sm:inline">Kurs</span> hinzufügen
               </button>
             </div>
           </div>
@@ -212,7 +212,7 @@ function LearningsContent() {
                   type="button"
                   onClick={handleDismissSuggestions}
                   className="p-1 hover:bg-cream-200 rounded-lg transition-colors"
-                  aria-label="Empfehlungen schliessen"
+                  aria-label="Empfehlungen schließen"
                 >
                   <X className="h-4 w-4 text-muted" aria-hidden="true" />
                 </button>

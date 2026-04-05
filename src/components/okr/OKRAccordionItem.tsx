@@ -564,11 +564,11 @@ export function OKRAccordionItem({
 
                 <button
                   onClick={() => onDelete(okr)}
-                  className="p-2 min-w-[44px] min-h-[44px] flex items-center justify-center hover:bg-red-50 rounded-lg transition-colors"
+                  className="group p-2 min-w-[44px] min-h-[44px] flex items-center justify-center hover:bg-red-50 rounded-lg transition-colors"
                   title="Löschen"
                   aria-label={`"${okr.title}" löschen`}
                 >
-                  <Trash2 className="h-4 w-4 text-red-500" aria-hidden="true" />
+                  <Trash2 className="h-4 w-4 text-red-500 group-hover:text-red-600 transition-colors" aria-hidden="true" />
                 </button>
               </div>
             </div>

@@ -63,7 +63,7 @@ export function TeamLearnings() {
         </div>
         <p className="empty-state-title">Zugriff verweigert</p>
         <p className="empty-state-description">
-          Diese Ansicht ist nur fuer Manager und Administratoren verfuegbar.
+          Diese Ansicht ist nur für Manager und Administratoren verfügbar.
         </p>
       </div>
     );
