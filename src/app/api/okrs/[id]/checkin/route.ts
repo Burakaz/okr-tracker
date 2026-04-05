@@ -34,15 +34,40 @@ export async function GET(
 
     const serviceClient = await createServiceClient();
 
-    // Verify the user owns the OKR
-    const { data: okr, error: okrError } = await serviceClient
+    // Try as owner first
+    let { data: okr } = await serviceClient
       .from("okrs")
       .select("id, user_id")
       .eq("id", okrId)
       .eq("user_id", user.id)
       .single();
 
-    if (okrError || !okr) {
+    // If not owner, check manager/HR/admin access
+    if (!okr) {
+      const { data: targetOkr } = await serviceClient
+        .from("okrs")
+        .select("id, user_id, organization_id")
+        .eq("id", okrId)
+        .single();
+
+      if (targetOkr) {
+        const { data: requesterProfile } = await serviceClient
+          .from("profiles")
+          .select("role, organization_id")
+          .eq("id", user.id)
+          .single();
+
+        if (
+          requesterProfile &&
+          requesterProfile.organization_id === targetOkr.organization_id &&
+          ["manager", "hr", "admin", "super_admin"].includes(requesterProfile.role)
+        ) {
+          okr = { id: targetOkr.id, user_id: targetOkr.user_id };
+        }
+      }
+    }
+
+    if (!okr) {
       reqLog.finish(404, { userId: user.id });
       return withRateLimitHeaders(
         withCorsHeaders(

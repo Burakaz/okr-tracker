@@ -19,6 +19,7 @@ import {
   Check,
   MessageSquare,
 } from "lucide-react";
+import { CheckinHistory } from "@/components/okr/CheckinHistory";
 import { ProgressBar } from "@/components/ui/ProgressBar";
 import { CheckinCelebration, type CelebrationLevel } from "@/components/okr/CheckinCelebration";
 import { CourseLinker } from "@/components/okr/CourseLinker";
@@ -499,6 +500,11 @@ export function OKRAccordionItem({
                   isLinking={isLinkingCourse}
                 />
               )}
+
+              {/* Check-in History */}
+              <div className="px-4 sm:px-5 py-3 border-t border-cream-300/30">
+                <CheckinHistory okrId={okr.id} />
+              </div>
 
               {/* Action Buttons */}
               <div className="flex flex-wrap items-center gap-2 pt-2 border-t border-cream-200">
