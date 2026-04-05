@@ -1,6 +1,6 @@
 "use client";
 
-import { Suspense, useState } from "react";
+import { Suspense } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import {
@@ -10,11 +10,8 @@ import {
   Trophy,
   Users,
   Building2,
-  ChevronDown,
-  LogOut,
-  User as UserIcon,
+  Settings,
   X,
-  TrendingUp,
 } from "lucide-react";
 import type { User } from "@/types";
 
@@ -40,21 +37,45 @@ export function Sidebar(props: SidebarProps) {
   );
 }
 
-const navItems = [
-  { href: "/dashboard", icon: LayoutDashboard, label: "Mein Quartal" },
-  { href: "/okrs", icon: Target, label: "Ziele" },
-  { href: "/learnings", icon: BookOpen, label: "Lernen" },
-  { href: "/career", icon: TrendingUp, label: "Karriere" },
-  { href: "/review", icon: Trophy, label: "Rückblick" },
-];
+function SectionLabel({ children }: { children: React.ReactNode }) {
+  return (
+    <h3 className="px-3 pt-5 pb-1 text-[10px] font-semibold uppercase tracking-wider text-muted">
+      {children}
+    </h3>
+  );
+}
 
-const managementItems = [
-  { href: "/team", icon: Users, label: "Team & Orga" },
-];
+function NavItem({
+  href,
+  icon,
+  label,
+  active,
+  variant = "primary",
+  onClick,
+}: {
+  href: string;
+  icon: React.ReactNode;
+  label: string;
+  active: boolean;
+  variant?: "primary" | "secondary";
+  onClick?: () => void;
+}) {
+  const isPrimary = variant === "primary";
+  return (
+    <Link
+      href={href}
+      className={`sidebar-item ${active ? "active" : ""} ${!isPrimary ? "text-muted" : ""}`}
+      onClick={onClick}
+      style={{ fontSize: isPrimary ? 13 : 12 }}
+    >
+      {icon}
+      <span>{label}</span>
+    </Link>
+  );
+}
 
 function SidebarContent({ user, orgLogo, onNavClick }: SidebarProps) {
   const pathname = usePathname();
-  const [showProfileMenu, setShowProfileMenu] = useState(false);
 
   const initials = user.name
     .split(" ")
@@ -63,24 +84,20 @@ function SidebarContent({ user, orgLogo, onNavClick }: SidebarProps) {
     .toUpperCase()
     .slice(0, 2);
 
-  const roleDisplay =
-    user.role === "super_admin"
-      ? "Super Admin"
-      : user.role === "admin"
-        ? "Administrator"
-        : user.role === "manager"
-          ? "Manager"
-          : user.role === "hr"
-            ? "HR"
-            : "Mitarbeiter";
-
   const isActive = (href: string) => {
     if (href === "/dashboard") return pathname === "/dashboard";
     return pathname.startsWith(href);
   };
 
+  const isManager = ["admin", "super_admin", "hr", "manager"].includes(
+    user.role,
+  );
+
   return (
-    <aside className="sidebar-container w-52" aria-label="Seitenleiste">
+    <aside
+      className="sidebar-container w-52 flex flex-col"
+      aria-label="Seitenleiste"
+    >
       {/* Logo / Org Header */}
       <div className="px-4 py-5">
         <div className="flex items-center gap-3">
@@ -119,47 +136,76 @@ function SidebarContent({ user, orgLogo, onNavClick }: SidebarProps) {
         className="flex-1 overflow-y-auto px-3 py-1"
         aria-label="Hauptnavigation"
       >
+        {/* HAUPTMENU */}
+        <SectionLabel>Hauptmenu</SectionLabel>
         <div className="space-y-0.5">
-          {navItems.map((item) => (
-            <NavItem
-              key={item.href}
-              href={item.href}
-              icon={<item.icon className="h-4 w-4" />}
-              label={item.label}
-              active={isActive(item.href)}
-              onClick={onNavClick}
-            />
-          ))}
+          <NavItem
+            href="/dashboard"
+            icon={<LayoutDashboard className="h-4 w-4" />}
+            label="Mein Quartal"
+            active={isActive("/dashboard")}
+            variant="primary"
+            onClick={onNavClick}
+          />
+          <NavItem
+            href="/okrs"
+            icon={<Target className="h-4 w-4" />}
+            label="Ziele"
+            active={isActive("/okrs")}
+            variant="primary"
+            onClick={onNavClick}
+          />
+          <NavItem
+            href="/learnings"
+            icon={<BookOpen className="h-4 w-4" />}
+            label="Lernen"
+            active={isActive("/learnings")}
+            variant="primary"
+            onClick={onNavClick}
+          />
         </div>
 
-        {/* Management Section - only for admin/manager/hr/super_admin */}
-        {["admin", "super_admin", "hr", "manager"].includes(user.role) && (
-          <div>
-            <h3 className="section-header">Management</h3>
+        {/* EINBLICKE */}
+        <SectionLabel>Einblicke</SectionLabel>
+        <div className="space-y-0.5">
+          <NavItem
+            href="/review"
+            icon={<Trophy className="h-3.5 w-3.5" />}
+            label="Rückblick"
+            active={isActive("/review")}
+            variant="secondary"
+            onClick={onNavClick}
+          />
+        </div>
+
+        {/* VERWALTUNG - only for manager/admin/hr/super_admin */}
+        {isManager && (
+          <>
+            <SectionLabel>Verwaltung</SectionLabel>
             <div className="space-y-0.5">
-              {managementItems.map((item) => (
-                <NavItem
-                  key={item.href}
-                  href={item.href}
-                  icon={<item.icon className="h-4 w-4" />}
-                  label={item.label}
-                  active={isActive(item.href)}
-                  onClick={onNavClick}
-                />
-              ))}
+              <NavItem
+                href="/team"
+                icon={<Users className="h-3.5 w-3.5" />}
+                label="Team & Orga"
+                active={isActive("/team")}
+                variant="secondary"
+                onClick={onNavClick}
+              />
             </div>
-          </div>
+          </>
         )}
       </nav>
 
-      {/* User Profile with Dropdown */}
-      <div className="p-3 border-t border-cream-300/50 relative">
-        <button
-          onClick={() => setShowProfileMenu(!showProfileMenu)}
-          className="w-full flex items-center gap-2.5 p-2 rounded-lg hover:bg-black/[0.04] cursor-pointer transition-colors"
-          aria-label="Profil-Menu"
-          aria-expanded={showProfileMenu}
-          aria-haspopup="true"
+      {/* Bottom Profile Link */}
+      <div className="p-3 border-t border-cream-300/50">
+        <Link
+          href="/settings"
+          onClick={onNavClick}
+          className={`flex items-center gap-2.5 p-2 rounded-lg transition-colors ${
+            pathname.startsWith("/settings")
+              ? "bg-black/[0.06]"
+              : "hover:bg-black/[0.04]"
+          }`}
         >
           {user.avatar_url ? (
             <img
@@ -175,90 +221,17 @@ function SidebarContent({ user, orgLogo, onNavClick }: SidebarProps) {
               </span>
             </div>
           )}
-          <div className="flex-1 min-w-0 text-left">
+          <div className="flex-1 min-w-0">
             <p className="font-medium text-[13px] text-foreground truncate">
               {user.name}
             </p>
-            <p className="text-[10px] text-muted truncate">{roleDisplay}</p>
+            <p className="text-[10px] text-muted truncate">
+              Profil & Settings
+            </p>
           </div>
-          <ChevronDown
-            className={`h-3.5 w-3.5 text-muted flex-shrink-0 transition-transform ${showProfileMenu ? "rotate-180" : ""}`}
-          />
-        </button>
-
-        {showProfileMenu && (
-          <>
-            <div
-              className="fixed inset-0 z-10"
-              onClick={() => setShowProfileMenu(false)}
-              aria-hidden="true"
-            />
-            <div
-              className="absolute bottom-full left-3 right-3 mb-1 bg-white rounded-xl shadow-lg border border-cream-300 py-1 z-50"
-              role="menu"
-              aria-label="Profil-Menu"
-            >
-              <div className="px-3 py-2 border-b border-cream-300/50">
-                <p className="text-[12px] text-muted truncate">{user.email}</p>
-                {user.craft_focus && (
-                  <p className="text-[11px] text-muted/70 truncate mt-0.5">{user.craft_focus}</p>
-                )}
-              </div>
-              <Link
-                href="/settings"
-                onClick={() => {
-                  setShowProfileMenu(false);
-                  onNavClick?.();
-                }}
-                className="dropdown-item text-[13px]"
-                role="menuitem"
-              >
-                <UserIcon className="h-3.5 w-3.5" aria-hidden="true" />
-                Profil & Einstellungen
-              </Link>
-              <div
-                className="border-t border-cream-300/50 my-0.5"
-                role="separator"
-              />
-              <form action="/auth/signout" method="POST">
-                <button
-                  type="submit"
-                  className="dropdown-item-danger w-full text-[13px]"
-                  role="menuitem"
-                >
-                  <LogOut className="h-3.5 w-3.5" aria-hidden="true" />
-                  Abmelden
-                </button>
-              </form>
-            </div>
-          </>
-        )}
+          <Settings className="h-3.5 w-3.5 text-muted flex-shrink-0" />
+        </Link>
       </div>
     </aside>
-  );
-}
-
-function NavItem({
-  href,
-  icon,
-  label,
-  active,
-  onClick,
-}: {
-  href: string;
-  icon: React.ReactNode;
-  label: string;
-  active: boolean;
-  onClick?: () => void;
-}) {
-  return (
-    <Link
-      href={href}
-      className={`sidebar-item ${active ? "active" : ""}`}
-      onClick={onClick}
-    >
-      {icon}
-      <span>{label}</span>
-    </Link>
   );
 }
