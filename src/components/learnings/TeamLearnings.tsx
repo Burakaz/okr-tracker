@@ -11,7 +11,8 @@ import { ProgressBar } from "@/components/ui/ProgressBar";
 import { useTeamLearnings, useCurrentUser } from "@/lib/queries";
 import type { TeamLearningMember } from "@/types";
 
-function getInitials(name: string): string {
+function getInitials(name: string | undefined | null): string {
+  if (!name) return "?";
   return name
     .split(" ")
     .map((part) => part.charAt(0))
