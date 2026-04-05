@@ -6,11 +6,11 @@ import {
   Palette,
   Code,
   Megaphone,
-  Crown,
-  BarChart3,
-  MessageSquare,
-  Package,
-  Lightbulb,
+  TrendingUp,
+  Settings2,
+  Users,
+  DollarSign,
+  MoreHorizontal,
   X,
 } from "lucide-react";
 import type { CourseCategory } from "@/types";
@@ -34,11 +34,11 @@ const categories: { value: CourseCategory | "all"; label: string; icon: React.Re
   { value: "design", label: "Design", icon: <Palette className="h-3 w-3" /> },
   { value: "development", label: "Dev", icon: <Code className="h-3 w-3" /> },
   { value: "marketing", label: "Marketing", icon: <Megaphone className="h-3 w-3" /> },
-  { value: "leadership", label: "Leadership", icon: <Crown className="h-3 w-3" /> },
-  { value: "data", label: "Daten", icon: <BarChart3 className="h-3 w-3" /> },
-  { value: "communication", label: "Komm.", icon: <MessageSquare className="h-3 w-3" /> },
-  { value: "product", label: "Produkt", icon: <Package className="h-3 w-3" /> },
-  { value: "other", label: "Sonstige", icon: <Lightbulb className="h-3 w-3" /> },
+  { value: "sales", label: "Sales", icon: <TrendingUp className="h-3 w-3" /> },
+  { value: "operations", label: "Operations", icon: <Settings2 className="h-3 w-3" /> },
+  { value: "hr", label: "HR", icon: <Users className="h-3 w-3" /> },
+  { value: "finance", label: "Finanzen", icon: <DollarSign className="h-3 w-3" /> },
+  { value: "other", label: "Sonstige", icon: <MoreHorizontal className="h-3 w-3" /> },
 ];
 
 const statusOptions = [

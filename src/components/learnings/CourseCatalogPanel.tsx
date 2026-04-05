@@ -25,10 +25,10 @@ const categoryFilters: { value: CourseCategory | "all"; label: string }[] = [
   { value: "design", label: "Design" },
   { value: "development", label: "Dev" },
   { value: "marketing", label: "Marketing" },
-  { value: "leadership", label: "Leadership" },
-  { value: "data", label: "Daten" },
-  { value: "communication", label: "Komm." },
-  { value: "product", label: "Produkt" },
+  { value: "sales", label: "Sales" },
+  { value: "operations", label: "Operations" },
+  { value: "hr", label: "HR" },
+  { value: "finance", label: "Finanzen" },
   { value: "other", label: "Sonstige" },
 ];
 

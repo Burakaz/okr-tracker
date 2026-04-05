@@ -8,11 +8,11 @@ import {
   Palette,
   Code,
   Megaphone,
-  Crown,
-  BarChart3,
-  MessageSquare,
-  Package,
-  Lightbulb,
+  TrendingUp,
+  Settings2,
+  Users,
+  DollarSign,
+  MoreHorizontal,
   Loader2,
 } from "lucide-react";
 import { useFocusTrap } from "@/hooks/useFocusTrap";
@@ -28,37 +28,39 @@ interface CourseDetailModalProps {
   onUnenroll: (enrollmentId: string) => void;
 }
 
-const categoryGradients: Record<CourseCategory, string> = {
+const VALID_CATEGORIES = ["design", "development", "marketing", "sales", "operations", "hr", "finance", "other"];
+
+const categoryGradients: Record<string, string> = {
   design: "from-pink-400 to-purple-500",
   development: "from-cyan-400 to-blue-500",
   marketing: "from-orange-400 to-red-500",
-  leadership: "from-amber-400 to-yellow-600",
-  data: "from-emerald-400 to-teal-500",
-  communication: "from-violet-400 to-indigo-500",
-  product: "from-rose-400 to-pink-500",
+  sales: "from-amber-400 to-yellow-600",
+  operations: "from-emerald-400 to-teal-500",
+  hr: "from-violet-400 to-indigo-500",
+  finance: "from-rose-400 to-pink-500",
   other: "from-gray-400 to-slate-500",
 };
 
-const categoryLabels: Record<CourseCategory, string> = {
+const categoryLabels: Record<string, string> = {
   design: "Design",
   development: "Entwicklung",
   marketing: "Marketing",
-  leadership: "Leadership",
-  data: "Daten",
-  communication: "Kommunikation",
-  product: "Produkt",
+  sales: "Sales",
+  operations: "Operations",
+  hr: "HR",
+  finance: "Finanzen",
   other: "Sonstiges",
 };
 
-const categoryIcons: Record<CourseCategory, React.ReactNode> = {
+const categoryIcons: Record<string, React.ReactNode> = {
   design: <Palette className="h-5 w-5" />,
   development: <Code className="h-5 w-5" />,
   marketing: <Megaphone className="h-5 w-5" />,
-  leadership: <Crown className="h-5 w-5" />,
-  data: <BarChart3 className="h-5 w-5" />,
-  communication: <MessageSquare className="h-5 w-5" />,
-  product: <Package className="h-5 w-5" />,
-  other: <Lightbulb className="h-5 w-5" />,
+  sales: <TrendingUp className="h-5 w-5" />,
+  operations: <Settings2 className="h-5 w-5" />,
+  hr: <Users className="h-5 w-5" />,
+  finance: <DollarSign className="h-5 w-5" />,
+  other: <MoreHorizontal className="h-5 w-5" />,
 };
 
 const difficultyLabels: Record<string, string> = {
@@ -132,13 +134,18 @@ export function CourseDetailModal({
           <>
             {/* Gradient header */}
             <div
-              className={`relative h-[60px] bg-gradient-to-r ${categoryGradients[course.category]} rounded-t-[1rem]`}
+              className={`relative h-[60px] bg-gradient-to-r ${categoryGradients[VALID_CATEGORIES.includes(course.category) ? course.category : "other"]} rounded-t-[1rem]`}
             >
               {/* Category badge */}
-              <span className="absolute top-3 left-4 badge bg-white/30 text-white text-[10px] flex items-center gap-1">
-                {categoryIcons[course.category]}
-                {categoryLabels[course.category]}
-              </span>
+              {(() => {
+                const displayCategory = VALID_CATEGORIES.includes(course.category) ? course.category : "other";
+                return (
+                  <span className="absolute top-3 left-4 badge bg-white/30 text-white text-[10px] flex items-center gap-1">
+                    {categoryIcons[displayCategory]}
+                    {categoryLabels[displayCategory]}
+                  </span>
+                );
+              })()}
 
               {/* Close button */}
               <button

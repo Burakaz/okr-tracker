@@ -32,10 +32,10 @@ export interface SuggestModulesRequest {
     | "design"
     | "development"
     | "marketing"
-    | "leadership"
-    | "data"
-    | "communication"
-    | "product"
+    | "sales"
+    | "operations"
+    | "hr"
+    | "finance"
     | "other";
   difficulty?: "beginner" | "intermediate" | "advanced";
   description?: string;

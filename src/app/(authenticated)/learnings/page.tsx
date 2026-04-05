@@ -43,10 +43,10 @@ const CATEGORY_LABELS: Record<string, string> = {
   design: "Design",
   development: "Entwicklung",
   marketing: "Marketing",
-  leadership: "Leadership",
-  data: "Daten",
-  communication: "Komm.",
-  product: "Produkt",
+  sales: "Sales",
+  operations: "Operations",
+  hr: "HR",
+  finance: "Finanzen",
   other: "Sonstige",
 };
 
@@ -155,10 +155,10 @@ function LearningsContent() {
         "design",
         "development",
         "marketing",
-        "leadership",
-        "data",
-        "communication",
-        "product",
+        "sales",
+        "operations",
+        "hr",
+        "finance",
         "other",
       ];
       const cat = validCategories.includes(category as CourseCategory)
@@ -209,7 +209,7 @@ function LearningsContent() {
   return (
     <div className="h-full flex flex-col overflow-hidden">
       <div className="flex-1 overflow-y-auto">
-        <div className="p-4 sm:p-6 space-y-5 max-w-5xl mx-auto">
+        <div className="p-4 sm:p-6 space-y-5 max-w-[1400px] mx-auto">
           {/* 1. Page header */}
           <div className="flex flex-wrap items-start sm:items-center justify-between gap-3">
             <div>

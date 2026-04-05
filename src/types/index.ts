@@ -194,7 +194,7 @@ export interface DuplicateOKRRequest {
 export type OKRFilterType = 'all' | 'performance' | 'skill' | 'learning' | 'career' | 'archive';
 
 // ===== Learning =====
-export type CourseCategory = 'design' | 'development' | 'marketing' | 'leadership' | 'data' | 'communication' | 'product' | 'other';
+export type CourseCategory = 'design' | 'development' | 'marketing' | 'sales' | 'operations' | 'hr' | 'finance' | 'other';
 export type CourseDifficulty = 'beginner' | 'intermediate' | 'advanced';
 export type EnrollmentStatus = 'in_progress' | 'completed' | 'paused' | 'dropped';
 

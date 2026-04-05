@@ -135,7 +135,7 @@ Antworte im folgenden JSON-Format:
   "recommendations": [
     {
       "title": "Kurstitel",
-      "category": "design|development|marketing|leadership|data|communication|product|other",
+      "category": "design|development|marketing|sales|operations|hr|finance|other",
       "reason": "Kurze Begründung warum dieser Kurs empfohlen wird"
     }
   ]

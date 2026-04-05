@@ -4,11 +4,11 @@ import {
   Palette,
   Code,
   Megaphone,
-  Crown,
-  BarChart3,
-  MessageSquare,
-  Package,
-  Lightbulb,
+  TrendingUp,
+  Settings2,
+  Users,
+  DollarSign,
+  MoreHorizontal,
   Clock,
 } from "lucide-react";
 import type { Course, Enrollment, CourseCategory } from "@/types";
@@ -20,36 +20,38 @@ interface CourseCardProps {
   onEnroll?: (id: string) => void;
 }
 
-const categoryGradients: Record<CourseCategory, string> = {
+const VALID_CATEGORIES = ["design", "development", "marketing", "sales", "operations", "hr", "finance", "other"];
+
+const categoryGradients: Record<string, string> = {
   design: "from-pink-400 to-purple-500",
   development: "from-cyan-400 to-blue-500",
   marketing: "from-orange-400 to-red-500",
-  leadership: "from-amber-400 to-yellow-600",
-  data: "from-emerald-400 to-teal-500",
-  communication: "from-violet-400 to-indigo-500",
-  product: "from-rose-400 to-pink-500",
+  sales: "from-amber-400 to-yellow-600",
+  operations: "from-emerald-400 to-teal-500",
+  hr: "from-violet-400 to-indigo-500",
+  finance: "from-rose-400 to-pink-500",
   other: "from-gray-400 to-slate-500",
 };
 
-const categoryIcons: Record<CourseCategory, React.ReactNode> = {
+const categoryIcons: Record<string, React.ReactNode> = {
   design: <Palette className="h-8 w-8 text-white/90" />,
   development: <Code className="h-8 w-8 text-white/90" />,
   marketing: <Megaphone className="h-8 w-8 text-white/90" />,
-  leadership: <Crown className="h-8 w-8 text-white/90" />,
-  data: <BarChart3 className="h-8 w-8 text-white/90" />,
-  communication: <MessageSquare className="h-8 w-8 text-white/90" />,
-  product: <Package className="h-8 w-8 text-white/90" />,
-  other: <Lightbulb className="h-8 w-8 text-white/90" />,
+  sales: <TrendingUp className="h-8 w-8 text-white/90" />,
+  operations: <Settings2 className="h-8 w-8 text-white/90" />,
+  hr: <Users className="h-8 w-8 text-white/90" />,
+  finance: <DollarSign className="h-8 w-8 text-white/90" />,
+  other: <MoreHorizontal className="h-8 w-8 text-white/90" />,
 };
 
-const categoryLabels: Record<CourseCategory, string> = {
+const categoryLabels: Record<string, string> = {
   design: "Design",
   development: "Entwicklung",
   marketing: "Marketing",
-  leadership: "Leadership",
-  data: "Daten",
-  communication: "Kommunikation",
-  product: "Produkt",
+  sales: "Sales",
+  operations: "Operations",
+  hr: "HR",
+  finance: "Finanzen",
   other: "Sonstiges",
 };
 
@@ -80,6 +82,7 @@ export function CourseCard({
   onViewDetail,
   onEnroll,
 }: CourseCardProps) {
+  const displayCategory = VALID_CATEGORIES.includes(course.category) ? course.category : "other";
   const isEnrolled = !!enrollment;
   const isCompleted = enrollment?.status === "completed";
   const progress = enrollment?.progress ?? 0;
@@ -110,11 +113,11 @@ export function CourseCard({
     >
       {/* Gradient header */}
       <div
-        className={`course-gradient bg-gradient-to-r ${categoryGradients[course.category]}`}
+        className={`course-gradient bg-gradient-to-r ${categoryGradients[displayCategory]}`}
       >
         {/* Category badge top-left */}
         <span className="absolute top-2.5 left-2.5 badge bg-white/30 text-white text-[10px]">
-          {categoryLabels[course.category]}
+          {categoryLabels[displayCategory]}
         </span>
 
         {/* Difficulty badge top-right */}
@@ -125,7 +128,7 @@ export function CourseCard({
         </span>
 
         {/* Category icon centered */}
-        {categoryIcons[course.category]}
+        {categoryIcons[displayCategory]}
       </div>
 
       {/* Card body */}
