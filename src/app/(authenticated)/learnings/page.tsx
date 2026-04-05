@@ -311,15 +311,16 @@ function LearningsContent() {
               </div>
             ) : activeEnrollments.length > 0 ? (
               <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4">
-                {activeEnrollments.map((enrollment) => {
+                {activeEnrollments.map((enrollment, index) => {
                   if (!enrollment.course) return null;
                   return (
+                    <div key={enrollment.id} className="stagger-item" style={{ animationDelay: `${index * 50}ms` }}>
                     <CourseCard
-                      key={enrollment.id}
                       course={enrollment.course}
                       enrollment={enrollment}
                       onViewDetail={handleViewDetail}
                     />
+                    </div>
                   );
                 })}
               </div>
@@ -422,18 +423,19 @@ function LearningsContent() {
                 </div>
               ) : (
                 <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4">
-                  {filteredCourses.map((course) => {
+                  {filteredCourses.map((course, index) => {
                     const enrollment = enrollments.find(
                       (e) => e.course_id === course.id
                     );
                     return (
+                      <div key={course.id} className="stagger-item" style={{ animationDelay: `${index * 50}ms` }}>
                       <CourseCard
-                        key={course.id}
                         course={course}
                         enrollment={enrollment}
                         onViewDetail={handleViewDetail}
                         onEnroll={handleEnroll}
                       />
+                      </div>
                     );
                   })}
                 </div>

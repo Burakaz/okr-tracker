@@ -474,9 +474,9 @@ function OKRsContent() {
           <h2 className="sr-only">Aktive Ziele</h2>
           {filteredOKRs.length > 0 ? (
             <div className="space-y-3">
-              {filteredOKRs.map((okr) => (
+              {filteredOKRs.map((okr, index) => (
+                <div key={okr.id} className="stagger-item" style={{ animationDelay: `${index * 50}ms` }}>
                 <OKRAccordionItem
-                  key={okr.id}
                   okr={okr}
                   isExpanded={expandedId === okr.id}
                   onToggle={() => handleToggleExpand(okr.id)}
@@ -490,6 +490,7 @@ function OKRsContent() {
                   onLinkCourse={okr.category === "learning" ? handleLinkCourse : undefined}
                   isLinkingCourse={linkCourseMutation.isPending}
                 />
+                </div>
               ))}
             </div>
           ) : (

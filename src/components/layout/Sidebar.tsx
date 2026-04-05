@@ -201,7 +201,7 @@ function SidebarContent({ user, orgLogo, onNavClick }: SidebarProps) {
         <Link
           href="/settings"
           onClick={onNavClick}
-          className={`flex items-center gap-2.5 p-2 rounded-lg transition-colors ${
+          className={`group flex items-center gap-2.5 p-2 rounded-lg transition-colors ${
             pathname.startsWith("/settings")
               ? "bg-black/[0.06]"
               : "hover:bg-black/[0.04]"
@@ -229,7 +229,7 @@ function SidebarContent({ user, orgLogo, onNavClick }: SidebarProps) {
               Profil & Settings
             </p>
           </div>
-          <Settings className="h-3.5 w-3.5 text-muted flex-shrink-0" />
+          <Settings className="h-3.5 w-3.5 text-muted flex-shrink-0 transition-transform duration-300 group-hover:rotate-90" />
         </Link>
       </div>
     </aside>

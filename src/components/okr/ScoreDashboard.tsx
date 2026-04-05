@@ -82,7 +82,7 @@ export function ScoreDashboard({ okrs, quarter }: ScoreDashboardProps) {
       {/* SCORE */}
       <MetricCard icon={<TrendingUp className="h-4 w-4 text-muted" aria-hidden="true" />} label="Score">
         <div className="flex items-center gap-2 mb-3">
-          <p className={`text-2xl font-bold ${scoreColor}`}>
+          <p className={`text-2xl font-bold number-highlight ${scoreColor}`}>
             {averageScore.toFixed(2)}
           </p>
           <span className={`badge ${scoreBadgeClass}`}>{scoreLabel}</span>

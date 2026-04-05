@@ -31,10 +31,10 @@ export function CategoryTiles({ selected, onSelect }: CategoryTilesProps) {
           <button
             key={key}
             onClick={() => onSelect(isActive ? null : key)}
-            className={`flex flex-col items-center gap-1.5 p-3 rounded-xl transition-all ${
+            className={`flex flex-col items-center gap-1.5 p-3 rounded-xl transition-all transition-transform duration-200 ${
               isActive
-                ? "bg-foreground text-white shadow-sm"
-                : "bg-cream-50 text-muted hover:bg-cream-100"
+                ? "bg-foreground text-white shadow-sm hover:scale-[1.03]"
+                : "bg-cream-50 text-muted hover:bg-cream-100 hover:scale-[1.02]"
             }`}
           >
             <Icon className="h-5 w-5" />

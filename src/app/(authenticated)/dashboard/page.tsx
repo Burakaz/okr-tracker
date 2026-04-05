@@ -133,7 +133,7 @@ function DashboardContent() {
 
   return (
     <div className="h-full overflow-y-auto">
-      <div className="px-4 sm:px-6 py-6 sm:py-8 space-y-5 sm:space-y-6 max-w-[1400px] mx-auto">
+      <div className="px-4 sm:px-6 py-6 sm:py-8 space-y-5 sm:space-y-6 max-w-[1400px] mx-auto fade-in">
         {/* Motivational Greeting */}
         <div className="py-2 px-2">
           <h1 className="text-2xl sm:text-3xl text-foreground">
@@ -293,7 +293,7 @@ function DashboardContent() {
                     : 0;
 
                 return (
-                  <Link key={enrollment.id} href="/learnings" className="card p-3 card-hover block">
+                  <Link key={enrollment.id} href="/learnings" className="card card-lift p-3 card-hover block">
                     <div className="flex items-center gap-3">
                       <div className="w-8 h-8 rounded-lg bg-cream-100 flex items-center justify-center flex-shrink-0">
                         <BookOpen className="h-4 w-4 text-accent-green" />
@@ -357,7 +357,7 @@ function QuickStatCard({
   value: number | string;
 }) {
   return (
-    <div className="card p-4 card-hover">
+    <div className="card card-lift p-4 card-hover">
       <div className="mb-2">{icon}</div>
       <p className="text-2xl font-bold text-foreground leading-none">{value}</p>
       <p className="text-[11px] text-muted mt-1">{label}</p>

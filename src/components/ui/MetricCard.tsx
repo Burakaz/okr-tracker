@@ -8,7 +8,7 @@ interface MetricCardProps {
 
 export function MetricCard({ icon, label, children }: MetricCardProps) {
   return (
-    <div className="card p-4">
+    <div className="card card-lift p-4">
       <div className="flex items-center gap-2 mb-2">
         <div className="w-8 h-8 rounded-lg bg-cream-100 flex items-center justify-center">
           {icon}
