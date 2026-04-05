@@ -475,21 +475,25 @@ function OKRsContent() {
           {filteredOKRs.length > 0 ? (
             <div className="space-y-3">
               {filteredOKRs.map((okr, index) => (
-                <div key={okr.id} className="stagger-item" style={{ animationDelay: `${index * 50}ms` }}>
-                <OKRAccordionItem
-                  okr={okr}
-                  isExpanded={expandedId === okr.id}
-                  onToggle={() => handleToggleExpand(okr.id)}
-                  onEdit={handleEditOKR}
-                  onArchive={handleArchive}
-                  onDuplicate={handleDuplicate}
-                  onDelete={handleDelete}
-                  onQuickCheckin={handleQuickCheckin}
-                  enrollments={okr.category === "learning" ? enrollments : undefined}
-                  courseLinks={okr.category === "learning" ? getCourseLinksForOKR(okr) : undefined}
-                  onLinkCourse={okr.category === "learning" ? handleLinkCourse : undefined}
-                  isLinkingCourse={linkCourseMutation.isPending}
-                />
+                <div
+                  key={okr.id}
+                  className="stagger-item"
+                  style={{ animationDelay: `${index * 50}ms` }}
+                >
+                  <OKRAccordionItem
+                    okr={okr}
+                    isExpanded={expandedId === okr.id}
+                    onToggle={() => handleToggleExpand(okr.id)}
+                    onEdit={handleEditOKR}
+                    onArchive={handleArchive}
+                    onDuplicate={handleDuplicate}
+                    onDelete={handleDelete}
+                    onQuickCheckin={handleQuickCheckin}
+                    enrollments={okr.category === "learning" ? enrollments : undefined}
+                    courseLinks={okr.category === "learning" ? getCourseLinksForOKR(okr) : undefined}
+                    onLinkCourse={okr.category === "learning" ? handleLinkCourse : undefined}
+                    isLinkingCourse={linkCourseMutation.isPending}
+                  />
                 </div>
               ))}
             </div>
