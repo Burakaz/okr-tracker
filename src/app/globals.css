@@ -1131,6 +1131,14 @@ body:not(:focus-within) .blur-on-unfocus {
   overflow: hidden;
 }
 
+/* ===== Type Scale Utilities ===== */
+/* Standardized sizes: use these instead of arbitrary text-[Xpx] values */
+/* text-label: 11px — uppercase labels, meta text */
+/* text-caption: 12px — secondary info, badges, timestamps */
+/* text-body-sm: 13px — compact body text, buttons, inputs */
+/* text-body: 14px — default body text */
+/* text-heading-sm: 15px — small headings, section titles */
+
 /* ===== Reduced Motion ===== */
 @media (prefers-reduced-motion: reduce) {
   *, *::before, *::after {
