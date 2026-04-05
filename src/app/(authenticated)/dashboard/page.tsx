@@ -135,7 +135,7 @@ function DashboardContent() {
     <div className="h-full overflow-y-auto">
       <div className="px-4 sm:px-6 py-6 sm:py-8 space-y-5 sm:space-y-6 max-w-5xl mx-auto">
         {/* Motivational Greeting */}
-        <div className="py-2 pl-6">
+        <div className="py-2 px-2">
           <h1 className="text-2xl sm:text-3xl text-foreground">
             {greeting}, <span className="font-playfair italic">{firstName}</span>! {motivEmoji}
           </h1>
@@ -282,7 +282,7 @@ function DashboardContent() {
                 Lernfortschritt
               </h2>
               <Link
-                href="/okrs"
+                href="/learnings"
                 className="text-[12px] text-muted hover:text-foreground transition-colors flex items-center gap-1"
               >
                 Alle Kurse
@@ -309,10 +309,10 @@ function DashboardContent() {
                     : 0;
 
                 return (
-                  <div key={enrollment.id} className="card p-3 card-hover">
+                  <Link key={enrollment.id} href="/learnings" className="card p-3 card-hover block">
                     <div className="flex items-center gap-3">
-                      <div className="w-8 h-8 rounded-lg bg-blue-50 flex items-center justify-center flex-shrink-0">
-                        <BookOpen className="h-4 w-4 text-blue-600" />
+                      <div className="w-8 h-8 rounded-lg bg-cream-100 flex items-center justify-center flex-shrink-0">
+                        <BookOpen className="h-4 w-4 text-accent-green" />
                       </div>
                       <div className="flex-1 min-w-0">
                         <p className="text-[13px] font-medium text-foreground truncate">
@@ -326,7 +326,7 @@ function DashboardContent() {
                         </div>
                       </div>
                     </div>
-                  </div>
+                  </Link>
                 );
               })}
             </div>
@@ -336,22 +336,22 @@ function DashboardContent() {
         {/* Quick Stats Footer */}
         <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
           <QuickStatCard
-            icon={<Target className="h-4 w-4 text-green-600" />}
+            icon={<Target className="h-4 w-4 text-accent-green" />}
             label="Aktive Ziele"
             value={activeOKRs.length}
           />
           <QuickStatCard
-            icon={<CheckCircle2 className="h-4 w-4 text-blue-600" />}
+            icon={<CheckCircle2 className="h-4 w-4 text-accent-green" />}
             label="Durchschnitt"
             value={`${avgProgress}%`}
           />
           <QuickStatCard
-            icon={<BookOpen className="h-4 w-4 text-purple-600" />}
+            icon={<BookOpen className="h-4 w-4 text-muted" />}
             label="Aktive Kurse"
             value={activeCourses.length}
           />
           <QuickStatCard
-            icon={<Clock className="h-4 w-4 text-amber-600" />}
+            icon={<Clock className="h-4 w-4 text-muted" />}
             label="Tage übrig"
             value={daysRemaining}
           />
@@ -373,10 +373,10 @@ function QuickStatCard({
   value: number | string;
 }) {
   return (
-    <div className="card p-4">
-      <div className="mb-1.5">{icon}</div>
-      <p className="text-2xl font-bold text-foreground">{value}</p>
-      <p className="text-[11px] text-muted">{label}</p>
+    <div className="card p-4 card-hover">
+      <div className="mb-2">{icon}</div>
+      <p className="text-2xl font-bold text-foreground leading-none">{value}</p>
+      <p className="text-[11px] text-muted mt-1">{label}</p>
     </div>
   );
 }
