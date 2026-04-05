@@ -46,10 +46,10 @@ export function ScoreDashboard({ okrs, quarter }: ScoreDashboardProps) {
 
   const scoreColor =
     averageScore >= 0.7
-      ? "text-green-600"
+      ? "text-[var(--status-success)]"
       : averageScore >= 0.4
-        ? "text-amber-600"
-        : "text-red-600";
+        ? "text-[var(--status-warning)]"
+        : "text-[var(--status-error)]";
 
   const scoreLabel =
     averageScore >= 0.7
@@ -67,10 +67,10 @@ export function ScoreDashboard({ okrs, quarter }: ScoreDashboardProps) {
 
   const scoreBarColor =
     averageScore >= 0.7
-      ? "bg-green-500"
+      ? "bg-[var(--status-success)]"
       : averageScore >= 0.4
-        ? "bg-amber-500"
-        : "bg-red-400";
+        ? "bg-[var(--status-warning)]"
+        : "bg-[var(--status-error)]";
 
   // Time-vs-score comparison
   const scorePercent = Math.round(averageScore * 100);
@@ -162,7 +162,7 @@ export function ScoreDashboard({ okrs, quarter }: ScoreDashboardProps) {
           </span>
         </div>
         {overdueCount > 0 && (
-          <p className="text-[11px] text-amber-600 mt-1.5 flex items-center gap-1">
+          <p className="text-[11px] text-[var(--status-warning)] mt-1.5 flex items-center gap-1">
             <AlertCircle className="h-3 w-3" aria-hidden="true" />
             {overdueCount} Check-in{overdueCount !== 1 ? "s" : ""} überfällig
           </p>

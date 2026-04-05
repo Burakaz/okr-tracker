@@ -22,9 +22,9 @@ const icons = {
 };
 
 const iconBgs = {
-  transfer: "bg-blue-50",
-  delete: "bg-red-50",
-  warning: "bg-amber-50",
+  transfer: "bg-[var(--status-info-bg)]",
+  delete: "bg-[var(--status-error-bg)]",
+  warning: "bg-[var(--status-warning-bg)]",
 };
 
 export function ConfirmDialog({
@@ -89,7 +89,7 @@ export function ConfirmDialog({
             onClick={onConfirm}
             className={`flex-1 py-2.5 text-sm font-medium rounded-lg transition-colors ${
               variant === "danger"
-                ? "bg-red-600 hover:bg-red-700 text-white"
+                ? "bg-[var(--danger)] hover:bg-[var(--danger-dark)] text-white"
                 : "btn-primary"
             }`}
           >

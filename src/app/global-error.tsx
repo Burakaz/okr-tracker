@@ -20,8 +20,8 @@ export default function GlobalError({
           margin: 0,
           fontFamily:
             "Inter, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif",
-          backgroundColor: "#f5f4f0",
-          color: "#1a1a1a",
+          backgroundColor: "var(--background)",
+          color: "var(--foreground)",
           minHeight: "100vh",
           display: "flex",
           alignItems: "center",
@@ -31,10 +31,10 @@ export default function GlobalError({
         <div style={{ width: "100%", maxWidth: "28rem", padding: "1rem" }}>
           <div
             style={{
-              backgroundColor: "white",
+              backgroundColor: "var(--card-bg)",
               borderRadius: "1rem",
               boxShadow: "0 1px 3px rgba(0,0,0,0.04)",
-              border: "1px solid #e8e5e1",
+              border: "1px solid var(--border-color)",
               padding: "2rem",
               textAlign: "center",
             }}
@@ -43,7 +43,7 @@ export default function GlobalError({
               style={{
                 width: "3.5rem",
                 height: "3.5rem",
-                backgroundColor: "#fef2f2",
+                backgroundColor: "var(--danger-light)",
                 borderRadius: "50%",
                 display: "flex",
                 alignItems: "center",
@@ -52,7 +52,7 @@ export default function GlobalError({
               }}
             >
               <svg
-                style={{ width: "1.75rem", height: "1.75rem", color: "#ef4444" }}
+                style={{ width: "1.75rem", height: "1.75rem", color: "var(--danger)" }}
                 fill="none"
                 viewBox="0 0 24 24"
                 strokeWidth={1.5}
@@ -77,7 +77,7 @@ export default function GlobalError({
             </h1>
             <p
               style={{
-                color: "#7a7a7a",
+                color: "var(--text-muted)",
                 fontSize: "0.875rem",
                 marginBottom: "1.5rem",
               }}
@@ -90,7 +90,7 @@ export default function GlobalError({
               <p
                 style={{
                   fontSize: "0.75rem",
-                  color: "#7a7a7a",
+                  color: "var(--text-muted)",
                   marginBottom: "1rem",
                   fontFamily: "monospace",
                 }}
@@ -116,7 +116,7 @@ export default function GlobalError({
                   fontSize: "0.8125rem",
                   fontWeight: 500,
                   borderRadius: "0.5rem",
-                  backgroundColor: "#1a1a1a",
+                  backgroundColor: "var(--foreground)",
                   color: "white",
                   border: "none",
                   cursor: "pointer",
@@ -134,9 +134,9 @@ export default function GlobalError({
                   fontSize: "0.8125rem",
                   fontWeight: 500,
                   borderRadius: "0.5rem",
-                  backgroundColor: "white",
-                  color: "#1a1a1a",
-                  border: "1px solid #e8e5e1",
+                  backgroundColor: "var(--card-bg)",
+                  color: "var(--foreground)",
+                  border: "1px solid var(--border-color)",
                   cursor: "pointer",
                 }}
               >

@@ -79,11 +79,11 @@ function getLast4QuartersForSelector(): string[] {
 function StatusIcon({ status }: { status: OKRStatus }) {
   switch (status) {
     case "on_track":
-      return <CheckCircle2 className="h-4 w-4 text-green-500 flex-shrink-0" aria-hidden="true" />;
+      return <CheckCircle2 className="h-4 w-4 text-[var(--status-success)] flex-shrink-0" aria-hidden="true" />;
     case "at_risk":
-      return <AlertTriangle className="h-4 w-4 text-amber-500 flex-shrink-0" aria-hidden="true" />;
+      return <AlertTriangle className="h-4 w-4 text-[var(--status-warning)] flex-shrink-0" aria-hidden="true" />;
     case "off_track":
-      return <XCircle className="h-4 w-4 text-red-500 flex-shrink-0" aria-hidden="true" />;
+      return <XCircle className="h-4 w-4 text-[var(--status-error)] flex-shrink-0" aria-hidden="true" />;
   }
 }
 
@@ -236,10 +236,10 @@ function ReviewContent() {
                   <p
                     className={`text-4xl font-bold ${
                       review.score >= 70
-                        ? "text-green-600"
+                        ? "text-[var(--status-success)]"
                         : review.score >= 40
-                          ? "text-amber-600"
-                          : "text-red-600"
+                          ? "text-[var(--status-warning)]"
+                          : "text-[var(--status-error)]"
                     }`}
                   >
                     {review.score}%
@@ -253,7 +253,7 @@ function ReviewContent() {
                 <div className="flex items-center gap-1 h-3 rounded-full overflow-hidden bg-cream-200">
                   {statusCounts.on_track > 0 && (
                     <div
-                      className="h-full bg-green-500 rounded-full"
+                      className="h-full bg-[var(--status-success)] rounded-full"
                       style={{
                         width: `${(statusCounts.on_track / review.okrs.length) * 100}%`,
                       }}
@@ -262,7 +262,7 @@ function ReviewContent() {
                   )}
                   {statusCounts.at_risk > 0 && (
                     <div
-                      className="h-full bg-amber-500 rounded-full"
+                      className="h-full bg-[var(--status-warning)] rounded-full"
                       style={{
                         width: `${(statusCounts.at_risk / review.okrs.length) * 100}%`,
                       }}
@@ -271,7 +271,7 @@ function ReviewContent() {
                   )}
                   {statusCounts.off_track > 0 && (
                     <div
-                      className="h-full bg-red-500 rounded-full"
+                      className="h-full bg-[var(--status-error)] rounded-full"
                       style={{
                         width: `${(statusCounts.off_track / review.okrs.length) * 100}%`,
                       }}
@@ -282,15 +282,15 @@ function ReviewContent() {
 
                 <div className="flex items-center gap-4 mt-3 text-[11px] text-muted">
                   <span className="flex items-center gap-1">
-                    <span className="w-2 h-2 rounded-full bg-green-500" />
+                    <span className="w-2 h-2 rounded-full bg-[var(--status-success)]" />
                     Im Plan ({statusCounts.on_track})
                   </span>
                   <span className="flex items-center gap-1">
-                    <span className="w-2 h-2 rounded-full bg-amber-500" />
+                    <span className="w-2 h-2 rounded-full bg-[var(--status-warning)]" />
                     Gef&auml;hrdet ({statusCounts.at_risk})
                   </span>
                   <span className="flex items-center gap-1">
-                    <span className="w-2 h-2 rounded-full bg-red-500" />
+                    <span className="w-2 h-2 rounded-full bg-[var(--status-error)]" />
                     Kritisch ({statusCounts.off_track})
                   </span>
                 </div>
@@ -359,7 +359,7 @@ function ReviewContent() {
                     <p className="text-[11px] font-semibold text-muted uppercase tracking-wider mb-1">
                       Abgeschlossen
                     </p>
-                    <p className="text-2xl font-bold text-green-600">
+                    <p className="text-2xl font-bold text-[var(--status-success)]">
                       {review.learning_summary.courses_completed}
                     </p>
                     <p className="text-[11px] text-muted mt-1">Kurse</p>
@@ -393,10 +393,10 @@ function ReviewContent() {
                         const heightPct = (t.score / maxScore) * 100;
                         const barColor =
                           t.score >= 70
-                            ? "bg-green-500"
+                            ? "bg-[var(--status-success)]"
                             : t.score >= 40
-                              ? "bg-amber-500"
-                              : "bg-red-400";
+                              ? "bg-[var(--status-warning)]"
+                              : "bg-[var(--status-error)]";
 
                         return (
                           <div

@@ -19,8 +19,8 @@ const sizeClasses = {
 
 const colorClasses = {
   green: "bg-accent-green",
-  amber: "bg-amber-500",
-  red: "bg-red-500",
+  amber: "bg-[var(--status-warning)]",
+  red: "bg-[var(--status-error)]",
 };
 
 export function ProgressBar({

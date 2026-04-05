@@ -65,6 +65,16 @@
   --accent-green-dark: #16a34a;
   --text-placeholder: #767676;
   --scrollbar-hover: #b8b5b1;
+
+  /* Status colors (semantic) */
+  --status-success: #16a34a;
+  --status-success-bg: #dcfce7;
+  --status-warning: #a16207;
+  --status-warning-bg: #fef9c3;
+  --status-error: #dc2626;
+  --status-error-bg: #fee2e2;
+  --status-info: #2563eb;
+  --status-info-bg: #dbeafe;
 }
 
 body {
@@ -759,7 +769,7 @@ body:not(:focus-within) .blur-on-unfocus {
 }
 
 ::-webkit-scrollbar-thumb {
-  background: #d4d1cd;
+  background: var(--cream-400);
   border-radius: 3px;
 }
 
