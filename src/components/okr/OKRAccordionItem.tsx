@@ -27,7 +27,8 @@ import {
   isCheckinOverdue,
   getCheckinDaysRemaining,
 } from "@/lib/okr-logic";
-import type { OKR, OKRStatus, OKRCategory, KeyResult, Enrollment, OKRCourseLink } from "@/types";
+import { useCheckinHistory } from "@/lib/queries";
+import type { OKR, OKRStatus, OKRCategory, KeyResult, Enrollment, OKRCourseLink, CheckIn } from "@/types";
 
 interface OKRAccordionItemProps {
   okr: OKR;
@@ -145,6 +146,11 @@ export function OKRAccordionItem({
   const [checkinNote, setCheckinNote] = useState("");
   const [celebrationLevel, setCelebrationLevel] = useState<CelebrationLevel | null>(null);
 
+  const { data: checkinData } = useCheckinHistory(okr.id);
+  const latestRejection = checkinData?.checkins?.find(
+    (c: CheckIn) => c.review?.status === "rejected"
+  );
+
   const score = (okr.progress / 100).toFixed(2);
   const statusColor = getStatusColor(okr.status);
   const cat = categoryConfig[okr.category];
@@ -244,12 +250,17 @@ export function OKRAccordionItem({
           <h3 className="text-[16px] font-semibold text-foreground leading-tight">
             {okr.title}
           </h3>
-          <ChevronDown
-            className={`h-4 w-4 text-cream-400 flex-shrink-0 mt-0.5 transition-transform duration-200 ${
-              isExpanded ? "rotate-180" : ""
-            }`}
-            aria-hidden="true"
-          />
+          <div className="flex items-center flex-shrink-0">
+            {latestRejection && !isExpanded && (
+              <div className="w-2 h-2 rounded-full bg-[var(--status-error)] mr-1" title="Manager-Feedback vorhanden" />
+            )}
+            <ChevronDown
+              className={`h-4 w-4 text-cream-400 mt-0.5 transition-transform duration-200 ${
+                isExpanded ? "rotate-180" : ""
+              }`}
+              aria-hidden="true"
+            />
+          </div>
         </div>
 
         {/* Row 2: Badges (left) + Score Area (right) */}
@@ -477,6 +488,25 @@ export function OKRAccordionItem({
               id={`okr-detail-${okr.id}`}
               className="px-4 sm:px-5 pb-4 space-y-3"
             >
+              {/* Rejection alert */}
+              {latestRejection && latestRejection.review && (
+                <div className="p-3 rounded-lg bg-[var(--status-error-bg)] border border-[var(--status-error)]/20">
+                  <div className="flex items-start gap-2">
+                    <span className="text-[14px]">⚠️</span>
+                    <div>
+                      <p className="text-[12px] font-semibold text-[var(--status-error)]">
+                        Manager-Feedback: Anpassung nötig
+                      </p>
+                      {latestRejection.review.comment && (
+                        <p className="text-[12px] text-foreground mt-0.5">
+                          {latestRejection.review.comment}
+                        </p>
+                      )}
+                    </div>
+                  </div>
+                </div>
+              )}
+
               {/* Why it matters */}
               {okr.why_it_matters && (
                 <div>

@@ -97,6 +97,19 @@ export interface CheckIn {
   change_type: CheckInChangeType;
   change_details: Record<string, unknown>;
   checked_at: string;
+  review?: CheckinReview | null;
+}
+
+export type CheckinReviewStatus = 'approved' | 'noted' | 'rejected';
+
+export interface CheckinReview {
+  id: string;
+  checkin_id: string;
+  reviewer_id: string;
+  reviewer_name?: string;
+  status: CheckinReviewStatus;
+  comment: string | null;
+  created_at: string;
 }
 
 // ===== Career =====

@@ -59,7 +59,7 @@ export async function GET(
 
     let query = serviceClient
       .from("okr_checkins")
-      .select("*")
+      .select("*, checkin_reviews(*)")
       .eq("user_id", memberId)
       .order("checked_at", { ascending: false })
       .limit(50);
@@ -78,9 +78,16 @@ export async function GET(
       );
     }
 
+    const checkinsWithReview = (checkins || []).map((c: Record<string, unknown>) => {
+      const reviews = c.checkin_reviews as Array<Record<string, unknown>> | null;
+      const review = reviews && reviews.length > 0 ? reviews[0] : null;
+      const { checkin_reviews: _, ...rest } = c;
+      return { ...rest, review };
+    });
+
     reqLog.finish(200, { userId: user.id });
     return withRateLimitHeaders(
-      withCorsHeaders(NextResponse.json({ checkins: checkins || [] }))
+      withCorsHeaders(NextResponse.json({ checkins: checkinsWithReview }))
     );
   } catch (error) {
     logger.error("GET team member checkins error", {

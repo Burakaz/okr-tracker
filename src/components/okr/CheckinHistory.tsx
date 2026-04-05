@@ -2,8 +2,9 @@
 
 import { useState } from "react";
 import { ChevronDown, Clock, TrendingUp, MessageSquare } from "lucide-react";
-import { useCheckinHistory } from "@/lib/queries";
-import type { CheckIn } from "@/types";
+import { useCheckinHistory, useReviewCheckin } from "@/lib/queries";
+import { CheckinReviewBadge } from "@/components/okr/CheckinReviewBadge";
+import type { CheckIn, CheckinReviewStatus } from "@/types";
 
 const confidenceEmojis: Record<number, string> = {
   1: "😰",
@@ -34,7 +35,20 @@ function formatRelativeDate(dateStr: string): string {
   return date.toLocaleDateString("de-DE", { day: "numeric", month: "short", year: "numeric" });
 }
 
-function CheckinEntry({ checkin }: { checkin: CheckIn }) {
+function CheckinEntry({
+  checkin,
+  okrId,
+  isManagerView,
+}: {
+  checkin: CheckIn;
+  okrId: string;
+  isManagerView?: boolean;
+}) {
+  const [showReviewForm, setShowReviewForm] = useState(false);
+  const [reviewStatus, setReviewStatus] = useState<CheckinReviewStatus | null>(null);
+  const [reviewComment, setReviewComment] = useState("");
+  const reviewMutation = useReviewCheckin();
+
   const details = checkin.change_details as { previous_progress?: number; new_progress?: number } | undefined;
   const prevProgress = details?.previous_progress;
   const newProgress = details?.new_progress;
@@ -70,7 +84,7 @@ function CheckinEntry({ checkin }: { checkin: CheckIn }) {
           <div className="flex items-center gap-1.5 text-[12px]">
             <TrendingUp className="h-3 w-3 text-muted" />
             <span className="text-muted">{Math.round(prevProgress!)}%</span>
-            <span className="text-muted">→</span>
+            <span className="text-muted">&rarr;</span>
             <span className="font-medium text-foreground">{Math.round(newProgress!)}%</span>
             <span className={`text-[11px] font-medium ${progressDelta > 0 ? "text-[var(--status-success)]" : progressDelta < 0 ? "text-[var(--status-error)]" : "text-muted"}`}>
               ({progressDelta > 0 ? "+" : ""}{Math.round(progressDelta)}%)
@@ -86,11 +100,85 @@ function CheckinEntry({ checkin }: { checkin: CheckIn }) {
           </div>
         )}
 
-        {/* Review badge placeholder — will be filled in Task 3 */}
-        {(checkin as Record<string, unknown>).review && (
-          <div className="text-[11px] text-muted italic">
-            Manager-Feedback vorhanden
+        {/* Review badge */}
+        {checkin.review && (
+          <CheckinReviewBadge review={checkin.review} />
+        )}
+
+        {/* Manager review form */}
+        {isManagerView && !checkin.review && (
+          <div className="mt-2">
+            {!showReviewForm ? (
+              <button
+                onClick={() => setShowReviewForm(true)}
+                className="text-[12px] text-muted hover:text-foreground transition-colors"
+              >
+                Feedback geben
+              </button>
+            ) : (
+              <div className="space-y-2 p-2 bg-cream-50 rounded-lg">
+                <div className="flex gap-1.5">
+                  {(["approved", "noted", "rejected"] as const).map((s) => (
+                    <button
+                      key={s}
+                      onClick={() => setReviewStatus(s)}
+                      className={`px-2.5 py-1.5 rounded-lg text-[12px] font-medium transition-colors ${
+                        reviewStatus === s
+                          ? s === "approved" ? "bg-[var(--status-success)] text-white"
+                            : s === "rejected" ? "bg-[var(--status-error)] text-white"
+                            : "bg-foreground text-white"
+                          : "bg-cream-100 text-muted hover:bg-cream-200"
+                      }`}
+                    >
+                      {s === "approved" ? "✅ Bestätigt" : s === "noted" ? "📝 Notiert" : "⚠️ Anpassung nötig"}
+                    </button>
+                  ))}
+                </div>
+                {reviewStatus === "rejected" && (
+                  <textarea
+                    value={reviewComment}
+                    onChange={(e) => setReviewComment(e.target.value)}
+                    placeholder="Was muss angepasst werden?"
+                    className="input text-[12px] min-h-[60px]"
+                  />
+                )}
+                <div className="flex gap-2">
+                  <button
+                    onClick={() => {
+                      if (!reviewStatus) return;
+                      reviewMutation.mutate({
+                        okrId,
+                        checkinId: checkin.id,
+                        status: reviewStatus,
+                        comment: reviewComment || undefined,
+                      });
+                      setShowReviewForm(false);
+                    }}
+                    disabled={!reviewStatus || reviewMutation.isPending}
+                    className="btn-primary text-[12px] py-1.5"
+                  >
+                    {reviewMutation.isPending ? "Speichern..." : "Speichern"}
+                  </button>
+                  <button
+                    onClick={() => { setShowReviewForm(false); setReviewStatus(null); setReviewComment(""); }}
+                    className="btn-ghost text-[12px] py-1.5"
+                  >
+                    Abbrechen
+                  </button>
+                </div>
+              </div>
+            )}
           </div>
+        )}
+
+        {/* Manager can update existing review */}
+        {isManagerView && checkin.review && (
+          <button
+            onClick={() => { setShowReviewForm(true); setReviewStatus(checkin.review!.status); setReviewComment(checkin.review!.comment || ""); }}
+            className="text-[11px] text-muted hover:text-foreground transition-colors mt-1"
+          >
+            Feedback ändern
+          </button>
         )}
       </div>
     </div>
@@ -143,7 +231,7 @@ export function CheckinHistory({ okrId, maxVisible = 3, isManagerView = false }:
 
       <div className="relative">
         {visible.map((checkin) => (
-          <CheckinEntry key={checkin.id} checkin={checkin} />
+          <CheckinEntry key={checkin.id} checkin={checkin} okrId={okrId} isManagerView={isManagerView} />
         ))}
       </div>
 

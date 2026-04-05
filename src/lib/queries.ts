@@ -542,6 +542,38 @@ export function useSuggestCourses() {
   });
 }
 
+export function useReviewCheckin() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: async ({
+      okrId,
+      checkinId,
+      status,
+      comment,
+    }: {
+      okrId: string;
+      checkinId: string;
+      status: "approved" | "noted" | "rejected";
+      comment?: string;
+    }) => {
+      const res = await fetch(`/api/okrs/${okrId}/checkin/${checkinId}/review`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ status, comment }),
+      });
+      if (!res.ok) {
+        const err = await res.json().catch(() => ({ error: "Unbekannter Fehler" }));
+        throw new Error(err.error || "Review fehlgeschlagen");
+      }
+      return res.json();
+    },
+    onSuccess: (_data, vars) => {
+      queryClient.invalidateQueries({ queryKey: ["checkins", vars.okrId] });
+      queryClient.invalidateQueries({ queryKey: ["teamMemberCheckins"] });
+    },
+  });
+}
+
 // ===== Redesign: New Hooks =====
 export function useQuickCheckin() {
   const queryClient = useQueryClient();
