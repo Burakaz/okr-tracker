@@ -318,7 +318,7 @@ function DashboardContent() {
         )}
 
         {/* Quick Stats Footer */}
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-3">
           <QuickStatCard
             icon={<Target className="h-4 w-4 text-accent-green" />}
             label="Aktive Ziele"

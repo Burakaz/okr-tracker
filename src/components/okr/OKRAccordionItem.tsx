@@ -365,7 +365,7 @@ export function OKRAccordionItem({
                     key={opt.value}
                     type="button"
                     onClick={() => setSelectedConfidence(opt.value)}
-                    className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-[12px] font-medium transition-all ${
+                    className={`flex items-center gap-1.5 px-3 py-2.5 sm:py-1.5 rounded-lg text-[12px] font-medium transition-all ${
                       selectedConfidence === opt.value
                         ? "bg-foreground text-white"
                         : "bg-cream-100 text-muted hover:bg-cream-200"

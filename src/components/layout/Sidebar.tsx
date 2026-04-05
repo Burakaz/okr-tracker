@@ -39,7 +39,7 @@ export function Sidebar(props: SidebarProps) {
 
 function SectionLabel({ children }: { children: React.ReactNode }) {
   return (
-    <h3 className="px-3 pt-5 pb-1 text-[10px] font-semibold uppercase tracking-wider text-muted">
+    <h3 className="px-3 pt-5 pb-1 text-[11px] sm:text-[10px] font-semibold uppercase tracking-wider text-muted">
       {children}
     </h3>
   );
@@ -116,13 +116,13 @@ function SidebarContent({ user, orgLogo, onNavClick }: SidebarProps) {
             <span className="text-sm font-semibold text-foreground">
               ADMKRS
             </span>
-            <p className="text-[10px] text-muted">Personal Development OS</p>
+            <p className="text-[11px] sm:text-[10px] text-muted">Personal Development OS</p>
           </div>
           {/* Close button - only visible on mobile overlay */}
           {onNavClick && (
             <button
               onClick={onNavClick}
-              className="lg:hidden p-1.5 rounded-lg hover:bg-black/[0.04] transition-colors"
+              className="lg:hidden p-2.5 rounded-lg hover:bg-black/[0.04] transition-colors"
               aria-label="Menu schließen"
             >
               <X className="h-4 w-4 text-muted" />

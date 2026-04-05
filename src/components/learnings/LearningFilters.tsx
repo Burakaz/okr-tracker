@@ -160,7 +160,7 @@ export function LearningFilters({
               setShowSearch(false);
               setSearchInput("");
             }}
-            className="absolute right-2 top-1/2 -translate-y-1/2 p-0.5 hover:bg-cream-200 rounded"
+            className="absolute right-2 top-1/2 -translate-y-1/2 p-2 hover:bg-cream-200 rounded"
             aria-label="Suche schliessen"
           >
             <X className="h-3 w-3 text-muted" />

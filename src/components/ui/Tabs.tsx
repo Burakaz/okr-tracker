@@ -45,7 +45,7 @@ export function Tabs<T extends string = string>({
               aria-controls={`${idPrefix}-panel-${tab.key}`}
               id={`${idPrefix}-tab-${tab.key}`}
               onClick={() => onTabChange(tab.key)}
-              className={`flex items-center gap-1.5 px-3 py-2 text-[13px] font-medium rounded-lg transition-colors whitespace-nowrap ${
+              className={`flex items-center gap-1.5 px-3 py-2 min-h-[44px] text-[13px] font-medium rounded-lg transition-colors whitespace-nowrap ${
                 isActive
                   ? "bg-foreground text-white"
                   : "text-muted hover:bg-cream-200"
@@ -82,7 +82,7 @@ export function Tabs<T extends string = string>({
             aria-controls={`${idPrefix}-panel-${tab.key}`}
             id={`${idPrefix}-tab-${tab.key}`}
             onClick={() => onTabChange(tab.key)}
-            className={`flex items-center gap-1.5 px-4 py-2 text-[13px] font-medium border-b-2 transition-colors ${
+            className={`flex items-center gap-1.5 px-4 py-2 min-h-[44px] text-[13px] font-medium border-b-2 transition-colors ${
               isActive
                 ? "border-accent-green text-accent-green"
                 : "border-transparent text-muted hover:text-foreground"

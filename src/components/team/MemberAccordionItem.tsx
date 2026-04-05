@@ -119,7 +119,7 @@ export function MemberAccordionItem({
         <Link
           href={`/team/${member.id}`}
           onClick={(e) => e.stopPropagation()}
-          className="p-1.5 rounded-lg hover:bg-cream-200 transition-colors flex-shrink-0"
+          className="p-2 rounded-lg hover:bg-cream-200 transition-colors flex-shrink-0"
           title="Detailseite öffnen"
         >
           <ArrowUpRight className="h-4 w-4 text-muted hover:text-foreground" />

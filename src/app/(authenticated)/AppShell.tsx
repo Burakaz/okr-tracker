@@ -46,7 +46,7 @@ export function AppShell({ user, orgLogo, children }: AppShellProps) {
           onMenuClick={toggleSidebar}
         />
 
-        <main id="main-content" className="flex-1 overflow-hidden" role="main">
+        <main id="main-content" className="flex-1 overflow-hidden pb-[env(safe-area-inset-bottom)]" role="main">
           {children}
         </main>
       </div>

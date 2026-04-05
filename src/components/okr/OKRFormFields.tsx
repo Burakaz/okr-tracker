@@ -644,9 +644,9 @@ export function OKRFormFields({
       <form onSubmit={handleSubmit} className="flex-1 flex flex-col min-h-0">
         <div className="flex-1 overflow-y-auto">
           <div className="max-w-5xl mx-auto px-4 sm:px-6 py-6">
-            <div className="grid grid-cols-1 lg:grid-cols-5 gap-8">
+            <div className="grid grid-cols-1 md:grid-cols-5 gap-8">
               {/* Left column (60%) */}
-              <div className="lg:col-span-3 space-y-6">
+              <div className="md:col-span-3 space-y-6">
                 {titleInput(true, true)}
                 {whyItMattersField()}
                 {courseSelectorBlock()}
@@ -656,8 +656,8 @@ export function OKRFormFields({
               </div>
 
               {/* Right column (40%) */}
-              <div className="lg:col-span-2 space-y-6">
-                <div className="lg:sticky lg:top-6 space-y-6">
+              <div className="md:col-span-2 space-y-6">
+                <div className="md:sticky md:top-6 space-y-6">
                   {categorySelector()}
                   {quarterSelector()}
                   {scopeSelector()}
