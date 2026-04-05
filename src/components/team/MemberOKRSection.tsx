@@ -1,7 +1,9 @@
 "use client";
 
-import { Target } from "lucide-react";
+import { useState } from "react";
+import { Target, Clock, ChevronDown } from "lucide-react";
 import { ProgressBar } from "@/components/ui/ProgressBar";
+import { CheckinHistory } from "@/components/okr/CheckinHistory";
 import { getCategoryLabel, getCategoryClassName, progressToScore } from "@/lib/okr-logic";
 import type { OKR } from "@/types";
 
@@ -12,6 +14,8 @@ interface MemberOKRSectionProps {
 }
 
 export function MemberOKRSection({ okrs, showSummary = false, showHeader = true }: MemberOKRSectionProps) {
+  const [expandedHistoryId, setExpandedHistoryId] = useState<string | null>(null);
+
   if (okrs.length === 0) {
     return (
       <div className="text-center py-4">
@@ -78,6 +82,22 @@ export function MemberOKRSection({ okrs, showSummary = false, showHeader = true 
                     </span>
                   </div>
                 ))}
+              </div>
+            )}
+
+            {/* Check-in History Toggle */}
+            <button
+              onClick={() => setExpandedHistoryId(expandedHistoryId === okr.id ? null : okr.id)}
+              className="flex items-center gap-1 text-[12px] text-muted hover:text-foreground transition-colors mt-2"
+            >
+              <Clock className="h-3 w-3" />
+              Check-in Verlauf
+              <ChevronDown className={`h-3 w-3 transition-transform duration-200 ${expandedHistoryId === okr.id ? 'rotate-180' : ''}`} />
+            </button>
+
+            {expandedHistoryId === okr.id && (
+              <div className="mt-2 pl-2 border-l-2 border-cream-200">
+                <CheckinHistory okrId={okr.id} isManagerView={true} />
               </div>
             )}
           </div>

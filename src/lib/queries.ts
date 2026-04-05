@@ -70,6 +70,20 @@ export function useCheckinHistory(okrId: string) {
   });
 }
 
+export function useTeamMemberCheckins(memberId: string | undefined, okrId?: string) {
+  return useQuery<{ checkins: CheckIn[] }>({
+    queryKey: ["teamMemberCheckins", memberId, okrId],
+    queryFn: async () => {
+      const params = okrId ? `?okr_id=${okrId}` : "";
+      const res = await fetch(`/api/team/members/${memberId}/checkins${params}`);
+      if (!res.ok) throw new Error("Fehler beim Laden der Check-ins");
+      return res.json();
+    },
+    staleTime: 2 * 60 * 1000,
+    enabled: !!memberId,
+  });
+}
+
 // ===== Career =====
 export function useCareerProgress() {
   return useQuery<{ progress: UserCareerProgress | null }>({
