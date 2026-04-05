@@ -152,6 +152,7 @@ function CheckinCard({
                       ? "bg-foreground text-white"
                       : "bg-cream-100 text-muted hover:bg-cream-200"
                   }`}
+                  aria-label={`Konfidenz ${level}`}
                 >
                   {level}
                 </button>

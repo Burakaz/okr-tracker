@@ -85,7 +85,7 @@ export default function OrganizationPage() {
         {activeTab === "rights" && (
           <div role="tabpanel" id="panel-rights" aria-labelledby="tab-rights">
           <div className="space-y-4">
-            <h3 className="text-[15px] font-semibold text-foreground">Rollenübersicht</h3>
+            <h2 className="text-[15px] font-semibold text-foreground">Rollenübersicht</h2>
             <div className="space-y-3">
               {[
                 { role: "Super Admin", desc: "Vollzugriff auf alle Funktionen, kann nicht geändert werden.", badge: "badge-red" },

@@ -5,7 +5,7 @@ import { Users } from "lucide-react";
 export function OrgTeamsTab() {
   return (
     <div>
-      <h3 className="text-sm font-semibold text-foreground mb-1">Teams (0)</h3>
+      <h2 className="text-sm font-semibold text-foreground mb-1">Teams (0)</h2>
       <p className="text-xs text-muted mb-4">
         Erstelle und verwalte Teams in deiner Organisation.
       </p>

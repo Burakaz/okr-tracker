@@ -371,6 +371,7 @@ export function OKRAccordionItem({
                         : "bg-cream-100 text-muted hover:bg-cream-200"
                     }`}
                     aria-pressed={selectedConfidence === opt.value}
+                    aria-label={`Konfidenz: ${opt.label}`}
                   >
                     <span aria-hidden="true">{opt.emoji}</span>
                     <span>{opt.label}</span>
@@ -396,9 +397,10 @@ export function OKRAccordionItem({
                 className={`input w-full text-[13px] resize-none mt-1 ${
                   !hasNote && checkinNote.length === 0 ? "" : !hasNote ? "border-red-300 focus:ring-red-300" : "border-green-300 focus:ring-green-300"
                 }`}
+                aria-describedby={!hasNote ? `checkin-note-error-${okr.id}` : undefined}
               />
               {!hasNote && (
-                <p className="text-[11px] text-muted mt-1">
+                <p id={`checkin-note-error-${okr.id}`} className="text-[11px] text-muted mt-1">
                   Ohne Beschreibung kein Check-in — halte fest, was du gemacht hast.
                 </p>
               )}

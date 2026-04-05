@@ -471,6 +471,7 @@ function OKRsContent() {
           </div>
 
           {/* 7. OKR Accordion List */}
+          <h2 className="sr-only">Aktive Ziele</h2>
           {filteredOKRs.length > 0 ? (
             <div className="space-y-3">
               {filteredOKRs.map((okr) => (
