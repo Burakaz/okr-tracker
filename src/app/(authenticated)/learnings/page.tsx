@@ -2,10 +2,12 @@
 
 import { useState, useMemo, useCallback, Suspense } from "react";
 import { toast } from "sonner";
-import { Plus, Sparkles, Loader2, X } from "lucide-react";
-import { CourseCatalog } from "@/components/learnings/CourseCatalog";
-import { MyLearnings } from "@/components/learnings/MyLearnings";
-import { LearningFilters } from "@/components/learnings/LearningFilters";
+import {
+  Plus, Sparkles, Loader2, X, BookOpen,
+  ChevronDown, ChevronRight, Search, ArrowDown,
+} from "lucide-react";
+import { CourseCard } from "@/components/learnings/CourseCard";
+import { CategoryTiles } from "@/components/learnings/CategoryTiles";
 import { CourseDetailModal } from "@/components/learnings/CourseDetailModal";
 import { AddLearningForm } from "@/components/learnings/AddLearningForm";
 import { TeamLearnings } from "@/components/learnings/TeamLearnings";
@@ -17,8 +19,6 @@ import {
   useCurrentUser,
   useSuggestCourses,
 } from "@/lib/queries";
-import { Tabs } from "@/components/ui/Tabs";
-import type { TabItem } from "@/components/ui/Tabs";
 import type { UserRole, CourseCategory } from "@/types";
 
 export default function LearningsPage() {
@@ -34,8 +34,6 @@ export default function LearningsPage() {
     </Suspense>
   );
 }
-
-type LearningTab = "my-learnings" | "catalog" | "team";
 
 const MANAGER_ROLES: UserRole[] = ["manager", "hr", "admin", "super_admin"];
 
@@ -55,13 +53,11 @@ function LearningsContent() {
   const user = userData?.user || null;
   const isManager = user ? MANAGER_ROLES.includes(user.role) : false;
 
-  // Tab & filter state
-  const [activeTab, setActiveTab] = useState<LearningTab>("my-learnings");
-  const [filters, setFilters] = useState<{
-    category?: string;
-    status?: string;
-    search?: string;
-  }>({});
+  // State
+  const [selectedCategory, setSelectedCategory] = useState<CourseCategory | null>(null);
+  const [searchTerm, setSearchTerm] = useState("");
+  const [showCompleted, setShowCompleted] = useState(false);
+  const [showTeamSection, setShowTeamSection] = useState(false);
   const [selectedCourseId, setSelectedCourseId] = useState<string | null>(null);
   const [addFormState, setAddFormState] = useState<{
     open: boolean;
@@ -71,21 +67,23 @@ function LearningsContent() {
   const [showAISuggestions, setShowAISuggestions] = useState(false);
 
   // Data fetching
-  const catalogFilters = useMemo(
-    () => ({
-      category: filters.category,
-      search: filters.search,
-    }),
-    [filters.category, filters.search]
-  );
-
-  const { data: coursesData, isLoading: isLoadingCourses } =
-    useCourses(catalogFilters);
-  const { data: enrollmentsData, isLoading: isLoadingEnrollments } =
-    useEnrollments(filters.status);
+  const { data: coursesData, isLoading: isLoadingCourses } = useCourses();
+  const { data: enrollmentsData, isLoading: isLoadingEnrollments } = useEnrollments();
 
   const courses = coursesData?.courses || [];
   const enrollments = enrollmentsData?.enrollments || [];
+
+  // Derived data
+  const activeEnrollments = enrollments.filter(e => e.status === "in_progress");
+  const completedEnrollments = enrollments.filter(e => e.status === "completed");
+
+  const filteredCourses = useMemo(() => {
+    return courses.filter(c => {
+      if (selectedCategory && c.category !== selectedCategory) return false;
+      if (searchTerm && !c.title.toLowerCase().includes(searchTerm.toLowerCase())) return false;
+      return true;
+    });
+  }, [courses, selectedCategory, searchTerm]);
 
   // Mutations
   const enrollMutation = useEnrollCourse();
@@ -152,14 +150,8 @@ function LearningsContent() {
   const handleCreateFromSuggestion = useCallback(
     (title: string, category: string) => {
       const validCategories: CourseCategory[] = [
-        "design",
-        "development",
-        "marketing",
-        "sales",
-        "operations",
-        "hr",
-        "finance",
-        "other",
+        "design", "development", "marketing", "sales",
+        "operations", "hr", "finance", "other",
       ];
       const cat = validCategories.includes(category as CourseCategory)
         ? (category as CourseCategory)
@@ -169,47 +161,10 @@ function LearningsContent() {
     []
   );
 
-  const handleSwitchToCatalog = useCallback(() => {
-    setActiveTab("catalog");
-  }, []);
-
-  // Filter courses by enrollment status for "my-learnings" tab
-  const filteredEnrollments = useMemo(() => {
-    let result = enrollments;
-
-    if (filters.category) {
-      result = result.filter(
-        (e) => e.course?.category === filters.category
-      );
-    }
-    if (filters.search) {
-      const searchLower = filters.search.toLowerCase();
-      result = result.filter(
-        (e) =>
-          e.course?.title?.toLowerCase().includes(searchLower) ||
-          e.course?.description?.toLowerCase().includes(searchLower)
-      );
-    }
-
-    return result;
-  }, [enrollments, filters.category, filters.search]);
-
-  // Tab config
-  const tabs = useMemo(() => {
-    const base: TabItem<LearningTab>[] = [
-      { key: "my-learnings", label: "Meine Kurse", count: enrollments.length },
-      { key: "catalog", label: "Kurskatalog", count: courses.length },
-    ];
-    if (isManager) {
-      base.push({ key: "team", label: "Team" });
-    }
-    return base;
-  }, [enrollments.length, courses.length, isManager]);
-
   return (
     <div className="h-full flex flex-col overflow-hidden">
       <div className="flex-1 overflow-y-auto">
-        <div className="p-4 sm:p-6 space-y-5 max-w-[1400px] mx-auto">
+        <div className="p-4 sm:p-6 space-y-8 max-w-[1400px] mx-auto">
           {/* 1. Page header */}
           <div className="flex flex-wrap items-start sm:items-center justify-between gap-3">
             <div>
@@ -234,9 +189,7 @@ function LearningsContent() {
                 <span className="hidden sm:inline">KI Vorschlagen</span>
               </button>
               <button
-                onClick={() =>
-                  setAddFormState({ open: true })
-                }
+                onClick={() => setAddFormState({ open: true })}
                 className="btn-primary text-[13px] gap-1.5"
               >
                 <Plus className="h-4 w-4" aria-hidden="true" />
@@ -245,7 +198,7 @@ function LearningsContent() {
             </div>
           </div>
 
-          {/* AI Suggestions Panel */}
+          {/* 2. AI Suggestions Panel */}
           {showAISuggestions && (
             <div className="rounded-xl border border-accent-greenLight bg-accent-greenLight/5 p-4 space-y-3">
               <div className="flex items-center justify-between">
@@ -331,52 +284,183 @@ function LearningsContent() {
             </div>
           )}
 
-          {/* 2. Tab navigation */}
-          <Tabs
-            tabs={tabs}
-            activeTab={activeTab}
-            onTabChange={setActiveTab}
-            variant="underline"
-            ariaLabel="Lernbereiche"
-          />
+          {/* 3. Dein Lernfortschritt Section */}
+          <section>
+            <div className="flex items-center gap-2 mb-4">
+              <h2 className="text-[15px] font-semibold text-foreground">
+                Dein Lernfortschritt
+              </h2>
+              {activeEnrollments.length > 0 && (
+                <span className="text-[11px] font-medium px-1.5 py-0.5 rounded-full bg-cream-200 text-muted">
+                  {activeEnrollments.length}
+                </span>
+              )}
+            </div>
 
-          {/* 3. Filters (not on team tab) */}
-          {activeTab !== "team" && (
-            <LearningFilters
-              filters={filters}
-              onFilterChange={setFilters}
-              showStatusFilter={activeTab === "my-learnings"}
-            />
-          )}
+            {isLoadingEnrollments ? (
+              <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4">
+                {Array.from({ length: 3 }).map((_, i) => (
+                  <div key={i} className="card overflow-hidden">
+                    <div className="h-[100px] bg-cream-200 animate-pulse rounded-t-[1rem]" />
+                    <div className="p-4 space-y-3">
+                      <div className="h-4 bg-cream-200 animate-pulse rounded w-3/4" />
+                      <div className="h-3 bg-cream-200 animate-pulse rounded w-full" />
+                    </div>
+                  </div>
+                ))}
+              </div>
+            ) : activeEnrollments.length > 0 ? (
+              <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4">
+                {activeEnrollments.map((enrollment) => {
+                  if (!enrollment.course) return null;
+                  return (
+                    <CourseCard
+                      key={enrollment.id}
+                      course={enrollment.course}
+                      enrollment={enrollment}
+                      onViewDetail={handleViewDetail}
+                    />
+                  );
+                })}
+              </div>
+            ) : (
+              <div className="empty-state" role="status">
+                <div className="w-16 h-16 rounded-2xl bg-cream-200 flex items-center justify-center mb-4">
+                  <BookOpen className="w-8 h-8 text-muted" aria-hidden="true" />
+                </div>
+                <p className="empty-state-title">
+                  Noch keine Kurse
+                </p>
+                <p className="empty-state-description mb-3">
+                  Entdecke den Katalog unten
+                </p>
+                <ArrowDown className="h-5 w-5 text-muted animate-bounce" aria-hidden="true" />
+              </div>
+            )}
 
-          {/* 4. Tab content */}
-          {activeTab === "my-learnings" && (
-            <div role="tabpanel" id="panel-my-learnings" aria-labelledby="tab-my-learnings">
-              <MyLearnings
-                enrollments={filteredEnrollments}
-                isLoading={isLoadingEnrollments}
-                onViewDetail={handleViewDetail}
-                onSwitchToCatalog={handleSwitchToCatalog}
+            {/* Completed subsection */}
+            {completedEnrollments.length > 0 && (
+              <div className="mt-4">
+                <button
+                  onClick={() => setShowCompleted(!showCompleted)}
+                  className="flex items-center gap-1.5 text-[13px] font-medium text-muted hover:text-foreground transition-colors"
+                >
+                  {showCompleted ? (
+                    <ChevronDown className="h-4 w-4" />
+                  ) : (
+                    <ChevronRight className="h-4 w-4" />
+                  )}
+                  Abgeschlossen ({completedEnrollments.length})
+                </button>
+                {showCompleted && (
+                  <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4 mt-3">
+                    {completedEnrollments.map((enrollment) => {
+                      if (!enrollment.course) return null;
+                      return (
+                        <CourseCard
+                          key={enrollment.id}
+                          course={enrollment.course}
+                          enrollment={enrollment}
+                          onViewDetail={handleViewDetail}
+                        />
+                      );
+                    })}
+                  </div>
+                )}
+              </div>
+            )}
+          </section>
+
+          {/* 4. Entdecken / Kurskatalog Section */}
+          <section>
+            <h2 className="text-[15px] font-semibold text-foreground mb-4">
+              Kurskatalog
+            </h2>
+
+            <div className="space-y-4">
+              <CategoryTiles
+                selected={selectedCategory}
+                onSelect={setSelectedCategory}
               />
-            </div>
-          )}
 
-          {activeTab === "catalog" && (
-            <div role="tabpanel" id="panel-catalog" aria-labelledby="tab-catalog">
-              <CourseCatalog
-                courses={courses}
-                enrollments={enrollments}
-                isLoading={isLoadingCourses}
-                onViewDetail={handleViewDetail}
-                onEnroll={handleEnroll}
-              />
-            </div>
-          )}
+              {/* Search input */}
+              <div className="relative">
+                <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted" aria-hidden="true" />
+                <input
+                  type="text"
+                  placeholder="Kurse durchsuchen..."
+                  value={searchTerm}
+                  onChange={(e) => setSearchTerm(e.target.value)}
+                  className="w-full pl-9 pr-4 py-2.5 text-[13px] rounded-xl border border-cream-300 bg-white placeholder:text-muted/60 focus:outline-none focus:ring-2 focus:ring-foreground/10 focus:border-foreground/20 transition-all"
+                />
+              </div>
 
-          {activeTab === "team" && isManager && (
-            <div role="tabpanel" id="panel-team" aria-labelledby="tab-team">
-              <TeamLearnings />
+              {/* Course grid */}
+              {isLoadingCourses ? (
+                <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4">
+                  {Array.from({ length: 6 }).map((_, i) => (
+                    <div key={i} className="card overflow-hidden">
+                      <div className="h-[100px] bg-cream-200 animate-pulse rounded-t-[1rem]" />
+                      <div className="p-4 space-y-3">
+                        <div className="h-4 bg-cream-200 animate-pulse rounded w-3/4" />
+                        <div className="h-3 bg-cream-200 animate-pulse rounded w-full" />
+                        <div className="h-3 bg-cream-200 animate-pulse rounded w-2/3" />
+                        <div className="h-8 bg-cream-200 animate-pulse rounded mt-3" />
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              ) : filteredCourses.length === 0 ? (
+                <div className="empty-state" role="status">
+                  <div className="w-16 h-16 rounded-2xl bg-cream-200 flex items-center justify-center mb-4">
+                    <BookOpen className="w-8 h-8 text-muted" aria-hidden="true" />
+                  </div>
+                  <p className="empty-state-title">Keine Kurse gefunden</p>
+                  <p className="empty-state-description">
+                    Versuche andere Filter oder erstelle einen neuen Kurs.
+                  </p>
+                </div>
+              ) : (
+                <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4">
+                  {filteredCourses.map((course) => {
+                    const enrollment = enrollments.find(
+                      (e) => e.course_id === course.id
+                    );
+                    return (
+                      <CourseCard
+                        key={course.id}
+                        course={course}
+                        enrollment={enrollment}
+                        onViewDetail={handleViewDetail}
+                        onEnroll={handleEnroll}
+                      />
+                    );
+                  })}
+                </div>
+              )}
             </div>
+          </section>
+
+          {/* 5. Team Lernen Section (manager+ only) */}
+          {isManager && (
+            <section>
+              <button
+                onClick={() => setShowTeamSection(!showTeamSection)}
+                className="flex items-center gap-1.5 text-[15px] font-semibold text-foreground hover:text-foreground/80 transition-colors"
+              >
+                {showTeamSection ? (
+                  <ChevronDown className="h-4 w-4" />
+                ) : (
+                  <ChevronRight className="h-4 w-4" />
+                )}
+                Team Lernfortschritt
+              </button>
+              {showTeamSection && (
+                <div className="mt-4">
+                  <TeamLearnings />
+                </div>
+              )}
+            </section>
           )}
         </div>
       </div>
