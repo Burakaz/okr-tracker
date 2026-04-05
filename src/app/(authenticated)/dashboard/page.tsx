@@ -4,7 +4,6 @@ import { useMemo, Suspense } from "react";
 import Link from "next/link";
 import {
   Target,
-  AlertCircle,
   ArrowRight,
   Clock,
   Loader2,
@@ -18,6 +17,7 @@ import {
   isCheckinOverdue,
 } from "@/lib/okr-logic";
 import { ProgressBar } from "@/components/ui/ProgressBar";
+import { InlineCheckin } from "@/components/dashboard/InlineCheckin";
 import type { OKR } from "@/types";
 
 const currentQuarter = getCurrentQuarter();
@@ -225,33 +225,17 @@ function DashboardContent() {
           </div>
         </div>
 
-        {/* Check-in Nudge */}
+        {/* Inline Check-ins */}
         {overdueOKRs.length > 0 && (
-          <div className="card p-4 border-l-4 border-l-amber-400 bg-amber-50/30">
-            <div className="flex items-center justify-between">
-              <div className="flex items-center gap-3">
-                <AlertCircle className="h-4.5 w-4.5 text-amber-500 flex-shrink-0" />
-                <div>
-                  <p className="text-[13px] font-medium text-foreground">
-                    {overdueOKRs.length}{" "}
-                    {overdueOKRs.length === 1 ? "Ziel braucht" : "Ziele brauchen"}{" "}
-                    ein Update
-                  </p>
-                  <p className="text-[11px] text-muted mt-0.5">
-                    {overdueOKRs
-                      .slice(0, 2)
-                      .map((o) => o.title)
-                      .join(", ")}
-                    {overdueOKRs.length > 2 &&
-                      ` +${overdueOKRs.length - 2} weitere`}
-                  </p>
-                </div>
-              </div>
-              <Link href="/okrs" className="btn-primary text-[12px] gap-1">
-                <Clock className="h-3 w-3" />
-                Check-in
-              </Link>
-            </div>
+          <InlineCheckin okrs={overdueOKRs} />
+        )}
+
+        {/* All up-to-date celebration */}
+        {activeOKRs.length > 0 && overdueOKRs.length === 0 && (
+          <div className="card p-4 border-l-4 border-l-accent-green bg-green-50/30">
+            <p className="text-[13px] font-medium text-foreground">
+              Alles aktuell! Deine Ziele sind auf dem neuesten Stand.
+            </p>
           </div>
         )}
 

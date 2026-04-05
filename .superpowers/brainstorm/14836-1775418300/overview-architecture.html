@@ -1,0 +1,197 @@
+<h2>OKR Tracker — Redesign Overview</h2>
+<p class="subtitle">Gesamtarchitektur: 6 Bereiche, alle Entscheidungen zusammengefasst</p>
+
+<div class="section">
+  <div class="label">Navigation (Sidebar)</div>
+  <div style="display:flex; gap:24px; margin-top:12px;">
+
+    <!-- Sidebar Wireframe -->
+    <div style="width:200px; flex-shrink:0; background:#f5f4f0; border-radius:12px; padding:16px; border:1px solid #e8e5e1;">
+      <div style="font-weight:700; font-size:15px; margin-bottom:20px; padding-bottom:12px; border-bottom:1px solid #e8e5e1;">OKR ADMKRS</div>
+
+      <div style="font-size:10px; text-transform:uppercase; letter-spacing:1px; color:#999; margin-bottom:8px; font-weight:600;">Hauptmenu</div>
+      <div style="padding:8px 10px; background:#1a1a1a; color:white; border-radius:8px; font-size:13px; font-weight:500; margin-bottom:4px;">Dashboard</div>
+      <div style="padding:8px 10px; font-size:13px; color:#5c5c5c; margin-bottom:4px;">Ziele</div>
+      <div style="padding:8px 10px; font-size:13px; color:#5c5c5c; margin-bottom:4px;">Lernen</div>
+
+      <div style="font-size:10px; text-transform:uppercase; letter-spacing:1px; color:#999; margin:20px 0 8px; font-weight:600;">Einblicke</div>
+      <div style="padding:6px 10px; font-size:12px; color:#999; margin-bottom:2px;">Ruckblick</div>
+
+      <div style="font-size:10px; text-transform:uppercase; letter-spacing:1px; color:#999; margin:20px 0 8px; font-weight:600;">Verwaltung</div>
+      <div style="padding:6px 10px; font-size:12px; color:#999; margin-bottom:2px;">Team & Orga</div>
+
+      <div style="margin-top:auto; padding-top:24px; border-top:1px solid #e8e5e1; margin-top:24px;">
+        <div style="display:flex; align-items:center; gap:8px; padding:8px 10px; font-size:13px; color:#5c5c5c;">
+          <div style="width:28px; height:28px; border-radius:50%; background:#e8e5e1; display:flex; align-items:center; justify-content:center; font-size:11px; font-weight:600;">BK</div>
+          Profil & Settings
+        </div>
+      </div>
+    </div>
+
+    <!-- Explanation -->
+    <div style="flex:1;">
+      <h3 style="margin-top:0;">Sidebar-Gruppierung</h3>
+      <div style="display:grid; gap:16px;">
+        <div style="padding:16px; background:#f0fdf4; border-radius:10px; border-left:3px solid #22c55e;">
+          <strong>Hauptmenu</strong> (gross, prominent)
+          <p style="margin:6px 0 0; font-size:13px; color:#555;">Dashboard, Ziele, Lernen — die 3 Seiten die jeder Nutzer regelmaessig braucht</p>
+        </div>
+        <div style="padding:16px; background:#faf9f7; border-radius:10px; border-left:3px solid #d4d1cd;">
+          <strong>Einblicke</strong> (kleiner, sekundaer)
+          <p style="margin:6px 0 0; font-size:13px; color:#555;">Ruckblick — passive Info-Seite, selten besucht</p>
+        </div>
+        <div style="padding:16px; background:#faf9f7; border-radius:10px; border-left:3px solid #d4d1cd;">
+          <strong>Verwaltung</strong> (nur Manager/Admin)
+          <p style="margin:6px 0 0; font-size:13px; color:#555;">Team & Orga — rollenbasiert, nur wer es braucht</p>
+        </div>
+        <div style="padding:16px; background:#eff6ff; border-radius:10px; border-left:3px solid #3b82f6;">
+          <strong>Profil & Settings</strong> (unten, mit Avatar)
+          <p style="margin:6px 0 0; font-size:13px; color:#555;">Karriere + Settings + Konto zusammengefasst. Ersetzt den separaten /career Sidebar-Eintrag.</p>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="section" style="margin-top:32px;">
+  <div class="label">Seitenstruktur (6 Bereiche)</div>
+  <div style="display:grid; grid-template-columns:1fr 1fr; gap:16px; margin-top:12px;">
+
+    <!-- Dashboard -->
+    <div style="padding:20px; background:white; border-radius:12px; border:2px solid #22c55e;">
+      <div style="display:flex; align-items:center; gap:8px; margin-bottom:8px;">
+        <span style="font-size:18px;">1</span>
+        <h3 style="margin:0; color:#22c55e;">Dashboard (Action-Zentrale)</h3>
+      </div>
+      <ul style="font-size:13px; color:#555; padding-left:18px; margin:0;">
+        <li>Begruessung + KI-Motivation</li>
+        <li>Quarter-Progress mit Ring</li>
+        <li><strong>Inline Check-ins direkt hier</strong> — keine Navigation noetig</li>
+        <li>Lernfortschritt-Karten</li>
+        <li>Quick Stats</li>
+      </ul>
+      <div style="margin-top:10px; padding:8px 12px; background:#f0fdf4; border-radius:6px; font-size:11px; color:#16a34a;">
+        NEU: Ueberfaellige OKRs mit Slider + Note direkt auf dem Dashboard
+      </div>
+    </div>
+
+    <!-- Ziele -->
+    <div style="padding:20px; background:white; border-radius:12px; border:2px solid #e8e5e1;">
+      <div style="display:flex; align-items:center; gap:8px; margin-bottom:8px;">
+        <span style="font-size:18px;">2</span>
+        <h3 style="margin:0;">Ziele (OKRs)</h3>
+      </div>
+      <ul style="font-size:13px; color:#555; padding-left:18px; margin:0;">
+        <li>Quarter-Selector + Filter</li>
+        <li>OKR Accordion mit Check-in</li>
+        <li>Archiv-Tab</li>
+        <li><strong>Neues OKR: Ganzseitig auf /okrs/new</strong></li>
+        <li>Edit/Duplicate/Delete Flows</li>
+      </ul>
+      <div style="margin-top:10px; padding:8px 12px; background:#fef9c3; border-radius:6px; font-size:11px; color:#a16207;">
+        NEU: OKR-Erstellung als eigene Seite statt Modal
+      </div>
+    </div>
+
+    <!-- Lernen -->
+    <div style="padding:20px; background:white; border-radius:12px; border:2px solid #22c55e;">
+      <div style="display:flex; align-items:center; gap:8px; margin-bottom:8px;">
+        <span style="font-size:18px;">3</span>
+        <h3 style="margin:0; color:#22c55e;">Lernen (Hub-Seite, komplett neu)</h3>
+      </div>
+      <ul style="font-size:13px; color:#555; padding-left:18px; margin:0;">
+        <li><strong>Oben: "Dein Lernfortschritt"</strong> — aktive Kurse, naechstes Modul</li>
+        <li><strong>Darunter: "Entdecken"</strong> — Katalog mit Kategorie-Kacheln</li>
+        <li>KI-Kursvorschlaege integriert</li>
+        <li>Kein Tab-Switching mehr</li>
+        <li>Team-Learnings fuer Manager inline</li>
+      </ul>
+      <div style="margin-top:10px; padding:8px 12px; background:#f0fdf4; border-radius:6px; font-size:11px; color:#16a34a;">
+        KOMPLETT NEU: Scroll-basierte Hub statt Tab-View
+      </div>
+    </div>
+
+    <!-- Settings -->
+    <div style="padding:20px; background:white; border-radius:12px; border:2px solid #22c55e;">
+      <div style="display:flex; align-items:center; gap:8px; margin-bottom:8px;">
+        <span style="font-size:18px;">4</span>
+        <h3 style="margin:0; color:#22c55e;">Profil & Settings (Tab-basiert)</h3>
+      </div>
+      <ul style="font-size:13px; color:#555; padding-left:18px; margin:0;">
+        <li><strong>Tab "Profil":</strong> Name, Dept, Position, Craft Focus, Avatar</li>
+        <li><strong>Tab "Karriere":</strong> Level, Fortschritt, Ladder (ex /career)</li>
+        <li><strong>Tab "Konto":</strong> Auth, Email, Benachrichtigungen</li>
+        <li><strong>Tab "Darstellung":</strong> Theme, Sprache (Zukunft)</li>
+      </ul>
+      <div style="margin-top:10px; padding:8px 12px; background:#f0fdf4; border-radius:6px; font-size:11px; color:#16a34a;">
+        KOMPLETT NEU: Karriere + Settings zusammengefuehrt, /career entfaellt
+      </div>
+    </div>
+
+    <!-- Rückblick -->
+    <div style="padding:20px; background:white; border-radius:12px; border:2px solid #e8e5e1;">
+      <div style="display:flex; align-items:center; gap:8px; margin-bottom:8px;">
+        <span style="font-size:18px;">5</span>
+        <h3 style="margin:0;">Ruckblick</h3>
+      </div>
+      <ul style="font-size:13px; color:#555; padding-left:18px; margin:0;">
+        <li>Quarter-Review mit Trend-Chart</li>
+        <li>OKR-Ergebnisse + Achievements</li>
+        <li>Lern-Summary</li>
+        <li>Bleibt weitgehend gleich</li>
+      </ul>
+      <div style="margin-top:10px; padding:8px 12px; background:#faf9f7; border-radius:6px; font-size:11px; color:#999;">
+        ANPASSUNG: max-w auf 1400px, sonst unveraendert
+      </div>
+    </div>
+
+    <!-- Team -->
+    <div style="padding:20px; background:white; border-radius:12px; border:2px solid #e8e5e1;">
+      <div style="display:flex; align-items:center; gap:8px; margin-bottom:8px;">
+        <span style="font-size:18px;">6</span>
+        <h3 style="margin:0;">Team & Orga</h3>
+      </div>
+      <ul style="font-size:13px; color:#555; padding-left:18px; margin:0;">
+        <li>Team-Uebersicht mit Member Accordion</li>
+        <li>Org-Einstellungen (Admin only)</li>
+        <li>Member Detail View</li>
+        <li>Bleibt weitgehend gleich</li>
+      </ul>
+      <div style="margin-top:10px; padding:8px 12px; background:#faf9f7; border-radius:6px; font-size:11px; color:#999;">
+        ANPASSUNG: max-w auf 1400px, sonst unveraendert
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="section" style="margin-top:32px;">
+  <div class="label">Globale Aenderungen</div>
+  <div style="display:grid; grid-template-columns:1fr 1fr 1fr; gap:12px; margin-top:12px;">
+    <div style="padding:16px; background:white; border-radius:10px; border:1px solid #e8e5e1; text-align:center;">
+      <div style="font-size:24px; font-weight:700; color:#1a1a1a;">1400px</div>
+      <div style="font-size:12px; color:#999; margin-top:4px;">Content max-width<br>(bisher 1024px)</div>
+    </div>
+    <div style="padding:16px; background:white; border-radius:10px; border:1px solid #e8e5e1; text-align:center;">
+      <div style="font-size:24px; font-weight:700; color:#1a1a1a;">8</div>
+      <div style="font-size:12px; color:#999; margin-top:4px;">Craft Focus Kategorien<br>(Settings-Liste kanonisch)</div>
+    </div>
+    <div style="padding:16px; background:white; border-radius:10px; border:1px solid #e8e5e1; text-align:center;">
+      <div style="font-size:24px; font-weight:700; color:#dc2626;">-1</div>
+      <div style="font-size:12px; color:#999; margin-top:4px;">Sidebar-Eintrag<br>(/career entfaellt)</div>
+    </div>
+  </div>
+</div>
+
+<div style="margin-top:32px; padding:20px; background:#1a1a1a; border-radius:12px; color:white;">
+  <h3 style="margin:0 0 8px; color:white;">Zusammenfassung der Entscheidungen</h3>
+  <div style="font-size:13px; line-height:1.8; opacity:0.85;">
+    1. Content-Bereich auf max-w-[1400px] erweitern<br>
+    2. Sidebar visuell gruppieren (Primaer / Einblicke / Verwaltung)<br>
+    3. Dashboard wird Action-Zentrale mit Inline-Checkins<br>
+    4. OKR-Erstellung als ganzseitige Route /okrs/new<br>
+    5. Learnings komplett neu als scroll-basierte Hub-Seite<br>
+    6. Settings + Karriere zusammenfuehren (Tab-basiert)<br>
+    7. Craft Focus auf Settings-Liste vereinheitlichen<br>
+    8. Alle Seiten: top-level UX/UI Qualitaet
+  </div>
+</div>
