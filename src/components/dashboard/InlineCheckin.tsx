@@ -139,22 +139,29 @@ function CheckinCard({
           {/* Confidence selector */}
           <div>
             <label className="text-[12px] text-muted mb-1.5 block">
-              Zuversicht
+              Wie zuversichtlich bist du?
             </label>
             <div className="flex gap-1.5">
-              {([1, 2, 3, 4, 5] as ConfidenceLevel[]).map((level) => (
+              {([
+                { value: 2 as ConfidenceLevel, emoji: "😟", label: "Schwierig" },
+                { value: 3 as ConfidenceLevel, emoji: "😐", label: "Unsicher" },
+                { value: 4 as ConfidenceLevel, emoji: "😊", label: "Machbar" },
+                { value: 5 as ConfidenceLevel, emoji: "🟢", label: "Läuft" },
+              ]).map((opt) => (
                 <button
-                  key={level}
+                  key={opt.value}
                   type="button"
-                  onClick={() => setConfidence(level)}
-                  className={`w-8 h-8 rounded text-[13px] font-medium transition-colors ${
-                    confidence === level
+                  onClick={() => setConfidence(opt.value)}
+                  className={`flex items-center gap-1 px-2.5 py-2 sm:py-1.5 rounded-lg text-[12px] font-medium transition-colors ${
+                    confidence === opt.value
                       ? "bg-foreground text-white"
                       : "bg-cream-100 text-muted hover:bg-cream-200"
                   }`}
-                  aria-label={`Konfidenz ${level}`}
+                  aria-label={`Konfidenz: ${opt.label}`}
+                  aria-pressed={confidence === opt.value}
                 >
-                  {level}
+                  <span>{opt.emoji}</span>
+                  <span className="hidden sm:inline">{opt.label}</span>
                 </button>
               ))}
             </div>

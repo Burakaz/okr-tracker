@@ -12,11 +12,11 @@ interface CheckinDialogProps {
 }
 
 const confidenceLabels: Record<ConfidenceLevel, string> = {
-  1: "Wird nicht erreicht",
-  2: "Unwahrscheinlich",
-  3: "Möglich",
-  4: "Wahrscheinlich",
-  5: "Wird erreicht",
+  1: "Sehr schwierig",
+  2: "Schwierig",
+  3: "Unsicher",
+  4: "Machbar",
+  5: "Läuft",
 };
 
 export function CheckinDialog({

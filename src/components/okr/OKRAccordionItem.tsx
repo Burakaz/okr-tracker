@@ -81,28 +81,27 @@ const categoryConfig: Record<OKRCategory, { icon: typeof Zap; label: string; cla
 };
 
 const statusBadgeConfig: Record<OKRStatus, { label: string; className: string }> = {
-  on_track: { label: "On Track", className: "badge-green" },
-  at_risk: { label: "At Risk", className: "badge-yellow" },
+  on_track: { label: "Im Plan", className: "badge-green" },
+  at_risk: { label: "Gefährdet", className: "badge-yellow" },
   off_track: { label: "Kritisch", className: "badge-red" },
 };
 
 function StatusIndicatorIcon({ status }: { status: OKRStatus }) {
   switch (status) {
     case "on_track":
-      return <CheckCheck className="h-3.5 w-3.5 text-green-600" aria-label="On Track" />;
+      return <CheckCheck className="h-3.5 w-3.5 text-green-600" aria-label="Im Plan" />;
     case "at_risk":
-      return <Minus className="h-3.5 w-3.5 text-amber-500" aria-label="At Risk" />;
+      return <Minus className="h-3.5 w-3.5 text-amber-500" aria-label="Gefährdet" />;
     case "off_track":
       return <X className="h-3.5 w-3.5 text-red-500" aria-label="Kritisch" />;
   }
 }
 
-// Reversed: Kritisch (left) → Sehr gut (right)
 const confidenceOptions = [
-  { value: 2, emoji: "😟", label: "Kritisch" },
-  { value: 3, emoji: "😐", label: "Risiko" },
-  { value: 4, emoji: "😊", label: "Gut" },
-  { value: 5, emoji: "🟢", label: "Sehr gut" },
+  { value: 2, emoji: "😟", label: "Schwierig" },
+  { value: 3, emoji: "😐", label: "Unsicher" },
+  { value: 4, emoji: "😊", label: "Machbar" },
+  { value: 5, emoji: "🟢", label: "Läuft" },
 ] as const;
 
 function getKRProgress(kr: KeyResult, value: number) {
