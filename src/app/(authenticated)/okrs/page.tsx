@@ -1,10 +1,10 @@
 "use client";
 
 import { useState, useMemo, Suspense } from "react";
+import { useRouter } from "next/navigation";
 import { useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
 import { Plus, Target } from "lucide-react";
-import { OKRForm } from "@/components/okr/OKRForm";
 import { CheckinDialog } from "@/components/okr/CheckinDialog";
 import { DuplicateOKRDialog } from "@/components/okr/DuplicateOKRDialog";
 import { ConfirmDialog } from "@/components/ui/ConfirmDialog";
@@ -21,7 +21,6 @@ import {
 import type {
   OKR,
   OKRCourseLink,
-  CreateOKRRequest,
   CreateCheckinRequest,
   DuplicateOKRRequest,
 } from "@/types";
@@ -44,6 +43,7 @@ type TabFilter = "active" | "archive";
 type ScopeFilter = "all" | "personal" | "team" | "company";
 
 function OKRsContent() {
+  const router = useRouter();
   const queryClient = useQueryClient();
 
   // Quarter state is LOCAL to this page
@@ -68,8 +68,6 @@ function OKRsContent() {
   const [tabFilter, setTabFilter] = useState<TabFilter>("active");
   const [scopeFilter, setScopeFilter] = useState<ScopeFilter>("all");
   const [expandedId, setExpandedId] = useState<string | null>(null);
-  const [showForm, setShowForm] = useState(false);
-  const [editingOKR, setEditingOKR] = useState<OKR | null>(null);
   const [showCheckin, setShowCheckin] = useState(false);
   const [checkinOKR, setCheckinOKR] = useState<OKR | null>(null);
   const [showDuplicate, setShowDuplicate] = useState(false);
@@ -120,44 +118,11 @@ function OKRsContent() {
   // --- Handlers ---
 
   const handleNewOKR = () => {
-    setEditingOKR(null);
-    setShowForm(true);
+    router.push("/okrs/new");
   };
 
   const handleEditOKR = (okr: OKR) => {
-    setEditingOKR(okr);
-    setShowForm(true);
-  };
-
-  const handleSubmitOKR = async (data: CreateOKRRequest) => {
-    const wasEditing = !!editingOKR;
-    const editId = editingOKR?.id;
-    setIsSubmitting(true);
-
-    try {
-      const url = editId ? `/api/okrs/${editId}` : "/api/okrs";
-      const method = editId ? "PATCH" : "POST";
-
-      const res = await fetch(url, {
-        method,
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(data),
-      });
-
-      if (res.ok) {
-        toast.success(wasEditing ? "OKR aktualisiert" : "OKR erstellt");
-        setShowForm(false);
-        setEditingOKR(null);
-        await invalidateOKRs();
-      } else {
-        const error = await res.json();
-        toast.error(error.error || "Fehler beim Speichern");
-      }
-    } catch {
-      toast.error("Fehler beim Speichern");
-    } finally {
-      setIsSubmitting(false);
-    }
+    router.push(`/okrs/${okr.id}/edit`);
   };
 
   const handleCheckin = (okr: OKR) => {
@@ -545,20 +510,6 @@ function OKRsContent() {
           )}
         </div>
       </div>
-
-      {/* OKR Form Modal */}
-      {showForm && (
-        <OKRForm
-          initialData={editingOKR || undefined}
-          currentQuarter={currentQuarter}
-          onSubmit={handleSubmitOKR}
-          onCancel={() => {
-            setShowForm(false);
-            setEditingOKR(null);
-          }}
-          isLoading={isSubmitting}
-        />
-      )}
 
       {/* Check-in Dialog */}
       {showCheckin && checkinOKR && (
