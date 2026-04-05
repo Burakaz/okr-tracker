@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useCallback, useRef } from "react";
+import { useState, useEffect, useCallback, useRef, useMemo } from "react";
 import {
   X,
   Plus,
@@ -18,6 +18,7 @@ import {
 import type { OKR, OKRCategory, CreateOKRRequest } from "@/types";
 import type { SuggestedKR } from "@/lib/ai/types";
 import { getCurrentQuarter, getNextQuarter } from "@/lib/okr-logic";
+import { useFocusTrap } from "@/hooks/useFocusTrap";
 import { useSuggestKPIs } from "@/hooks/useSuggestKPIs";
 import { CourseSelector, type SelectedCourse } from "./CourseSelector";
 
@@ -56,6 +57,7 @@ export function OKRForm({
   isLoading = false,
 }: OKRFormProps) {
   const isEditing = !!initialData;
+  const focusTrapRef = useFocusTrap();
   const defaultQuarter = currentQuarter || getCurrentQuarter();
 
   // Wizard step: in edit mode, start at step 2
@@ -249,16 +251,19 @@ export function OKRForm({
     });
   };
 
-  // Build quarter options
-  const quarterOptions: string[] = [];
-  let q = getCurrentQuarter();
-  for (let i = 0; i < 2; i++) {
-    q = getPrevQuarterLocal(q);
-  }
-  for (let i = 0; i < 7; i++) {
-    quarterOptions.push(q);
-    q = getNextQuarter(q);
-  }
+  // Build quarter options (static, no dynamic dependencies)
+  const quarterOptions = useMemo(() => {
+    const options: string[] = [];
+    let q = getCurrentQuarter();
+    for (let i = 0; i < 2; i++) {
+      q = getPrevQuarterLocal(q);
+    }
+    for (let i = 0; i < 7; i++) {
+      options.push(q);
+      q = getNextQuarter(q);
+    }
+    return options;
+  }, []);
 
   // Count total selected KRs
   const totalKRs = selectedCourses.length + acceptedSuggestions.size + keyResults.filter((kr) => kr.title.trim()).length;
@@ -266,6 +271,7 @@ export function OKRForm({
   return (
     <div className="modal-overlay" onClick={onCancel} role="dialog" aria-modal="true" aria-labelledby="okr-form-title">
       <div
+        ref={focusTrapRef}
         className="modal-content"
         style={{ maxWidth: "32rem" }}
         onClick={(e) => e.stopPropagation()}
@@ -325,16 +331,17 @@ export function OKRForm({
               </div>
 
               {/* Category */}
-              <div>
-                <label className="text-[11px] font-semibold text-muted uppercase tracking-wider block mb-1.5">
+              <fieldset>
+                <legend className="text-[11px] font-semibold text-muted uppercase tracking-wider block mb-1.5">
                   Kategorie
-                </label>
+                </legend>
                 <div className="grid grid-cols-4 gap-2">
                   {categories.map((cat) => (
                     <button
                       key={cat.value}
                       type="button"
                       onClick={() => setCategory(cat.value)}
+                      aria-pressed={category === cat.value}
                       className={`flex flex-col items-center gap-1.5 px-3 py-2.5 rounded-lg text-[11px] font-medium transition-all ${
                         category === cat.value
                           ? "bg-foreground text-white"
@@ -346,7 +353,7 @@ export function OKRForm({
                     </button>
                   ))}
                 </div>
-              </div>
+              </fieldset>
 
               {/* Quarter */}
               <div>
@@ -428,16 +435,17 @@ export function OKRForm({
                     />
                   </div>
 
-                  <div>
-                    <label className="text-[11px] font-semibold text-muted uppercase tracking-wider block mb-1.5">
+                  <fieldset>
+                    <legend className="text-[11px] font-semibold text-muted uppercase tracking-wider block mb-1.5">
                       Kategorie
-                    </label>
+                    </legend>
                     <div className="grid grid-cols-4 gap-2">
                       {categories.map((cat) => (
                         <button
                           key={cat.value}
                           type="button"
                           onClick={() => setCategory(cat.value)}
+                          aria-pressed={category === cat.value}
                           className={`flex flex-col items-center gap-1.5 px-3 py-2.5 rounded-lg text-[11px] font-medium transition-all ${
                             category === cat.value
                               ? "bg-foreground text-white"
@@ -449,7 +457,7 @@ export function OKRForm({
                         </button>
                       ))}
                     </div>
-                  </div>
+                  </fieldset>
 
                   <div>
                     <label htmlFor="okr-quarter-edit" className="text-[11px] font-semibold text-muted uppercase tracking-wider block mb-1.5">
@@ -711,7 +719,7 @@ export function OKRForm({
 
           {/* Validation Error */}
           {formError && (
-            <div className="mx-6 mb-0 p-3 bg-red-50 border border-red-200 rounded-lg">
+            <div id="okr-form-error" className="mx-6 mb-0 p-3 bg-red-50 border border-red-200 rounded-lg">
               <p className="text-[13px] text-red-600">{formError}</p>
             </div>
           )}
@@ -761,6 +769,7 @@ export function OKRForm({
                     type="submit"
                     className="btn-primary text-[13px]"
                     disabled={isLoading || !title.trim()}
+                    aria-describedby={formError ? "okr-form-error" : undefined}
                   >
                     {isLoading ? "Speichern..." : isEditing ? "Speichern" : "Ziel erstellen"}
                   </button>

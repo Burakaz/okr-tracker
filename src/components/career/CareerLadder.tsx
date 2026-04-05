@@ -54,14 +54,16 @@ function StatusCircles({
           e.stopPropagation();
           onSet("not_started");
         }}
-        className={`w-[18px] h-[18px] rounded-full flex items-center justify-center transition-all ${
+        className="flex items-center justify-center min-w-[44px] min-h-[44px]"
+        title="Nicht erfüllt"
+      >
+        <span className={`w-[18px] h-[18px] rounded-full flex items-center justify-center transition-all ${
           status === "not_started"
             ? "bg-cream-300 text-foreground/50 ring-1 ring-cream-400/40"
             : "bg-cream-100 text-cream-300 hover:bg-cream-200 hover:text-cream-400"
-        }`}
-        title="Nicht erfüllt"
-      >
-        <X className="h-2.5 w-2.5" strokeWidth={2.5} />
+        }`}>
+          <X className="h-2.5 w-2.5" strokeWidth={2.5} />
+        </span>
       </button>
 
       {/* In progress — Arrow */}
@@ -70,14 +72,16 @@ function StatusCircles({
           e.stopPropagation();
           onSet("in_progress");
         }}
-        className={`w-[18px] h-[18px] rounded-full flex items-center justify-center transition-all ${
+        className="flex items-center justify-center min-w-[44px] min-h-[44px]"
+        title="Aufbauend"
+      >
+        <span className={`w-[18px] h-[18px] rounded-full flex items-center justify-center transition-all ${
           status === "in_progress"
             ? "bg-amber-400 text-white ring-1 ring-amber-500/30"
             : "bg-cream-100 text-cream-300 hover:bg-amber-100 hover:text-amber-500"
-        }`}
-        title="Aufbauend"
-      >
-        <ArrowUpRight className="h-2.5 w-2.5" strokeWidth={2.5} />
+        }`}>
+          <ArrowUpRight className="h-2.5 w-2.5" strokeWidth={2.5} />
+        </span>
       </button>
 
       {/* Completed — Check */}
@@ -86,14 +90,16 @@ function StatusCircles({
           e.stopPropagation();
           onSet("completed");
         }}
-        className={`w-[18px] h-[18px] rounded-full flex items-center justify-center transition-all ${
+        className="flex items-center justify-center min-w-[44px] min-h-[44px]"
+        title="Erfüllt"
+      >
+        <span className={`w-[18px] h-[18px] rounded-full flex items-center justify-center transition-all ${
           status === "completed"
             ? "bg-emerald-500 text-white ring-1 ring-emerald-600/30"
             : "bg-cream-100 text-cream-300 hover:bg-emerald-100 hover:text-emerald-500"
-        }`}
-        title="Erfüllt"
-      >
-        <Check className="h-2.5 w-2.5" strokeWidth={2.5} />
+        }`}>
+          <Check className="h-2.5 w-2.5" strokeWidth={2.5} />
+        </span>
       </button>
     </div>
   );

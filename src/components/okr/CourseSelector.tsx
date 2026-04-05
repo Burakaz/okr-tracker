@@ -119,7 +119,7 @@ export function CourseSelector({ selected, onSelectionChange }: CourseSelectorPr
                 key={course.id}
                 type="button"
                 onClick={() => toggleCourse(course)}
-                className={`w-full text-left rounded-lg border p-3 transition-all ${
+                className={`w-full text-left rounded-lg border p-3 min-h-[44px] transition-all ${
                   isSelected
                     ? "border-foreground/30 bg-cream-100"
                     : "border-cream-300/50 bg-cream-50 hover:bg-cream-100/60"

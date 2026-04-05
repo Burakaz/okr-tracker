@@ -7,6 +7,8 @@ interface MemberEnrollment {
   id: string;
   status: string;
   progress: number;
+  started_at?: string;
+  completed_at?: string | null;
   course?: {
     id: string;
     title: string;
@@ -17,6 +19,7 @@ interface MemberEnrollment {
 
 interface MemberLearningSectionProps {
   enrollments: MemberEnrollment[];
+  showHeader?: boolean;
 }
 
 const categoryLabels: Record<string, string> = {
@@ -30,7 +33,14 @@ const categoryLabels: Record<string, string> = {
   other: "Sonstiges",
 };
 
-export function MemberLearningSection({ enrollments }: MemberLearningSectionProps) {
+const statusBadge: Record<string, { label: string; className: string }> = {
+  completed: { label: "Abgeschlossen", className: "text-accent-green" },
+  in_progress: { label: "In Arbeit", className: "text-foreground" },
+  paused: { label: "Pausiert", className: "text-muted" },
+  dropped: { label: "Abgebrochen", className: "text-red-500 line-through" },
+};
+
+export function MemberLearningSection({ enrollments, showHeader = true }: MemberLearningSectionProps) {
   if (enrollments.length === 0) {
     return (
       <div className="text-center py-4">
@@ -45,10 +55,12 @@ export function MemberLearningSection({ enrollments }: MemberLearningSectionProp
 
   return (
     <div className="space-y-2.5">
-      <h4 className="text-[11px] font-semibold text-muted uppercase tracking-wider flex items-center gap-1.5">
-        <BookOpen className="h-3.5 w-3.5" />
-        Lernfortschritte ({enrollments.length})
-      </h4>
+      {showHeader && (
+        <h4 className="text-[11px] font-semibold text-muted uppercase tracking-wider flex items-center gap-1.5">
+          <BookOpen className="h-3.5 w-3.5" />
+          Lernfortschritte ({enrollments.length})
+        </h4>
+      )}
 
       {/* Stats summary */}
       <div className="flex items-center gap-3 text-[11px]">
@@ -64,10 +76,27 @@ export function MemberLearningSection({ enrollments }: MemberLearningSectionProp
         const course = enrollment.course;
         if (!course) return null;
 
+        const isPaused = enrollment.status === "paused";
+        const isDropped = enrollment.status === "dropped";
+        const badge = statusBadge[enrollment.status];
+
         return (
-          <div key={enrollment.id} className="rounded-lg border border-cream-300/50 bg-cream-50 p-3">
+          <div
+            key={enrollment.id}
+            className={`rounded-lg border border-cream-300/50 p-3 ${
+              isDropped
+                ? "bg-red-50/30 opacity-60"
+                : isPaused
+                ? "bg-cream-50 opacity-70"
+                : "bg-cream-50"
+            }`}
+          >
             <div className="flex items-center gap-2 mb-1.5">
-              <p className="text-[13px] font-medium text-foreground flex-1 truncate">
+              <p
+                className={`text-[13px] font-medium flex-1 truncate ${
+                  isDropped ? "text-muted line-through" : "text-foreground"
+                }`}
+              >
                 {course.title}
               </p>
               <span className="text-[10px] px-1.5 py-0.5 rounded-full bg-cream-200 text-muted font-medium flex-shrink-0">
@@ -84,8 +113,10 @@ export function MemberLearningSection({ enrollments }: MemberLearningSectionProp
               </span>
             </div>
 
-            {enrollment.status === "completed" && (
-              <p className="text-[10px] text-accent-green font-medium mt-1">Abgeschlossen</p>
+            {badge && enrollment.status !== "in_progress" && (
+              <p className={`text-[10px] font-medium mt-1 ${badge.className}`}>
+                {badge.label}
+              </p>
             )}
           </div>
         );

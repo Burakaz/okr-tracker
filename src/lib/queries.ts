@@ -681,11 +681,13 @@ export function useMotivation(stats: {
 }
 
 // ===== Team Member Detail =====
-export function useTeamMemberDetail(memberId: string) {
+export function useTeamMemberDetail(memberId: string, quarter?: string) {
   return useQuery<{ member: import("@/types").TeamMemberDetail }>({
-    queryKey: ["teamMember", memberId],
+    queryKey: ["teamMember", memberId, quarter],
     queryFn: async () => {
-      const res = await fetch(`/api/team/members/${memberId}`);
+      const params = new URLSearchParams();
+      if (quarter) params.set("quarter", quarter);
+      const res = await fetch(`/api/team/members/${memberId}?${params}`);
       if (!res.ok) throw new Error("Fehler beim Laden des Mitgliederprofils");
       return res.json();
     },

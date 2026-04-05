@@ -88,7 +88,7 @@ export function LearningFilters({
   return (
     <div className="flex items-center gap-2 flex-wrap">
       {/* Category pills — scrollable on mobile */}
-      <div className="flex items-center gap-1.5 overflow-x-auto flex-shrink-0">
+      <div className="flex items-center gap-1.5 overflow-x-auto flex-shrink-0" role="group" aria-label="Kategorie-Filter">
         {categories.map((cat) => (
           <button
             key={cat.value}
@@ -144,7 +144,7 @@ export function LearningFilters({
 
       {/* Search toggle + input */}
       {showSearch ? (
-        <div className="relative flex-shrink-0" style={{ width: "200px" }}>
+        <div className="relative flex-shrink-0 w-full sm:w-[200px]">
           <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-muted" />
           <input
             ref={searchInputRef}
@@ -153,6 +153,7 @@ export function LearningFilters({
             onChange={(e) => setSearchInput(e.target.value)}
             placeholder="Suchen..."
             className="input pl-8 pr-8 py-1.5 text-[12px]"
+            aria-label="Kurse suchen"
           />
           <button
             onClick={() => {

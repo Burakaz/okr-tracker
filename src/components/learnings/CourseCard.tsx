@@ -113,7 +113,7 @@ export function CourseCard({
         className={`course-gradient bg-gradient-to-r ${categoryGradients[course.category]}`}
       >
         {/* Category badge top-left */}
-        <span className="absolute top-2.5 left-2.5 badge bg-white/20 text-white text-[10px] backdrop-blur-sm">
+        <span className="absolute top-2.5 left-2.5 badge bg-white/30 text-white text-[10px]">
           {categoryLabels[course.category]}
         </span>
 

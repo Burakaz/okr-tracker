@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import {
   User as UserIcon,
   Mail,
@@ -36,13 +36,15 @@ export default function SettingsPage() {
   const [hasInitialized, setHasInitialized] = useState(false);
 
   // Initialize form with user data once loaded
-  if (user && !hasInitialized) {
-    setName(user.name || "");
-    setDepartment(user.department || "");
-    setPosition(user.position || "");
-    setCraftFocus(user.craft_focus || "");
-    setHasInitialized(true);
-  }
+  useEffect(() => {
+    if (user) {
+      setName(user.name || "");
+      setDepartment(user.department || "");
+      setPosition(user.position || "");
+      setCraftFocus(user.craft_focus || "");
+      setHasInitialized(true);
+    }
+  }, [user]);
 
   const handleSave = async () => {
     if (!user) return;

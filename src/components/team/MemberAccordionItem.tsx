@@ -1,6 +1,7 @@
 "use client";
 
-import { ChevronDown } from "lucide-react";
+import { ChevronDown, ArrowUpRight } from "lucide-react";
+import Link from "next/link";
 import { ProgressBar } from "@/components/ui/ProgressBar";
 import { MemberDetailPanel } from "./MemberDetailPanel";
 import type { TeamMemberOKRStats } from "@/types";
@@ -86,7 +87,7 @@ export function MemberAccordionItem({
               {member.name}
             </p>
             {member.position && (
-              <span className="text-[11px] text-muted hidden sm:inline truncate max-w-[200px]">
+              <span className="text-[11px] text-muted hidden sm:inline truncate max-w-[120px] sm:max-w-[200px]">
                 {member.position}
               </span>
             )}
@@ -113,6 +114,16 @@ export function MemberAccordionItem({
         <span className={`badge text-[11px] flex-shrink-0 ${roleBadgeClass[member.role] || "badge-gray"}`}>
           {roleLabel[member.role] || member.role}
         </span>
+
+        {/* Detail page link */}
+        <Link
+          href={`/team/${member.id}`}
+          onClick={(e) => e.stopPropagation()}
+          className="p-1.5 rounded-lg hover:bg-cream-200 transition-colors flex-shrink-0"
+          title="Detailseite öffnen"
+        >
+          <ArrowUpRight className="h-4 w-4 text-muted hover:text-foreground" />
+        </Link>
 
         {/* Chevron */}
         <ChevronDown

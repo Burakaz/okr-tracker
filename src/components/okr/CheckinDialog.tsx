@@ -1,7 +1,7 @@
 "use client";
 
-import { useState, useEffect, useCallback } from "react";
-import { X } from "lucide-react";
+import { useState } from "react";
+import { Modal, ModalBody, ModalFooter } from "@/components/ui/Modal";
 import type { OKR, ConfidenceLevel, CreateCheckinRequest } from "@/types";
 
 interface CheckinDialogProps {
@@ -37,19 +37,6 @@ export function CheckinDialog({
     return values;
   });
 
-  // Escape key to close
-  const handleKeyDown = useCallback(
-    (e: KeyboardEvent) => {
-      if (e.key === "Escape") onCancel();
-    },
-    [onCancel]
-  );
-
-  useEffect(() => {
-    document.addEventListener("keydown", handleKeyDown);
-    return () => document.removeEventListener("keydown", handleKeyDown);
-  }, [handleKeyDown]);
-
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
 
@@ -68,31 +55,9 @@ export function CheckinDialog({
   };
 
   return (
-    <div className="modal-overlay" onClick={onCancel} role="dialog" aria-modal="true" aria-labelledby="checkin-dialog-title">
-      <div
-        className="modal-content"
-        style={{ maxWidth: "32rem" }}
-        onClick={(e) => e.stopPropagation()}
-      >
+    <Modal onClose={onCancel} title="Check-in" subtitle={okr.title} titleId="checkin-dialog-title" style={{ maxWidth: "32rem" }}>
         <form onSubmit={handleSubmit}>
-          {/* Header */}
-          <div className="flex items-center justify-between p-6 border-b border-cream-300/50">
-            <div>
-              <h2 id="checkin-dialog-title" className="text-lg font-semibold text-foreground">Check-in</h2>
-              <p className="text-[13px] text-muted truncate max-w-[300px]">{okr.title}</p>
-            </div>
-            <button
-              type="button"
-              onClick={onCancel}
-              className="p-1.5 hover:bg-cream-200 rounded-lg transition-colors"
-              aria-label="Check-in schließen"
-            >
-              <X className="h-5 w-5 text-muted" aria-hidden="true" />
-            </button>
-          </div>
-
-          {/* Content */}
-          <div className="p-6 space-y-5">
+          <ModalBody>
             {/* Key Results Updates */}
             {okr.key_results && okr.key_results.length > 0 && (
               <div>
@@ -229,19 +194,17 @@ export function CheckinDialog({
                 rows={2}
               />
             </div>
-          </div>
+          </ModalBody>
 
-          {/* Footer */}
-          <div className="flex items-center justify-end gap-3 p-6 border-t border-cream-300/50">
+          <ModalFooter>
             <button type="button" onClick={onCancel} className="btn-secondary">
               Abbrechen
             </button>
             <button type="submit" className="btn-success" disabled={isLoading}>
               {isLoading ? "Speichern..." : "Check-in speichern"}
             </button>
-          </div>
+          </ModalFooter>
         </form>
-      </div>
-    </div>
+    </Modal>
   );
 }

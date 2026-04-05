@@ -1,20 +1,22 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useMemo } from "react";
 import { Building2, Users, Shield, CreditCard, Loader2, Layers } from "lucide-react";
+import { Tabs } from "@/components/ui/Tabs";
 import { OrgGeneralTab } from "@/components/organization/OrgGeneralTab";
 import { OrgMembersTab } from "@/components/organization/OrgMembersTab";
 import { useOrganization, useOrganizationMembers } from "@/lib/queries";
+import type { TabItem } from "@/components/ui/Tabs";
 
-const tabs = [
-  { id: "general", label: "Allgemein", icon: Building2 },
-  { id: "members", label: "Mitglieder", icon: Users },
-  { id: "teams", label: "Teams", icon: Layers },
-  { id: "rights", label: "Rechte", icon: Shield },
-  { id: "billing", label: "Billing", icon: CreditCard },
-] as const;
+type TabId = "general" | "members" | "teams" | "rights" | "billing";
 
-type TabId = (typeof tabs)[number]["id"];
+const tabItems: TabItem<TabId>[] = [
+  { key: "general", label: "Allgemein", icon: Building2 },
+  { key: "members", label: "Mitglieder", icon: Users },
+  { key: "teams", label: "Teams", icon: Layers },
+  { key: "rights", label: "Rechte", icon: Shield },
+  { key: "billing", label: "Billing", icon: CreditCard },
+];
 
 export default function OrganizationPage() {
   const [activeTab, setActiveTab] = useState<TabId>("general");
@@ -54,34 +56,23 @@ export default function OrganizationPage() {
         </div>
 
         {/* Tabs */}
-        <div className="flex items-center gap-1 overflow-x-auto">
-          {tabs.map((tab) => {
-            const Icon = tab.icon;
-            return (
-              <button
-                key={tab.id}
-                onClick={() => setActiveTab(tab.id)}
-                className={`flex items-center gap-1.5 px-3 py-2 text-[13px] font-medium rounded-lg transition-colors whitespace-nowrap ${
-                  activeTab === tab.id
-                    ? "bg-foreground text-white"
-                    : "text-muted hover:bg-cream-200"
-                }`}
-              >
-                <Icon className="h-3.5 w-3.5" />
-                {tab.label}
-              </button>
-            );
-          })}
-        </div>
+        <Tabs
+          tabs={tabItems}
+          activeTab={activeTab}
+          onTabChange={setActiveTab}
+          variant="pill"
+          ariaLabel="Organisationseinstellungen"
+        />
        </div>
       </div>
 
       {/* Tab Content */}
       <div className="flex-1 overflow-y-auto">
        <div className="p-6 max-w-5xl mx-auto">
-        {activeTab === "general" && <OrgGeneralTab />}
-        {activeTab === "members" && <OrgMembersTab />}
+        {activeTab === "general" && <div role="tabpanel" id="panel-general" aria-labelledby="tab-general"><OrgGeneralTab /></div>}
+        {activeTab === "members" && <div role="tabpanel" id="panel-members" aria-labelledby="tab-members"><OrgMembersTab /></div>}
         {activeTab === "teams" && (
+          <div role="tabpanel" id="panel-teams" aria-labelledby="tab-teams">
           <div className="empty-state">
             <Layers className="empty-state-icon" />
             <p className="empty-state-title">Teams</p>
@@ -89,8 +80,10 @@ export default function OrganizationPage() {
               Team-Verwaltung wird in Kürze verfügbar sein.
             </p>
           </div>
+          </div>
         )}
         {activeTab === "rights" && (
+          <div role="tabpanel" id="panel-rights" aria-labelledby="tab-rights">
           <div className="space-y-4">
             <h3 className="text-[15px] font-semibold text-foreground">Rollenübersicht</h3>
             <div className="space-y-3">
@@ -108,14 +101,17 @@ export default function OrganizationPage() {
               ))}
             </div>
           </div>
+          </div>
         )}
         {activeTab === "billing" && (
+          <div role="tabpanel" id="panel-billing" aria-labelledby="tab-billing">
           <div className="empty-state">
             <CreditCard className="empty-state-icon" />
             <p className="empty-state-title">Billing</p>
             <p className="empty-state-description">
               Du befindest dich im kostenlosen Trial. Billing-Optionen werden in Kürze verfügbar sein.
             </p>
+          </div>
           </div>
         )}
        </div>

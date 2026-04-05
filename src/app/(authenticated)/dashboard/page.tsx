@@ -171,7 +171,7 @@ function DashboardContent() {
           <div className="flex items-center gap-6">
             {/* Progress Ring */}
             <div className="flex-shrink-0 relative">
-              <svg width={ringSize} height={ringSize} className="-rotate-90">
+              <svg width={ringSize} height={ringSize} className="-rotate-90" role="img" aria-label={`Fortschritt: ${avgProgress}%`}>
                 <circle
                   cx={ringSize / 2}
                   cy={ringSize / 2}

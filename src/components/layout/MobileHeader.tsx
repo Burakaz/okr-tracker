@@ -18,7 +18,7 @@ export function MobileHeader({ user, orgLogo, onMenuClick }: MobileHeaderProps) 
     .slice(0, 2);
 
   return (
-    <header className="flex lg:hidden items-center gap-3 px-4 py-3 border-b border-cream-300/50 bg-white/80 backdrop-blur-sm flex-shrink-0">
+    <header className="flex lg:hidden items-center gap-3 px-4 py-3 border-b border-cream-300/50 bg-white flex-shrink-0">
       <button
         onClick={onMenuClick}
         className="p-2 -ml-2 rounded-lg hover:bg-cream-100 transition-colors"

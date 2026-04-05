@@ -1,7 +1,7 @@
 "use client";
 
-import { useState, useEffect, useCallback } from "react";
-import { X } from "lucide-react";
+import { useState } from "react";
+import { Modal, ModalBody, ModalFooter } from "@/components/ui/Modal";
 import type { OKR, DuplicateOKRRequest } from "@/types";
 import { getCurrentQuarter, getNextQuarter } from "@/lib/okr-logic";
 
@@ -23,19 +23,6 @@ export function DuplicateOKRDialog({
   const [resetProgress, setResetProgress] = useState(true);
   const [copyKeyResults, setCopyKeyResults] = useState(true);
 
-  // Escape key to close
-  const handleKeyDown = useCallback(
-    (e: KeyboardEvent) => {
-      if (e.key === "Escape") onCancel();
-    },
-    [onCancel]
-  );
-
-  useEffect(() => {
-    document.addEventListener("keydown", handleKeyDown);
-    return () => document.removeEventListener("keydown", handleKeyDown);
-  }, [handleKeyDown]);
-
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     onSubmit({
@@ -54,27 +41,9 @@ export function DuplicateOKRDialog({
   }
 
   return (
-    <div className="modal-overlay" onClick={onCancel} role="dialog" aria-modal="true" aria-labelledby="duplicate-dialog-title">
-      <div
-        className="modal-content"
-        onClick={(e) => e.stopPropagation()}
-      >
-        <form onSubmit={handleSubmit}>
-          {/* Header */}
-          <div className="flex items-center justify-between p-6 border-b border-cream-300/50">
-            <h2 id="duplicate-dialog-title" className="text-lg font-semibold text-foreground">OKR duplizieren</h2>
-            <button
-              type="button"
-              onClick={onCancel}
-              className="p-1.5 hover:bg-cream-200 rounded-lg transition-colors"
-              aria-label="Dialog schließen"
-            >
-              <X className="h-5 w-5 text-muted" aria-hidden="true" />
-            </button>
-          </div>
-
-          {/* Content */}
-          <div className="p-6 space-y-5">
+    <Modal onClose={onCancel} title="OKR duplizieren" titleId="duplicate-dialog-title">
+      <form onSubmit={handleSubmit}>
+        <ModalBody>
             <p className="text-[13px] text-muted">
               &quot;{okr.title}&quot; wird als neues OKR dupliziert.
             </p>
@@ -100,7 +69,7 @@ export function DuplicateOKRDialog({
 
             {/* Options */}
             <div className="space-y-3">
-              <label className="flex items-center gap-3 cursor-pointer">
+              <label className="flex items-center gap-3 cursor-pointer min-h-[44px]">
                 <span
                   className={`w-5 h-5 rounded border flex items-center justify-center flex-shrink-0 transition-colors ${
                     resetProgress
@@ -123,7 +92,7 @@ export function DuplicateOKRDialog({
                 <span className="text-[13px] text-foreground">Fortschritt zurücksetzen</span>
               </label>
 
-              <label className="flex items-center gap-3 cursor-pointer">
+              <label className="flex items-center gap-3 cursor-pointer min-h-[44px]">
                 <span
                   className={`w-5 h-5 rounded border flex items-center justify-center flex-shrink-0 transition-colors ${
                     copyKeyResults
@@ -146,19 +115,17 @@ export function DuplicateOKRDialog({
                 <span className="text-[13px] text-foreground">Key Results kopieren</span>
               </label>
             </div>
-          </div>
+        </ModalBody>
 
-          {/* Footer */}
-          <div className="flex items-center justify-end gap-3 p-6 border-t border-cream-300/50">
+        <ModalFooter>
             <button type="button" onClick={onCancel} className="btn-secondary">
               Abbrechen
             </button>
             <button type="submit" className="btn-primary" disabled={isLoading}>
               {isLoading ? "Duplizieren..." : "Duplizieren"}
             </button>
-          </div>
-        </form>
-      </div>
-    </div>
+        </ModalFooter>
+      </form>
+    </Modal>
   );
 }

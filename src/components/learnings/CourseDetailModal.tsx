@@ -15,6 +15,7 @@ import {
   Lightbulb,
   Loader2,
 } from "lucide-react";
+import { useFocusTrap } from "@/hooks/useFocusTrap";
 import { useCourse } from "@/lib/queries";
 import { ModuleChecklist } from "./ModuleChecklist";
 import { CertificateUpload } from "./CertificateUpload";
@@ -87,6 +88,7 @@ export function CourseDetailModal({
   onEnroll,
   onUnenroll,
 }: CourseDetailModalProps) {
+  const focusTrapRef = useFocusTrap();
   const { data, isLoading } = useCourse(courseId);
   const course = data?.course;
   const enrollment = data?.enrollment;
@@ -118,6 +120,7 @@ export function CourseDetailModal({
       aria-labelledby="course-detail-title"
     >
       <div
+        ref={focusTrapRef}
         className="modal-content-wide"
         onClick={(e) => e.stopPropagation()}
       >
@@ -132,7 +135,7 @@ export function CourseDetailModal({
               className={`relative h-[60px] bg-gradient-to-r ${categoryGradients[course.category]} rounded-t-[1rem]`}
             >
               {/* Category badge */}
-              <span className="absolute top-3 left-4 badge bg-white/20 text-white text-[10px] backdrop-blur-sm flex items-center gap-1">
+              <span className="absolute top-3 left-4 badge bg-white/30 text-white text-[10px] flex items-center gap-1">
                 {categoryIcons[course.category]}
                 {categoryLabels[course.category]}
               </span>
@@ -141,7 +144,7 @@ export function CourseDetailModal({
               <button
                 type="button"
                 onClick={onClose}
-                className="absolute top-3 right-4 p-1 bg-white/20 hover:bg-white/30 rounded-lg transition-colors backdrop-blur-sm"
+                className="absolute top-3 right-4 p-1 bg-white/30 hover:bg-white/40 rounded-lg transition-colors"
                 aria-label="Schliessen"
               >
                 <X className="h-4 w-4 text-white" />

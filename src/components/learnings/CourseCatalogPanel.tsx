@@ -10,6 +10,7 @@ import {
   Loader2,
   CheckCircle2,
 } from "lucide-react";
+import { useFocusTrap } from "@/hooks/useFocusTrap";
 import { useCourses, useEnrollments, useEnrollCourse } from "@/lib/queries";
 import type { CourseCategory } from "@/types";
 
@@ -51,6 +52,7 @@ export function CourseCatalogPanel({
   onClose,
   onEnroll: externalOnEnroll,
 }: CourseCatalogPanelProps) {
+  const focusTrapRef = useFocusTrap();
   const [searchInput, setSearchInput] = useState("");
   const [debouncedSearch, setDebouncedSearch] = useState("");
   const [activeCategory, setActiveCategory] = useState<
@@ -140,6 +142,7 @@ export function CourseCatalogPanel({
 
       {/* Slide-over panel */}
       <div
+        ref={focusTrapRef}
         className="fixed right-0 top-0 bottom-0 w-full sm:w-[400px] bg-white shadow-xl z-50 flex flex-col slide-panel-right"
         role="dialog"
         aria-modal="true"

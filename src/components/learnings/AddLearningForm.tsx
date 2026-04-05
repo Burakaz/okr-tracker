@@ -1,8 +1,7 @@
 "use client";
 
-import { useState, useEffect, useCallback } from "react";
+import { useState, useCallback } from "react";
 import {
-  X,
   Plus,
   Trash2,
   Palette,
@@ -13,14 +12,20 @@ import {
   MessageSquare,
   Package,
   Lightbulb,
+  Sparkles,
+  Loader2,
 } from "lucide-react";
+import { Modal, ModalBody, ModalFooter } from "@/components/ui/Modal";
 import { useCreateCourse } from "@/lib/queries";
+import { useSuggestModules } from "@/hooks/useSuggestModules";
 import { toast } from "sonner";
 import type { CourseCategory, CourseDifficulty } from "@/types";
 
 interface AddLearningFormProps {
   onClose: () => void;
   isLoading?: boolean;
+  initialTitle?: string;
+  initialCategory?: CourseCategory;
 }
 
 interface ModuleInput {
@@ -78,12 +83,19 @@ function generateId() {
   return `mod-${Date.now()}-${Math.random().toString(36).slice(2, 7)}`;
 }
 
-export function AddLearningForm({ onClose }: AddLearningFormProps) {
+export function AddLearningForm({
+  onClose,
+  initialTitle,
+  initialCategory,
+}: AddLearningFormProps) {
   const createCourse = useCreateCourse();
+  const suggestModulesMutation = useSuggestModules();
 
-  const [title, setTitle] = useState("");
+  const [title, setTitle] = useState(initialTitle || "");
   const [description, setDescription] = useState("");
-  const [category, setCategory] = useState<CourseCategory>("development");
+  const [category, setCategory] = useState<CourseCategory>(
+    initialCategory || "development"
+  );
   const [provider, setProvider] = useState("");
   const [durationMinutes, setDurationMinutes] = useState("");
   const [difficulty, setDifficulty] = useState<CourseDifficulty>("beginner");
@@ -92,19 +104,6 @@ export function AddLearningForm({ onClose }: AddLearningFormProps) {
     { id: generateId(), title: "", estimated_minutes: "" },
   ]);
   const [formError, setFormError] = useState<string | null>(null);
-
-  // Escape key to close
-  const handleKeyDown = useCallback(
-    (e: KeyboardEvent) => {
-      if (e.key === "Escape") onClose();
-    },
-    [onClose]
-  );
-
-  useEffect(() => {
-    document.addEventListener("keydown", handleKeyDown);
-    return () => document.removeEventListener("keydown", handleKeyDown);
-  }, [handleKeyDown]);
 
   const addModule = () => {
     setModules((prev) => [
@@ -127,6 +126,64 @@ export function AddLearningForm({ onClose }: AddLearningFormProps) {
       prev.map((m) => (m.id === id ? { ...m, [field]: value } : m))
     );
   };
+
+  // AI: Suggest modules
+  const handleSuggestModules = useCallback(async () => {
+    if (title.trim().length < 3) return;
+
+    try {
+      const result = await suggestModulesMutation.mutateAsync({
+        course_title: title.trim(),
+        category,
+        difficulty,
+        description: description.trim() || undefined,
+      });
+
+      // Replace empty modules with AI suggestions, keep manually filled ones
+      const manualModules = modules.filter((m) => m.title.trim());
+      const aiModules: ModuleInput[] = result.modules.map((mod) => ({
+        id: generateId(),
+        title: mod.title,
+        estimated_minutes: String(mod.estimated_minutes),
+      }));
+
+      if (manualModules.length > 0) {
+        setModules([...manualModules, ...aiModules]);
+      } else {
+        setModules(aiModules);
+      }
+
+      // Auto-calculate total duration from modules
+      const totalMinutes = result.modules.reduce(
+        (sum, m) => sum + m.estimated_minutes,
+        0
+      );
+      if (!durationMinutes) {
+        setDurationMinutes(String(totalMinutes));
+      }
+
+      // Suggest description if field is empty
+      if (!description.trim() && result.suggested_description) {
+        setDescription(result.suggested_description);
+      }
+
+      toast.success(`${result.modules.length} Module vorgeschlagen`);
+    } catch (error) {
+      toast.error(
+        error instanceof Error
+          ? error.message
+          : "Fehler bei KI-Modul-Vorschlaegen"
+      );
+    }
+  }, [
+    title,
+    category,
+    difficulty,
+    description,
+    modules,
+    durationMinutes,
+    suggestModulesMutation,
+  ]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -170,39 +227,12 @@ export function AddLearningForm({ onClose }: AddLearningFormProps) {
     }
   };
 
-  return (
-    <div
-      className="modal-overlay"
-      onClick={onClose}
-      role="dialog"
-      aria-modal="true"
-      aria-labelledby="add-learning-title"
-    >
-      <div
-        className="modal-content"
-        onClick={(e) => e.stopPropagation()}
-      >
-        <form onSubmit={handleSubmit}>
-          {/* Header */}
-          <div className="flex items-center justify-between p-6 border-b border-cream-300/50">
-            <h2
-              id="add-learning-title"
-              className="text-lg font-semibold text-foreground"
-            >
-              Kurs hinzufuegen
-            </h2>
-            <button
-              type="button"
-              onClick={onClose}
-              className="p-1.5 hover:bg-cream-200 rounded-lg transition-colors"
-              aria-label="Formular schliessen"
-            >
-              <X className="h-5 w-5 text-muted" aria-hidden="true" />
-            </button>
-          </div>
+  const canSuggestModules = title.trim().length >= 3;
 
-          {/* Content */}
-          <div className="p-6 space-y-5">
+  return (
+    <Modal onClose={onClose} title="Kurs hinzufuegen" titleId="add-learning-title">
+        <form onSubmit={handleSubmit}>
+          <ModalBody>
             {/* Title */}
             <div>
               <label
@@ -242,16 +272,17 @@ export function AddLearningForm({ onClose }: AddLearningFormProps) {
             </div>
 
             {/* Category */}
-            <div>
-              <label className="text-[11px] font-semibold text-muted uppercase tracking-wider block mb-1.5">
+            <fieldset>
+              <legend className="text-[11px] font-semibold text-muted uppercase tracking-wider block mb-1.5">
                 Kategorie
-              </label>
+              </legend>
               <div className="grid grid-cols-4 gap-2">
                 {categories.map((cat) => (
                   <button
                     key={cat.value}
                     type="button"
                     onClick={() => setCategory(cat.value)}
+                    aria-pressed={category === cat.value}
                     className={`flex flex-col items-center gap-1.5 px-3 py-2.5 rounded-lg text-[11px] font-medium transition-all ${
                       category === cat.value
                         ? "bg-foreground text-white"
@@ -263,7 +294,7 @@ export function AddLearningForm({ onClose }: AddLearningFormProps) {
                   </button>
                 ))}
               </div>
-            </div>
+            </fieldset>
 
             {/* Provider */}
             <div>
@@ -303,16 +334,17 @@ export function AddLearningForm({ onClose }: AddLearningFormProps) {
             </div>
 
             {/* Difficulty */}
-            <div>
-              <label className="text-[11px] font-semibold text-muted uppercase tracking-wider block mb-1.5">
+            <fieldset>
+              <legend className="text-[11px] font-semibold text-muted uppercase tracking-wider block mb-1.5">
                 Schwierigkeit
-              </label>
+              </legend>
               <div className="flex items-center gap-2">
                 {difficulties.map((d) => (
                   <button
                     key={d.value}
                     type="button"
                     onClick={() => setDifficulty(d.value)}
+                    aria-pressed={difficulty === d.value}
                     className={`flex-1 py-2 px-3 rounded-lg text-[12px] font-medium transition-all ${
                       difficulty === d.value
                         ? "bg-foreground text-white"
@@ -323,7 +355,7 @@ export function AddLearningForm({ onClose }: AddLearningFormProps) {
                   </button>
                 ))}
               </div>
-            </div>
+            </fieldset>
 
             {/* External URL */}
             <div>
@@ -396,26 +428,47 @@ export function AddLearningForm({ onClose }: AddLearningFormProps) {
                   </div>
                 ))}
               </div>
-              <button
-                type="button"
-                onClick={addModule}
-                className="btn-ghost text-[13px] gap-1.5 mt-2"
-              >
-                <Plus className="h-3.5 w-3.5" />
-                Modul hinzufuegen
-              </button>
+              <div className="flex items-center gap-2 mt-2">
+                <button
+                  type="button"
+                  onClick={addModule}
+                  className="btn-ghost text-[13px] gap-1.5"
+                >
+                  <Plus className="h-3.5 w-3.5" />
+                  Modul hinzufuegen
+                </button>
+                <button
+                  type="button"
+                  onClick={handleSuggestModules}
+                  disabled={
+                    !canSuggestModules || suggestModulesMutation.isPending
+                  }
+                  className="btn-ghost text-[13px] gap-1.5"
+                  title={
+                    !canSuggestModules
+                      ? "Titel muss mindestens 3 Zeichen haben"
+                      : "KI schlaegt Module vor"
+                  }
+                >
+                  {suggestModulesMutation.isPending ? (
+                    <Loader2 className="h-3.5 w-3.5 animate-spin" />
+                  ) : (
+                    <Sparkles className="h-3.5 w-3.5" />
+                  )}
+                  KI Module
+                </button>
+              </div>
             </div>
-          </div>
+          </ModalBody>
 
           {/* Validation Error */}
           {formError && (
-            <div className="mx-6 mb-0 p-3 bg-red-50 border border-red-200 rounded-lg">
+            <div id="learning-form-error" className="mx-6 mb-0 p-3 bg-red-50 border border-red-200 rounded-lg">
               <p className="text-[13px] text-red-600">{formError}</p>
             </div>
           )}
 
-          {/* Footer */}
-          <div className="flex items-center justify-end gap-3 p-6 border-t border-cream-300/50">
+          <ModalFooter>
             <button type="button" onClick={onClose} className="btn-secondary">
               Abbrechen
             </button>
@@ -423,12 +476,12 @@ export function AddLearningForm({ onClose }: AddLearningFormProps) {
               type="submit"
               className="btn-primary"
               disabled={createCourse.isPending || !title.trim()}
+              aria-describedby={formError ? "learning-form-error" : undefined}
             >
               {createCourse.isPending ? "Erstellen..." : "Erstellen"}
             </button>
-          </div>
+          </ModalFooter>
         </form>
-      </div>
-    </div>
+    </Modal>
   );
 }

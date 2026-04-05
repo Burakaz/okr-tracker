@@ -23,3 +23,30 @@ export interface AISuggestRequest {
   category: "performance" | "skill" | "learning" | "career";
   existing_krs?: string[];
 }
+
+// ===== Suggest Modules Types =====
+
+export interface SuggestModulesRequest {
+  course_title: string;
+  category:
+    | "design"
+    | "development"
+    | "marketing"
+    | "leadership"
+    | "data"
+    | "communication"
+    | "product"
+    | "other";
+  difficulty?: "beginner" | "intermediate" | "advanced";
+  description?: string;
+}
+
+export interface SuggestedModule {
+  title: string;
+  estimated_minutes: number;
+}
+
+export interface SuggestModulesResponse {
+  modules: SuggestedModule[];
+  suggested_description?: string;
+}

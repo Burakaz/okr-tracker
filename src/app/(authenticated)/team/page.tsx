@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useMemo } from "react";
 import {
   Users,
   Loader2,
@@ -11,11 +11,13 @@ import {
 } from "lucide-react";
 import { useQuery } from "@tanstack/react-query";
 import { useCurrentUser } from "@/lib/queries";
+import { Tabs } from "@/components/ui/Tabs";
 import { TeamStatsBar } from "@/components/team/TeamStatsBar";
 import { MemberAccordionItem } from "@/components/team/MemberAccordionItem";
 import { OrgGeneralTab } from "@/components/organization/OrgGeneralTab";
 import { OrgMembersTab } from "@/components/organization/OrgMembersTab";
 import type { TeamMemberOKRStats } from "@/types";
+import type { TabItem } from "@/components/ui/Tabs";
 
 interface TeamMember {
   id: string;
@@ -123,31 +125,20 @@ export default function TeamPage() {
         </div>
 
         {/* Top-level tabs: Team / Organisation */}
-        <div className="flex items-center gap-1 mb-4">
-          <button
-            onClick={() => setTopTab("team")}
-            className={`flex items-center gap-1.5 px-4 py-2 text-[13px] font-medium rounded-lg transition-colors ${
-              topTab === "team"
-                ? "bg-foreground text-white"
-                : "text-muted hover:bg-cream-200"
-            }`}
-          >
-            <Users className="h-3.5 w-3.5" />
-            Übersicht
-          </button>
-          {isAdmin && (
-            <button
-              onClick={() => setTopTab("org")}
-              className={`flex items-center gap-1.5 px-4 py-2 text-[13px] font-medium rounded-lg transition-colors ${
-                topTab === "org"
-                  ? "bg-foreground text-white"
-                  : "text-muted hover:bg-cream-200"
-              }`}
-            >
-              <Building2 className="h-3.5 w-3.5" />
-              Organisation
-            </button>
-          )}
+        <div className="mb-4">
+          <Tabs
+            tabs={useMemo(() => {
+              const t: TabItem<TopTabId>[] = [
+                { key: "team", label: "Übersicht", icon: Users },
+              ];
+              if (isAdmin) t.push({ key: "org", label: "Organisation", icon: Building2 });
+              return t;
+            }, [isAdmin])}
+            activeTab={topTab}
+            onTabChange={setTopTab}
+            variant="pill"
+            ariaLabel="Team und Organisation"
+          />
         </div>
 
         {/* Team stats bar */}
@@ -162,31 +153,19 @@ export default function TeamPage() {
 
         {/* Sub-tabs for org view */}
         {topTab === "org" && (
-          <div className="flex items-center gap-1 overflow-x-auto">
-            {([
-              { id: "general" as OrgTabId, label: "Allgemein", icon: Building2 },
-              { id: "members" as OrgTabId, label: "Mitglieder", icon: Users },
-              { id: "teams" as OrgTabId, label: "Teams", icon: Layers },
-              { id: "rights" as OrgTabId, label: "Rechte", icon: Shield },
-              { id: "billing" as OrgTabId, label: "Billing", icon: CreditCard },
-            ]).map((tab) => {
-              const Icon = tab.icon;
-              return (
-                <button
-                  key={tab.id}
-                  onClick={() => setOrgTab(tab.id)}
-                  className={`flex items-center gap-1.5 px-3 py-2 text-[12px] font-medium rounded-lg transition-colors whitespace-nowrap ${
-                    orgTab === tab.id
-                      ? "bg-cream-200 text-foreground"
-                      : "text-muted hover:bg-cream-100"
-                  }`}
-                >
-                  <Icon className="h-3.5 w-3.5" />
-                  {tab.label}
-                </button>
-              );
-            })}
-          </div>
+          <Tabs
+            tabs={useMemo((): TabItem<OrgTabId>[] => [
+              { key: "general", label: "Allgemein", icon: Building2 },
+              { key: "members", label: "Mitglieder", icon: Users },
+              { key: "teams", label: "Teams", icon: Layers },
+              { key: "rights", label: "Rechte", icon: Shield },
+              { key: "billing", label: "Billing", icon: CreditCard },
+            ], [])}
+            activeTab={orgTab}
+            onTabChange={setOrgTab}
+            variant="pill"
+            ariaLabel="Organisationseinstellungen"
+          />
         )}
        </div>
       </div>
@@ -196,6 +175,7 @@ export default function TeamPage() {
        <div className="p-4 sm:p-6 max-w-5xl mx-auto">
         {/* Team view — unified accordion */}
         {topTab === "team" && (
+          <div role="tabpanel" id="panel-top-team" aria-labelledby="tab-top-team">
           <TeamMembersAccordion
             members={members}
             memberOKRStats={memberOKRStats}
@@ -203,14 +183,16 @@ export default function TeamPage() {
             onToggle={(id) => setExpandedMemberId(expandedMemberId === id ? null : id)}
             canEditMember={canEditMember}
           />
+          </div>
         )}
 
         {/* Organization tabs */}
         {topTab === "org" && (
           <>
-            {orgTab === "general" && <OrgGeneralTab />}
-            {orgTab === "members" && <OrgMembersTab />}
+            {orgTab === "general" && <div role="tabpanel" id="panel-org-general" aria-labelledby="tab-org-general"><OrgGeneralTab /></div>}
+            {orgTab === "members" && <div role="tabpanel" id="panel-org-members" aria-labelledby="tab-org-members"><OrgMembersTab /></div>}
             {orgTab === "teams" && (
+              <div role="tabpanel" id="panel-org-teams" aria-labelledby="tab-org-teams">
               <div className="empty-state">
                 <Layers className="empty-state-icon" />
                 <p className="empty-state-title">Teams</p>
@@ -218,8 +200,10 @@ export default function TeamPage() {
                   Team-Verwaltung wird in Kürze verfügbar sein.
                 </p>
               </div>
+              </div>
             )}
             {orgTab === "rights" && (
+              <div role="tabpanel" id="panel-org-rights" aria-labelledby="tab-org-rights">
               <div className="space-y-4">
                 <h3 className="text-[15px] font-semibold text-foreground">Rollenübersicht</h3>
                 <div className="space-y-3">
@@ -237,14 +221,17 @@ export default function TeamPage() {
                   ))}
                 </div>
               </div>
+              </div>
             )}
             {orgTab === "billing" && (
+              <div role="tabpanel" id="panel-org-billing" aria-labelledby="tab-org-billing">
               <div className="empty-state">
                 <CreditCard className="empty-state-icon" />
                 <p className="empty-state-title">Billing</p>
                 <p className="empty-state-description">
                   Du befindest dich im kostenlosen Trial. Billing-Optionen werden in Kürze verfügbar sein.
                 </p>
+              </div>
               </div>
             )}
           </>

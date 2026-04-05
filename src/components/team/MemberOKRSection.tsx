@@ -7,9 +7,11 @@ import type { OKR } from "@/types";
 
 interface MemberOKRSectionProps {
   okrs: OKR[];
+  showSummary?: boolean;
+  showHeader?: boolean;
 }
 
-export function MemberOKRSection({ okrs }: MemberOKRSectionProps) {
+export function MemberOKRSection({ okrs, showSummary = false, showHeader = true }: MemberOKRSectionProps) {
   if (okrs.length === 0) {
     return (
       <div className="text-center py-4">
@@ -19,12 +21,32 @@ export function MemberOKRSection({ okrs }: MemberOKRSectionProps) {
     );
   }
 
+  const avgProgress = Math.round(okrs.reduce((sum, o) => sum + o.progress, 0) / okrs.length);
+  const avgScore = progressToScore(avgProgress);
+
   return (
     <div className="space-y-2.5">
-      <h4 className="text-[11px] font-semibold text-muted uppercase tracking-wider flex items-center gap-1.5">
-        <Target className="h-3.5 w-3.5" />
-        OKRs ({okrs.length})
-      </h4>
+      {showHeader && (
+        <h4 className="text-[11px] font-semibold text-muted uppercase tracking-wider flex items-center gap-1.5">
+          <Target className="h-3.5 w-3.5" />
+          OKRs ({okrs.length})
+        </h4>
+      )}
+
+      {/* Optional summary bar */}
+      {showSummary && (
+        <div className="flex items-center gap-3 text-[11px]">
+          <span className="text-muted">
+            <span className="font-medium text-foreground">{okrs.length}</span> OKR{okrs.length !== 1 ? "s" : ""}
+          </span>
+          <span className="text-muted">
+            Ø Fortschritt: <span className="font-medium text-foreground">{avgProgress}%</span>
+          </span>
+          <span className="text-muted">
+            Ø Score: <span className="font-semibold text-foreground">{avgScore.toFixed(1)}</span>
+          </span>
+        </div>
+      )}
 
       {okrs.map((okr) => {
         const score = progressToScore(okr.progress);
