@@ -467,69 +467,73 @@ export function OKRAccordionItem({
       </div>
 
       {/* ===== Expanded: Additional Info + Actions (seamless) ===== */}
-      {isExpanded && !checkinMode && (
-        <div
-          id={`okr-detail-${okr.id}`}
-          className="px-4 sm:px-5 pb-4 space-y-3"
-        >
-          {/* Why it matters */}
-          {okr.why_it_matters && (
-            <div>
-              <h4 className="text-[11px] font-semibold text-muted uppercase tracking-wider mb-1">
-                Warum wichtig?
-              </h4>
-              <p className="text-[13px] text-muted leading-relaxed">
-                {okr.why_it_matters}
-              </p>
+      {!checkinMode && (
+        <div className={`accordion-content ${isExpanded ? 'expanded' : ''}`}>
+          <div>
+            <div
+              id={`okr-detail-${okr.id}`}
+              className="px-4 sm:px-5 pb-4 space-y-3"
+            >
+              {/* Why it matters */}
+              {okr.why_it_matters && (
+                <div>
+                  <h4 className="text-[11px] font-semibold text-muted uppercase tracking-wider mb-1">
+                    Warum wichtig?
+                  </h4>
+                  <p className="text-[13px] text-muted leading-relaxed">
+                    {okr.why_it_matters}
+                  </p>
+                </div>
+              )}
+
+              {/* Course Links (Learning OKRs) */}
+              {okr.category === "learning" && enrollments && onLinkCourse && (
+                <CourseLinker
+                  okrId={okr.id}
+                  keyResults={okr.key_results || []}
+                  enrollments={enrollments}
+                  courseLinks={courseLinks}
+                  onLinkCourse={onLinkCourse}
+                  isLinking={isLinkingCourse}
+                />
+              )}
+
+              {/* Action Buttons */}
+              <div className="flex flex-wrap items-center gap-2 pt-2 border-t border-cream-200">
+                <button
+                  onClick={() => onEdit(okr)}
+                  className="btn-ghost text-[12px] py-1.5 px-3 gap-1.5"
+                >
+                  <Pencil className="h-3.5 w-3.5" aria-hidden="true" />
+                  Bearbeiten
+                </button>
+                <button
+                  onClick={() => onDuplicate(okr)}
+                  className="btn-ghost text-[12px] py-1.5 px-3 gap-1.5"
+                >
+                  <Copy className="h-3.5 w-3.5" aria-hidden="true" />
+                  Duplizieren
+                </button>
+                <button
+                  onClick={() => onArchive(okr)}
+                  className="btn-ghost text-[12px] py-1.5 px-3 gap-1.5"
+                >
+                  <Archive className="h-3.5 w-3.5" aria-hidden="true" />
+                  Archivieren
+                </button>
+
+                <div className="flex-1" />
+
+                <button
+                  onClick={() => onDelete(okr)}
+                  className="p-2 min-w-[44px] min-h-[44px] flex items-center justify-center hover:bg-red-50 rounded-lg transition-colors"
+                  title="Löschen"
+                  aria-label={`"${okr.title}" löschen`}
+                >
+                  <Trash2 className="h-4 w-4 text-red-500" aria-hidden="true" />
+                </button>
+              </div>
             </div>
-          )}
-
-          {/* Course Links (Learning OKRs) */}
-          {okr.category === "learning" && enrollments && onLinkCourse && (
-            <CourseLinker
-              okrId={okr.id}
-              keyResults={okr.key_results || []}
-              enrollments={enrollments}
-              courseLinks={courseLinks}
-              onLinkCourse={onLinkCourse}
-              isLinking={isLinkingCourse}
-            />
-          )}
-
-          {/* Action Buttons */}
-          <div className="flex flex-wrap items-center gap-2 pt-2 border-t border-cream-200">
-            <button
-              onClick={() => onEdit(okr)}
-              className="btn-ghost text-[12px] py-1.5 px-3 gap-1.5"
-            >
-              <Pencil className="h-3.5 w-3.5" aria-hidden="true" />
-              Bearbeiten
-            </button>
-            <button
-              onClick={() => onDuplicate(okr)}
-              className="btn-ghost text-[12px] py-1.5 px-3 gap-1.5"
-            >
-              <Copy className="h-3.5 w-3.5" aria-hidden="true" />
-              Duplizieren
-            </button>
-            <button
-              onClick={() => onArchive(okr)}
-              className="btn-ghost text-[12px] py-1.5 px-3 gap-1.5"
-            >
-              <Archive className="h-3.5 w-3.5" aria-hidden="true" />
-              Archivieren
-            </button>
-
-            <div className="flex-1" />
-
-            <button
-              onClick={() => onDelete(okr)}
-              className="p-2 min-w-[44px] min-h-[44px] flex items-center justify-center hover:bg-red-50 rounded-lg transition-colors"
-              title="Löschen"
-              aria-label={`"${okr.title}" löschen`}
-            >
-              <Trash2 className="h-4 w-4 text-red-500" aria-hidden="true" />
-            </button>
           </div>
         </div>
       )}

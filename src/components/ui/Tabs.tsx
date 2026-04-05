@@ -115,7 +115,7 @@ export function TabPanel({
 }) {
   if (!active) return null;
   return (
-    <div role="tabpanel" id={id} aria-labelledby={labelledBy}>
+    <div role="tabpanel" id={id} aria-labelledby={labelledBy} key={id} className="tab-panel-enter">
       {children}
     </div>
   );

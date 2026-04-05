@@ -334,7 +334,7 @@ function LearningsContent() {
                 <p className="empty-state-description mb-3">
                   Entdecke den Katalog unten
                 </p>
-                <ArrowDown className="h-5 w-5 text-muted animate-bounce" aria-hidden="true" />
+                <ArrowDown className="h-5 w-5 text-muted animate-pulse" aria-hidden="true" />
               </div>
             )}
 

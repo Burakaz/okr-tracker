@@ -789,6 +789,16 @@ body:not(:focus-within) .blur-on-unfocus {
   border: 1px solid var(--cream-300);
   padding: 0.25rem;
   z-index: 50;
+  opacity: 0;
+  transform: scale(0.95) translateY(-4px);
+  animation: dropdown-in 150ms ease-out forwards;
+}
+
+@keyframes dropdown-in {
+  to {
+    opacity: 1;
+    transform: scale(1) translateY(0);
+  }
 }
 
 .dropdown-item {
@@ -828,11 +838,19 @@ body:not(:focus-within) .blur-on-unfocus {
   position: fixed;
   inset: 0;
   z-index: 50;
-  background-color: rgba(0, 0, 0, 0.25);
-  backdrop-filter: blur(4px);
+  background-color: rgba(0, 0, 0, 0);
+  backdrop-filter: blur(0px);
   display: flex;
   align-items: center;
   justify-content: center;
+  animation: modal-overlay-in 200ms ease-out forwards;
+}
+
+@keyframes modal-overlay-in {
+  to {
+    background-color: rgba(0, 0, 0, 0.25);
+    backdrop-filter: blur(4px);
+  }
 }
 
 .modal-content {
@@ -844,6 +862,16 @@ body:not(:focus-within) .blur-on-unfocus {
   margin: 1rem;
   max-height: 90vh;
   overflow-y: auto;
+  opacity: 0;
+  transform: scale(0.96) translateY(8px);
+  animation: modal-content-in 250ms cubic-bezier(0.16, 1, 0.3, 1) 50ms forwards;
+}
+
+@keyframes modal-content-in {
+  to {
+    opacity: 1;
+    transform: scale(1) translateY(0);
+  }
 }
 
 /* Empty State */
@@ -1043,6 +1071,65 @@ body:not(:focus-within) .blur-on-unfocus {
 }
 
 /* Responsive: Sidebar margin/height adjustments on mobile overlay */
+/* ===== Tab Content Fade ===== */
+.tab-panel-enter {
+  animation: tab-fade-in 200ms ease-out;
+}
+
+@keyframes tab-fade-in {
+  from { opacity: 0; transform: translateY(4px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+/* ===== List Stagger Animation ===== */
+.stagger-item {
+  opacity: 0;
+  transform: translateY(8px);
+  animation: stagger-in 300ms ease-out forwards;
+}
+
+.stagger-item:nth-child(1) { animation-delay: 0ms; }
+.stagger-item:nth-child(2) { animation-delay: 50ms; }
+.stagger-item:nth-child(3) { animation-delay: 100ms; }
+.stagger-item:nth-child(4) { animation-delay: 150ms; }
+.stagger-item:nth-child(5) { animation-delay: 200ms; }
+.stagger-item:nth-child(6) { animation-delay: 250ms; }
+.stagger-item:nth-child(7) { animation-delay: 300ms; }
+.stagger-item:nth-child(8) { animation-delay: 350ms; }
+
+@keyframes stagger-in {
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* ===== Accordion Expand/Collapse ===== */
+.accordion-content {
+  display: grid;
+  grid-template-rows: 0fr;
+  transition: grid-template-rows 250ms ease-out;
+}
+
+.accordion-content[data-expanded="true"],
+.accordion-content.expanded {
+  grid-template-rows: 1fr;
+}
+
+.accordion-content > div {
+  overflow: hidden;
+}
+
+/* ===== Reduced Motion ===== */
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}
+
 @media (max-width: 1023px) {
   .sidebar-container {
     margin: 0;

@@ -104,7 +104,8 @@ function CheckinCard({
       </button>
 
       {/* Expanded form */}
-      {isExpanded && (
+      <div className={`accordion-content ${isExpanded ? 'expanded' : ''}`}>
+        <div>
         <div className="border-t border-cream-200 p-4 space-y-4">
           {/* KR sliders */}
           {okr.key_results.map((kr) => (
@@ -186,7 +187,8 @@ function CheckinCard({
             )}
           </button>
         </div>
-      )}
+        </div>
+      </div>
     </div>
   );
 }

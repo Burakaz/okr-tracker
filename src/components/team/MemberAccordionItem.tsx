@@ -134,11 +134,13 @@ export function MemberAccordionItem({
       </button>
 
       {/* Expanded detail panel */}
-      {isExpanded && (
-        <div className="px-4 pb-4 border-t border-cream-300/50">
-          <MemberDetailPanel memberId={member.id} canEdit={canEdit} />
+      <div className={`accordion-content ${isExpanded ? 'expanded' : ''}`}>
+        <div>
+          <div className="px-4 pb-4 border-t border-cream-300/50">
+            <MemberDetailPanel memberId={member.id} canEdit={canEdit} />
+          </div>
         </div>
-      )}
+      </div>
     </div>
   );
 }
