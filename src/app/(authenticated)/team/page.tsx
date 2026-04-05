@@ -93,13 +93,26 @@ export default function TeamPage() {
   // Determine if the current user can edit a specific member
   const canEditMember = (member: TeamMember): boolean => {
     if (!currentUser) return false;
-    // HR/Admin/Super_Admin can edit all
     if (["hr", "admin", "super_admin"].includes(currentUser.role)) return true;
-    // Managers can edit their direct reports (we check manager_id on the server,
-    // but for UI we show edit mode for all if user is a manager — the API enforces the real check)
     if (currentUser.role === "manager") return true;
     return false;
   };
+
+  const topTabs = useMemo(() => {
+    const t: TabItem<TopTabId>[] = [
+      { key: "team", label: "Übersicht", icon: Users },
+    ];
+    if (isAdmin) t.push({ key: "org", label: "Organisation", icon: Building2 });
+    return t;
+  }, [isAdmin]);
+
+  const orgTabs = useMemo((): TabItem<OrgTabId>[] => [
+    { key: "general", label: "Allgemein", icon: Building2 },
+    { key: "members", label: "Mitglieder", icon: Users },
+    { key: "teams", label: "Teams", icon: Layers },
+    { key: "rights", label: "Rechte", icon: Shield },
+    { key: "billing", label: "Billing", icon: CreditCard },
+  ], []);
 
   if (isLoading) {
     return (
@@ -127,13 +140,7 @@ export default function TeamPage() {
         {/* Top-level tabs: Team / Organisation */}
         <div className="mb-4">
           <Tabs
-            tabs={useMemo(() => {
-              const t: TabItem<TopTabId>[] = [
-                { key: "team", label: "Übersicht", icon: Users },
-              ];
-              if (isAdmin) t.push({ key: "org", label: "Organisation", icon: Building2 });
-              return t;
-            }, [isAdmin])}
+            tabs={topTabs}
             activeTab={topTab}
             onTabChange={setTopTab}
             variant="pill"
@@ -154,13 +161,7 @@ export default function TeamPage() {
         {/* Sub-tabs for org view */}
         {topTab === "org" && (
           <Tabs
-            tabs={useMemo((): TabItem<OrgTabId>[] => [
-              { key: "general", label: "Allgemein", icon: Building2 },
-              { key: "members", label: "Mitglieder", icon: Users },
-              { key: "teams", label: "Teams", icon: Layers },
-              { key: "rights", label: "Rechte", icon: Shield },
-              { key: "billing", label: "Billing", icon: CreditCard },
-            ], [])}
+            tabs={orgTabs}
             activeTab={orgTab}
             onTabChange={setOrgTab}
             variant="pill"
