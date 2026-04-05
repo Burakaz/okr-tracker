@@ -3,6 +3,7 @@
 import { useMemo } from "react";
 import { TrendingUp, Target, Clock, AlertCircle } from "lucide-react";
 import { ProgressBar } from "@/components/ui/ProgressBar";
+import { MetricCard } from "@/components/ui/MetricCard";
 import {
   progressToScore,
   getQuarterDateRange,
@@ -79,15 +80,7 @@ export function ScoreDashboard({ okrs, quarter }: ScoreDashboardProps) {
   return (
     <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
       {/* SCORE */}
-      <div className="card p-4">
-        <div className="flex items-center gap-2 mb-2">
-          <div className="w-8 h-8 rounded-lg bg-cream-100 flex items-center justify-center">
-            <TrendingUp className="h-4 w-4 text-muted" aria-hidden="true" />
-          </div>
-          <span className="text-[11px] font-semibold text-muted uppercase tracking-wider">
-            Score
-          </span>
-        </div>
+      <MetricCard icon={<TrendingUp className="h-4 w-4 text-muted" aria-hidden="true" />} label="Score">
         <div className="flex items-center gap-2 mb-3">
           <p className={`text-2xl font-bold ${scoreColor}`}>
             {averageScore.toFixed(2)}
@@ -118,18 +111,10 @@ export function ScoreDashboard({ okrs, quarter }: ScoreDashboardProps) {
             <span className="text-[10px] text-muted">1.0</span>
           </div>
         </div>
-      </div>
+      </MetricCard>
 
       {/* AKTIVE OKRS */}
-      <div className="card p-4">
-        <div className="flex items-center gap-2 mb-2">
-          <div className="w-8 h-8 rounded-lg bg-cream-100 flex items-center justify-center">
-            <Target className="h-4 w-4 text-muted" aria-hidden="true" />
-          </div>
-          <span className="text-[11px] font-semibold text-muted uppercase tracking-wider">
-            Aktive OKRs
-          </span>
-        </div>
+      <MetricCard icon={<Target className="h-4 w-4 text-muted" aria-hidden="true" />} label="Aktive OKRs">
         <p className="text-2xl font-bold text-foreground">
           {activeOKRs.length}{" "}
           <span className="text-base font-normal text-muted">
@@ -139,18 +124,10 @@ export function ScoreDashboard({ okrs, quarter }: ScoreDashboardProps) {
         <p className="text-[11px] text-muted mt-1">
           Maximum pro Quartal
         </p>
-      </div>
+      </MetricCard>
 
       {/* ZEIT VERGANGEN */}
-      <div className="card p-4">
-        <div className="flex items-center gap-2 mb-2">
-          <div className="w-8 h-8 rounded-lg bg-cream-100 flex items-center justify-center">
-            <Clock className="h-4 w-4 text-muted" aria-hidden="true" />
-          </div>
-          <span className="text-[11px] font-semibold text-muted uppercase tracking-wider">
-            Zeit vergangen
-          </span>
-        </div>
+      <MetricCard icon={<Clock className="h-4 w-4 text-muted" aria-hidden="true" />} label="Zeit vergangen">
         <p className="text-2xl font-bold text-foreground">{quarterElapsed}%</p>
         <ProgressBar value={quarterElapsed} size="sm" className="mt-2" />
         <div className="flex flex-wrap items-center gap-2 mt-2">
@@ -167,7 +144,7 @@ export function ScoreDashboard({ okrs, quarter }: ScoreDashboardProps) {
             {overdueCount} Check-in{overdueCount !== 1 ? "s" : ""} überfällig
           </p>
         )}
-      </div>
+      </MetricCard>
     </div>
   );
 }

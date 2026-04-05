@@ -11,6 +11,7 @@ import {
   MoreHorizontal,
   Clock,
 } from "lucide-react";
+import { categoryGradients, categoryLabels } from "@/lib/category-styles";
 import type { Course, Enrollment, CourseCategory } from "@/types";
 
 interface CourseCardProps {
@@ -22,17 +23,6 @@ interface CourseCardProps {
 
 const VALID_CATEGORIES = ["design", "development", "marketing", "sales", "operations", "hr", "finance", "other"];
 
-const categoryGradients: Record<string, string> = {
-  design: "from-pink-400 to-purple-500",
-  development: "from-cyan-400 to-blue-500",
-  marketing: "from-orange-400 to-red-500",
-  sales: "from-amber-400 to-yellow-600",
-  operations: "from-emerald-400 to-teal-500",
-  hr: "from-violet-400 to-indigo-500",
-  finance: "from-rose-400 to-pink-500",
-  other: "from-gray-400 to-slate-500",
-};
-
 const categoryIcons: Record<string, React.ReactNode> = {
   design: <Palette className="h-8 w-8 text-white/90" />,
   development: <Code className="h-8 w-8 text-white/90" />,
@@ -42,17 +32,6 @@ const categoryIcons: Record<string, React.ReactNode> = {
   hr: <Users className="h-8 w-8 text-white/90" />,
   finance: <DollarSign className="h-8 w-8 text-white/90" />,
   other: <MoreHorizontal className="h-8 w-8 text-white/90" />,
-};
-
-const categoryLabels: Record<string, string> = {
-  design: "Design",
-  development: "Entwicklung",
-  marketing: "Marketing",
-  sales: "Sales",
-  operations: "Operations",
-  hr: "HR",
-  finance: "Finanzen",
-  other: "Sonstiges",
 };
 
 const difficultyLabels: Record<string, string> = {
