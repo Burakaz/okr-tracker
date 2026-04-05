@@ -113,7 +113,7 @@ export default function TeamPage() {
     <div className="h-full flex flex-col">
       {/* Header */}
       <div className="border-b border-cream-300/50">
-       <div className="px-4 sm:px-6 pt-4 sm:pt-6 pb-4 max-w-5xl mx-auto">
+       <div className="px-4 sm:px-6 pt-4 sm:pt-6 pb-4 max-w-[1400px] mx-auto">
         <div className="flex items-center justify-between mb-4">
           <div>
             <h1 className="text-lg font-semibold text-foreground">Team & Organisation</h1>
@@ -172,7 +172,7 @@ export default function TeamPage() {
 
       {/* Content */}
       <div className="flex-1 overflow-y-auto">
-       <div className="p-4 sm:p-6 max-w-5xl mx-auto">
+       <div className="p-4 sm:p-6 max-w-[1400px] mx-auto">
         {/* Team view — unified accordion */}
         {topTab === "team" && (
           <div role="tabpanel" id="panel-top-team" aria-labelledby="tab-top-team">

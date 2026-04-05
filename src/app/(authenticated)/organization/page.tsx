@@ -38,7 +38,7 @@ export default function OrganizationPage() {
     <div className="h-full flex flex-col">
       {/* Header */}
       <div className="border-b border-cream-300/50">
-       <div className="px-6 pt-6 pb-4 max-w-5xl mx-auto">
+       <div className="px-6 pt-6 pb-4 max-w-[1400px] mx-auto">
         <div className="flex items-center gap-4 mb-4">
           <div className="w-12 h-12 bg-cream-200 rounded-xl flex items-center justify-center border border-cream-300">
             {org?.logo_url ? (
@@ -68,7 +68,7 @@ export default function OrganizationPage() {
 
       {/* Tab Content */}
       <div className="flex-1 overflow-y-auto">
-       <div className="p-6 max-w-5xl mx-auto">
+       <div className="p-6 max-w-[1400px] mx-auto">
         {activeTab === "general" && <div role="tabpanel" id="panel-general" aria-labelledby="tab-general"><OrgGeneralTab /></div>}
         {activeTab === "members" && <div role="tabpanel" id="panel-members" aria-labelledby="tab-members"><OrgMembersTab /></div>}
         {activeTab === "teams" && (

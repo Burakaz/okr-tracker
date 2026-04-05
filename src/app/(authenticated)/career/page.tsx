@@ -77,7 +77,7 @@ export default function CareerPage() {
     <div className="h-full flex flex-col">
       {/* Header */}
       <div className="border-b border-cream-300/50">
-        <div className="h-14 flex items-center justify-between px-6 max-w-5xl mx-auto">
+        <div className="h-14 flex items-center justify-between px-6 max-w-[1400px] mx-auto">
           <div>
             <h1 className="text-[15px] font-semibold text-foreground">
               Karriere
@@ -95,7 +95,7 @@ export default function CareerPage() {
 
       {/* Content */}
       <div className="flex-1 overflow-y-auto">
-        <div className="p-6 max-w-5xl mx-auto space-y-6">
+        <div className="p-6 max-w-[1400px] mx-auto space-y-6">
           {/* Level Overview — Two columns */}
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             {/* Bestätigtes Level */}

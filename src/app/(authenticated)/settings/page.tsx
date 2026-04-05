@@ -91,7 +91,7 @@ export default function SettingsPage() {
     <div className="h-full flex flex-col">
       {/* Header */}
       <div className="border-b border-cream-300/50">
-       <div className="h-14 flex items-center px-6 max-w-5xl mx-auto">
+       <div className="h-14 flex items-center px-6 max-w-[1400px] mx-auto">
         <div className="flex items-center gap-2 text-sm text-muted">
           <span className="text-foreground font-medium">Einstellungen</span>
         </div>
@@ -99,7 +99,7 @@ export default function SettingsPage() {
       </div>
 
       <div className="flex-1 overflow-y-auto">
-       <div className="p-6 max-w-2xl mx-auto">
+       <div className="p-6 max-w-[1400px] mx-auto">
           {/* Profile Card */}
           <div className="card p-6 mb-6">
             <h1 className="text-lg font-semibold text-foreground mb-6">Profil</h1>

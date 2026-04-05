@@ -133,7 +133,7 @@ function DashboardContent() {
 
   return (
     <div className="h-full overflow-y-auto">
-      <div className="px-4 sm:px-6 py-6 sm:py-8 space-y-5 sm:space-y-6 max-w-5xl mx-auto">
+      <div className="px-4 sm:px-6 py-6 sm:py-8 space-y-5 sm:space-y-6 max-w-[1400px] mx-auto">
         {/* Motivational Greeting */}
         <div className="py-2 px-2">
           <h1 className="text-2xl sm:text-3xl text-foreground">
